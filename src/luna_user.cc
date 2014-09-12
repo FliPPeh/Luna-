@@ -80,7 +80,8 @@ void luna_user::set_flags(int newflags)
 bool luna_user::matches(const std::string& prefix) const
 {
     try {
-        return std::regex_search(prefix, std::regex{_hostmask});
+        return std::regex_search(prefix,
+            std::regex{_hostmask, std::regex::icase});
     } catch (std::regex_error const& e) {
         return false;
     }
