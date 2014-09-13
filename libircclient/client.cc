@@ -598,7 +598,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::ERROR] = handler{ 1, true,
+    _core_handlers[command::ERROR] = handler{ 1, false,
         [this](message const& msg) {
             on_disconnect();
             do_disconnect();
