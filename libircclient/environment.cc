@@ -51,7 +51,7 @@ environment::environment(const environment& rhs)
       _channels{}
 {
     for (auto& c : rhs._channels) {
-        _channels[c.first] = std::make_unique<channel>(*(c.second));
+        _channels[c.first] = std::unique_ptr<channel>{new channel{*(c.second)}};
     }
 }
 
@@ -179,7 +179,7 @@ channel_mode_argument_type environment::get_mode_argument_type(char mode) const
 
 channel& environment::create_channel(std::string name)
 {
-    _channels[name] = std::make_unique<channel>(name);
+    _channels[name] = std::unique_ptr<channel>{new channel{name}};
 
     return *_channels[name];
 }

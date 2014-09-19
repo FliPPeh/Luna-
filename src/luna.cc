@@ -41,6 +41,7 @@
 #include <cassert>
 #include <ctime>
 
+#include <boost/io/detail/quoted_manip.hpp>
 
 luna::luna(
     std::string const& nick,
@@ -171,7 +172,7 @@ void luna::read_shared_vars(const std::string& filename)
         std::string key;
         std::string value;
 
-        linestrm >> std::quoted(key) >> std::quoted(value);
+        linestrm >> boost::io::quoted(key) >> boost::io::quoted(value);
 
         std::string rvalue;
 
@@ -224,7 +225,7 @@ void luna::read_users(const std::string& filename)
         std::string flags;
         std::string title;
 
-        linestrm >> id >> hostmask >> flags >> std::quoted(title);
+        linestrm >> id >> hostmask >> flags >> boost::io::quoted(title);
 
         if (id.empty() or hostmask.empty() or flags.empty() or title.empty()) {
             _logger.warn()
@@ -257,8 +258,8 @@ void luna::save_shared_vars(const std::string& filename)
             }
         }
 
-        shared << std::quoted(i.first) << " "
-               << std::quoted(val)     << std::endl;
+        shared << boost::io::quoted(i.first) << " "
+               << boost::io::quoted(val)     << std::endl;
     }
 }
 
@@ -270,7 +271,7 @@ void luna::save_users(const std::string& filename)
         userlist << user.id()                     << " "
                  << user.hostmask()               << " "
                  << flags_to_string(user.flags()) << " "
-                 << std::quoted(user.title())
+                 << boost::io::quoted(user.title())
                  << std::endl;
     }
 }

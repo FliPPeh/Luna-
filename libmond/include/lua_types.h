@@ -100,7 +100,8 @@ struct mapped_type<char[N]> {
  * Map integrals to whatever lua_Integer may be
  */
 template <typename T>
-struct mapped_type<T, std::enable_if_t<std::is_integral<T>::value>> {
+struct mapped_type<T, typename
+        std::enable_if<std::is_integral<T>::value>::type> {
     using type = lua_Integer;
 };
 
@@ -108,7 +109,8 @@ struct mapped_type<T, std::enable_if_t<std::is_integral<T>::value>> {
  * Map floating points to whatever lua_Number may be
  */
 template <typename T>
-struct mapped_type<T, std::enable_if_t<std::is_floating_point<T>::value>> {
+struct mapped_type<T, typename
+        std::enable_if<std::is_floating_point<T>::value>::type> {
     using type = lua_Number;
 };
 
@@ -150,7 +152,8 @@ struct mapped_type<std::vector<T>> {
 };
 
 template <typename T>
-using remove_qualifiers = std::remove_cv_t<std::remove_reference_t<T>>;
+using remove_qualifiers = typename
+    std::remove_cv<typename std::remove_reference<T>::type>::type;
 
 template <typename T, typename... Ts>
 using mapped_type_t = typename mapped_type<remove_qualifiers<T>, Ts...>::type;

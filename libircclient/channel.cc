@@ -53,7 +53,8 @@ channel::channel(const channel& c)
       _next_uid{c._next_uid}
 {
     for (auto& cu : c._users) {
-        _users[cu.first] = std::make_unique<channel_user>(*(cu.second));
+        _users[cu.first] =
+            std::unique_ptr<channel_user>{new channel_user{*(cu.second)}};
         _users[cu.first]->_channel = this;
     }
 }
@@ -184,8 +185,8 @@ channel_user& channel::create_user(
     std::string host)
 {
     _users[nick] =
-        std::make_unique<channel_user>(
-            *this, _next_uid++, nick, std::move(user), std::move(host));
+        std::unique_ptr<channel_user>{new channel_user{
+            *this, _next_uid++, nick, std::move(user), std::move(host)}};
 
     return *_users[nick];
 }

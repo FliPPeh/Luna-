@@ -116,7 +116,8 @@ template <typename Fun, typename... Args>
 auto lift_result(Fun f, Args&&... args)
 {
     return _lift_result(f, args..., typename
-        impl::_bool<std::is_void<std::result_of_t<Fun (Args...)>>::value>{});
+        impl::_bool<std::is_void<
+            typename std::result_of<Fun (Args...)>::type>::value>{});
 }
 
 } // namespace mond
