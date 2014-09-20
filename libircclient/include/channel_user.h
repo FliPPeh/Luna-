@@ -23,8 +23,9 @@
 
 #include "macros.h"
 
-#include <string>
 #include <cstdint>
+
+#include <string>
 
 namespace irc {
 

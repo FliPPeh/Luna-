@@ -20,7 +20,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include "util.h"
+#include "macros.h"
 
 #include <string>
 #include <functional>
@@ -29,60 +29,17 @@
 
 namespace irc {
 
-namespace asio = boost::asio;
-
 struct message;
 
 
-enum class connection_error_type {
-    connection_error,
-    lookup_error,
-    stream_error,
-    io_error,
-    cannot_change_security,
-    not_connected
-};
-
-enum class connection_security {
-    insecure,
-    secure
-};
-
-
-template <typename T>
-char const* typed_error_meaning(connection_error_type t)
-{
-    switch (t) {
-    case connection_error_type::connection_error:
-        return "connection error";
-
-    case connection_error_type::lookup_error:
-        return "hostname lookup error";
-
-    case connection_error_type::stream_error:
-        return "Stream I/O error";
-
-    case connection_error_type::io_error:
-        return "I/O error";
-
-    case connection_error_type::cannot_change_security:
-        return "Can not change security";
-
-    case connection_error_type::not_connected:
-        return "Not connected";
-    }
-
-    return ""; // Not reached
-}
-
-using connection_error = typed_error<connection_error_type>;
+namespace asio = boost::asio;
 
 enum connection_flags : int {
     SSL = 0x01
 };
 
 /* \brief An asynchronous IRC connection using an external io_service */
-class DLL_PUBLIC async_connection {
+class DLL_LOCAL async_connection {
 public:
     using connect_handler = std::function<void (asio::ip::tcp::endpoint ep)>;
     using message_handler = std::function<void (message const&)>;

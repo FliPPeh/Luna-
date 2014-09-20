@@ -21,7 +21,7 @@
 
 #include "channel_user.h"
 
-#include "irc_utils.h"
+#include "irc_except.h"
 #include "environment.h"
 
 #include <tuple>

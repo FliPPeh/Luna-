@@ -25,8 +25,7 @@
  *  \brief Common, but not cruicial, IRC helpers.
  */
 
-#include "core.h"
-#include "util.h"
+#include "irc_core.h"
 
 #include <cstddef>
 
@@ -185,49 +184,21 @@ template <typename V>
 using unordered_user_map =
     std::unordered_map<std::string, V, nick_hash, nick_equal>;
 
-
-extern DLL_PUBLIC
-message pass(std::string password);
-
-extern DLL_PUBLIC
-message user(std::string username, std::string mode, std::string realname);
-
-extern DLL_PUBLIC
-message nick(std::string nickname);
-
-extern DLL_PUBLIC
-message join(std::string channel, std::string key = "");
-
-extern DLL_PUBLIC
-message topic(std::string channel, std::string new_topic);
-
-extern DLL_PUBLIC
-message mode(std::string channel, char mode);
-
-extern DLL_PUBLIC
-message mode(std::string channel, char mode, std::string argument);
-
-extern DLL_PUBLIC
-message privmsg(std::string target, std::string message);
-
-extern DLL_PUBLIC
-message notice(std::string target, std::string message);
-
-extern DLL_PUBLIC
-message response(std::string target, std::string channel, std::string message);
-
-extern DLL_PUBLIC
-message ctcp_request(
-    std::string target,
-    std::string ctcp,
-    std::string args = "");
-
-extern DLL_PUBLIC
-message ctcp_response(
-    std::string target,
-    std::string ctcp,
-    std::string args = "");
-
 }
+
+
+/*! \brief Splits a string on a delimiter.
+ *
+ * Splits the string \p src among the delimiter \p sep. Empty section are left
+ * out of the results and delimiters are not included.
+ *
+ * \param src Source string to split.
+ * \param sep Delimiter to split at.
+ * \return Non-Empty parts that were split out.
+ */
+extern DLL_PUBLIC
+std::vector<std::string> split_noempty(
+    std::string const& src,
+    std::string const& sep);
 
 #endif // defined IRC_UTILS_H

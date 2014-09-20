@@ -20,7 +20,7 @@
 #include "environment.h"
 
 #include "irc_utils.h"
-#include "util.h"
+#include "irc_except.h"
 #include "channel.h"
 #include "channel_user.h"
 

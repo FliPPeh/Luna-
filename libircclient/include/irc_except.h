@@ -17,29 +17,18 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#pragma once
+#ifndef IRC_EXCEPT_H
+#define IRC_EXCEPT_H
 
 #include "macros.h"
 
-#include <string>
-#include <vector>
 #include <stdexcept>
-#include <iosfwd>
+#include <string>
 
-/*! \brief Splits a string on a delimiter.
- *
- * Splits the string \p src among the delimiter \p sep. Empty section are left
- * out of the results and delimiters are not included.
- *
- * \param src Source string to split.
- * \param sep Delimiter to split at.
- * \return Non-Empty parts that were split out.
+/*! \file
+ *  \brief Exceptions used throughout the library.
  */
-extern DLL_PUBLIC
-std::vector<std::string> split_noempty(
-    std::string const& src,
-    std::string const& sep);
 
 namespace irc {
 
@@ -102,6 +91,94 @@ private:
     std::string _what;
 };
 
+
+//! Error types used to identify IRC protocol error.
+enum class protocol_error_type {
+    invalid_message,
+    invalid_command,
+    invalid_prefix,
+    login_error,
+    no_such_channel,
+    no_such_user,
+    no_such_mode,
+    not_enough_arguments
+};
+
+//! Error types used to identify IRC connection errors.
+enum class connection_error_type {
+    connection_error,
+    lookup_error,
+    stream_error,
+    io_error,
+    cannot_change_security,
+    not_connected
+};
+
+
+template <typename T>
+char const* typed_error_meaning(protocol_error_type t)
+{
+    switch (t) {
+    case protocol_error_type::invalid_message:
+        return "invalid message";
+
+    case protocol_error_type::invalid_command:
+        return "invalid command";
+
+    case protocol_error_type::invalid_prefix:
+        return "invalid prefix";
+
+    case protocol_error_type::login_error:
+        return "login error";
+
+    case protocol_error_type::no_such_channel:
+        return "no such channel";
+
+    case protocol_error_type::no_such_user:
+        return "no such user";
+
+    case protocol_error_type::no_such_mode:
+        return "no such mode";
+
+    case protocol_error_type::not_enough_arguments:
+        return "not enough parameters";
+    }
+
+    return ""; // Not reached
 }
 
-#endif
+template <typename T>
+char const* typed_error_meaning(connection_error_type t)
+{
+    switch (t) {
+    case connection_error_type::connection_error:
+        return "connection error";
+
+    case connection_error_type::lookup_error:
+        return "hostname lookup error";
+
+    case connection_error_type::stream_error:
+        return "Stream I/O error";
+
+    case connection_error_type::io_error:
+        return "I/O error";
+
+    case connection_error_type::cannot_change_security:
+        return "Can not change security";
+
+    case connection_error_type::not_connected:
+        return "Not connected";
+    }
+
+    return ""; // Not reached
+}
+
+//! \brief IRC protocol error
+using protocol_error   = typed_error<protocol_error_type>;
+
+//! \brief IRC connection error
+using connection_error = typed_error<connection_error_type>;
+
+}
+
+#endif // defined IRC_EXCEPT_H

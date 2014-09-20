@@ -22,6 +22,7 @@
 #include "irc_utils.h"
 
 #include <cstdint>
+
 #include <string>
 #include <tuple>
 

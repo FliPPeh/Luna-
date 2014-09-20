@@ -19,7 +19,9 @@
 
 #include "client.h"
 
-#include "core.h"
+#include "irc_core.h"
+#include "irc_except.h"
+#include "irc_helpers.h"
 #include "irc_utils.h"
 #include "connection.h"
 #include "environment.h"

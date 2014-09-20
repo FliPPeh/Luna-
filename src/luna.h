@@ -21,8 +21,9 @@
 #ifndef LUNA_H
 #define LUNA_H
 
-#include "channel.h"
-#include "channel_user.h"
+#include <channel.h>
+#include <channel_user.h>
+#include <environment.h>
 
 #include "proxies/luna_channel_proxy.h"
 
@@ -204,8 +205,6 @@ private:
 private:
     friend class luna_script;
     friend class luna_user_proxy;
-
-private:
     friend class luna_proxy;
 
     std::time_t _started;

@@ -22,11 +22,11 @@
 #define CHANNEL_H
 
 #include "macros.h"
-#include "core.h"
+
 #include "irc_utils.h"
-#include "util.h"
 
 #include <ctime>
+
 #include <tuple>
 #include <vector>
 #include <unordered_map>

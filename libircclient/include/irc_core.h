@@ -18,11 +18,10 @@
  */
 
 #pragma once
-#ifndef CORE_H
-#define CORE_H
+#ifndef IRC_CORE_H
+#define IRC_CORE_H
 
 #include "macros.h"
-#include "util.h"
 
 #include <string>
 #include <vector>
@@ -298,53 +297,6 @@ enum command : int {
     COMMAND_MAX
 };
 
-//! Error types used to identify IRC exception types.
-enum class protocol_error_type {
-    invalid_message,
-    invalid_command,
-    invalid_prefix,
-    login_error,
-    no_such_channel,
-    no_such_user,
-    no_such_mode,
-    not_enough_arguments
-};
-
-template <typename T>
-char const* typed_error_meaning(protocol_error_type t)
-{
-    switch (t) {
-    case protocol_error_type::invalid_message:
-        return "invalid message";
-
-    case protocol_error_type::invalid_command:
-        return "invalid command";
-
-    case protocol_error_type::invalid_prefix:
-        return "invalid prefix";
-
-    case protocol_error_type::login_error:
-        return "login error";
-
-    case protocol_error_type::no_such_channel:
-        return "no such channel";
-
-    case protocol_error_type::no_such_user:
-        return "no such user";
-
-    case protocol_error_type::no_such_mode:
-        return "no such mode";
-
-    case protocol_error_type::not_enough_arguments:
-        return "not enough parameters";
-    }
-
-    return ""; // Not reached
-}
-
-//! IRC exception type.
-using protocol_error = typed_error<protocol_error_type>;
-
 
 //! The internal representation of an IRC message and its parts.
 struct DLL_PUBLIC message {
@@ -407,4 +359,4 @@ inline std::ostream& operator<<(std::ostream& strm, message const& msg)
 
 }
 
-#endif // defined CORE_H
+#endif // defined IRC_CORE_H

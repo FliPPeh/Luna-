@@ -17,9 +17,10 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "core.h"
 #include "irc_utils.h"
-#include "util.h"
+
+#include "irc_core.h"
+#include "irc_except.h"
 
 #include <algorithm>
 #include <sstream>
@@ -36,8 +37,9 @@ std::tuple<std::string, std::string, std::string> split_prefix(
     }
 
     std::string nick = prefix.substr(0, prefix.find('!'));
-    std::string user = prefix.substr(prefix.find('!') + 1,
-                                prefix.find('@') - prefix.find('!') - 1);
+    std::string user = prefix.substr(
+        prefix.find('!') + 1,
+        prefix.find('@') - prefix.find('!') - 1);
 
     std::string host = prefix.substr(prefix.find('@') + 1);
 
@@ -65,7 +67,7 @@ std::string rfc1459_lower(std::string const& str)
 
     out.resize(str.size());
 
-    transform(begin(str), end(str), begin(out), [](char c) {
+    std::transform(begin(str), end(str), begin(out), [](char c) {
          return rfc1459_lower(c);
      });
 
@@ -78,110 +80,35 @@ std::string rfc1459_upper(std::string const& str)
 
     out.resize(str.size());
 
-    transform(begin(str), end(str), begin(out), [](char c) {
+    std::transform(begin(str), end(str), begin(out), [](char c) {
         return rfc1459_upper(c);
      });
 
     return out;
 }
 
-
-message pass(std::string password)
-{
-    return message{"", command::PASS, {std::move(password)}};
 }
 
-message user(std::string username, std::string mode, std::string realname)
+std::vector<std::string> split_noempty(
+    std::string const& src,
+    std::string const& sep)
 {
-    return message{"", command::USER, {
-        std::move(username),
-        std::move(mode),
-        std::move("*"),
-        std::move(realname)
-    }};
-}
+    std::size_t seppos = 0;
 
-message nick(std::string nickname)
-{
-    return message{"", command::NICK, {std::move(nickname)}};
-}
+    std::vector<std::string> results;
 
-message join(std::string channel, std::string key)
-{
-    if (key.empty()) {
-        return message{"", command::JOIN, {std::move(channel)}};
-    } else {
-        return message{"", command::JOIN, {std::move(channel), std::move(key)}};
-    }
-}
+    while (seppos != std::string::npos) {
+        std::size_t old = seppos ? seppos + sep.size() : 0;
 
-message topic(std::string channel, std::string new_topic)
-{
-    return message{"", command::TOPIC, {std::move(new_topic)}};
-}
+        seppos = src.find(sep, seppos + 1);
 
-message mode(std::string channel, char mode)
-{
-    return message{"", command::MODE, {}};
-}
+        std::string sub = src.substr(old, seppos - old);
 
-message mode(std::string channel, char mode, std::string argument)
-{
-    return message{"", command::MODE, {std::move(argument)}};
-}
-
-message privmsg(std::string target, std::string msg)
-{
-    return message{"", command::PRIVMSG, {std::move(target), std::move(msg)}};
-}
-
-message notice(std::string target, std::string msg)
-{
-    return message{"", command::NOTICE, {std::move(target), std::move(msg)}};
-}
-
-message response(std::string target, std::string channel, std::string msg)
-{
-    return message{"", command::PRIVMSG,
-        {std::move(channel),
-         normalize_nick(target) + ": " + msg}};
-}
-
-message ctcp_request(
-    std::string target,
-    std::string ctcp,
-    std::string args)
-{
-    std::ostringstream cmd;
-
-    cmd << '\x01' << ctcp;
-
-    if (not args.empty()) {
-        cmd << " " << args;
+        if (!sub.empty()) {
+            results.push_back(sub);
+        }
     }
 
-    cmd << '\x01';
-
-    return message{"", command::PRIVMSG, {std::move(target), cmd.str()}};
+    return results;
 }
 
-message ctcp_response(
-    std::string target,
-    std::string ctcp,
-    std::string args)
-{
-    std::ostringstream cmd;
-
-    cmd << '\x01' << ctcp;
-
-    if (not args.empty()) {
-        cmd << " " << args;
-    }
-
-    cmd << '\x01';
-
-    return message{"", command::NOTICE, {std::move(target), cmd.str()}};
-}
-
-
-}

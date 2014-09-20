@@ -21,13 +21,15 @@
 
 #include "luna.h"
 
-#include "irc_utils.h"
+#include <irc_core.h>
+#include <irc_except.h>
 
-#include "mond.h"
+#include <mond.h>
 
 #include <lua.hpp>
 
 #include <cstddef>
+
 #include <tuple>
 #include <string>
 #include <stdexcept>

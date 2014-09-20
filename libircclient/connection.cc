@@ -18,11 +18,14 @@
  */
 
 #include "connection.h"
-#include "core.h"
 
-#include <string>
+#include "irc_core.h"
+#include "irc_except.h"
+
 #include <cstddef>
 #include <cstring>
+
+#include <string>
 #include <functional>
 #include <iostream>
 

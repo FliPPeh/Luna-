@@ -20,10 +20,11 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include "core.h"
-#include "connection.h"
-#include "environment.h"
 #include "macros.h"
+
+#include "irc_core.h"
+
+#include <boost/asio.hpp>
 
 #include <cstddef>
 
@@ -37,6 +38,7 @@ namespace irc {
 struct message;
 
 class environment;
+class async_connection;
 
 class DLL_PUBLIC client {
 public:
@@ -109,9 +111,15 @@ private:
     DLL_LOCAL void init_core_handlers();
 
 private:
-    boost::asio::io_service _io_service;
-    boost::asio::deadline_timer _idle_timer;
+    enum session_state {
+        START,
+        LOGIN_SENT,
+        LOGGED_IN,
+        STOP
+    };
 
+    boost::asio::io_service         _io_service;
+    boost::asio::deadline_timer     _idle_timer;
     boost::posix_time::milliseconds _idle_interval;
 
     std::unique_ptr<irc::async_connection> _irccon;
@@ -119,7 +127,7 @@ private:
 
     bool _use_ssl;
 
-    enum { START, LOGIN_SENT, LOGGED_IN, STOP } _session_state;
+    session_state _session_state;
 
     using handler = std::tuple<
         std::size_t,                           // minimum number of arguments

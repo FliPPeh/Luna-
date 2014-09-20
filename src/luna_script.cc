@@ -28,13 +28,9 @@
 #include "logging.h"
 #include "luna.h"
 
-#include "core.h"
-#include "irc_utils.h"
-#include "environment.h"
-#include "channel.h"
-#include "channel_user.h"
-
 #include "mond.h"
+
+#include <irc_except.h>
 
 #include <sstream>
 #include <string>

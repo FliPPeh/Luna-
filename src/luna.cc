@@ -22,24 +22,23 @@
 #include "luna_script.h"
 #include "logging.h"
 
-#include "connection.h"
-#include "environment.h"
-#include "core.h"
-#include "irc_utils.h"
+#include <irc_core.h>
+#include <irc_except.h>
+#include <irc_helpers.h>
+#include <environment.h>
 
 #include <mond.h>
 
 #include <lua.hpp>
 
+#include <ctime>
+
 #include <algorithm>
-#include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <tuple>
-#include <cassert>
-#include <ctime>
 
 
 luna::luna(

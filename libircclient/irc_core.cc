@@ -17,7 +17,8 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "core.h"
+#include "irc_core.h"
+#include "irc_except.h"
 #include "irc_utils.h"
 
 #include <cstddef>

@@ -19,6 +19,8 @@
 
 #include "client_base.h"
 
+#include <environment.h>
+
 #include "tokenbucket.h"
 
 #include <iostream>
@@ -296,7 +298,7 @@ void client_base::handle_direct_message(
 
 void client_base::work_through_queue()
 {
-    while (_message_queue.size() > 0) {
+    while (not _message_queue.empty()) {
         irc::message& msg = _message_queue.front();
 
         std::string msgstr = irc::to_string(msg);
