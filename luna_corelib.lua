@@ -1,9 +1,16 @@
 local luna = {}
+--
+-- Merge __luna native library into corelib
+for k, v in pairs(__luna) do
+    luna[k] = v
+end
+
 
 luna.util = {}
 
 math.randomseed(os.time())
 
+-- Dump a Lua value
 function luna.util.dump(t, max)
     local ignore = {}
 
@@ -63,11 +70,73 @@ function luna.util.dump(t, max)
     return wrapped(t, max)
 end
 
--- Merge __luna native library into corelib
-for k, v in pairs(__luna) do
-    luna[k] = v
+
+local function splitmask(prefix)
+    nick = prefix:sub(1, prefix:find('!') - 1)
+    user = prefix:sub(prefix:find('!') + 1, prefix:find('@') - 1)
+    addr = prefix:sub(prefix:find('@') + 1)
+
+    if addr:match('(%d+.%d+.%d+.%d+)') then
+        host   = addr:sub(addr:find('^%d+.%d+.%d'))
+        domain = addr:sub(addr:find('%d+$'))
+    else
+        -- special case for no-host addresses
+        if addr:match('^%w+.%w+$') then
+            host = addr
+            domain = ''
+        else
+            host   = addr:sub(addr:find('^(%w+)'))
+            domain = addr:sub(addr:find('%w+.%w+$'))
+        end
+    end
+
+    user = user:gsub('^~', '')
+
+    return nick, user, host, domain
 end
 
+luna.util.default_ban_mask  = 4
+luna.util.default_user_mask = 2
+
+-- Mask a hostname
+function luna.util.mask(prefix, style, mtype)
+    local style = style or 'irc'
+    local mtype = mtype or 4
+    local nick, user, host, domain = splitmask(prefix)
+
+    styles = {
+        irc  = {  '*',     '*' },
+        emca = {'(.+?)', '(.?)'},
+        lua  = {'(.-)',  '(.?)'},
+    }
+
+    if not styles[style:lower()] then
+        error('unsupported hostmask style', 2)
+    end
+
+    local many1 = styles[style:lower()][1]
+    local any0  = styles[style:lower()][2]
+
+    masks = {
+        {many1,         user, host,   domain},
+        {many1, any0 .. user, host,   domain},
+        {many1, many1,        host,   domain},
+        {many1, any0 .. user, many1,  domain},
+        {many1, many1,        many1,  domain},
+        {nick,          user, host,   domain},
+        {nick,  any0 .. user, host,   domain},
+        {nick,  many1,        host,   domain},
+        {nick,  any0 .. user, many1,  domain},
+        {nick,  many1,        many1,  domain},
+    }
+
+    if mtype > #masks or mtype < 1 then
+        error('unsupported hostmask type',  2)
+    end
+
+    return string.format(domain ~= '' and '%s!%s@%s.%s'
+                                       or '%s!%s@%s', unpack(masks[mtype]))
+end
 
 -- Logging functionality
 function print(...)
@@ -216,8 +285,13 @@ function channel_userX:host() return ({self:user_info()})[3] end
 function channel_userX:privmsg(msg) privmsg(self:nick(), msg) end
 function channel_userX:notice(msg)  notice(self:nick(),  msg) end
 
+function channel_userX:mask(style, mtype)
+    return luna.util.mask(string.format('%s!%s@%s',
+        self:nick(), self:user(), self:host()), style, mtype)
+end
+
 function channel_userX:respond(msg)
-    self:channel():privmsg(self:nick() .. ': ' .. msg)
+    return self:channel():privmsg(self:nick() .. ': ' .. msg)
 end
 
 -- Also augment core types for fun and profit
