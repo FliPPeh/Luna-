@@ -32,6 +32,7 @@
 #include <functional>
 #include <array>
 #include <chrono>
+#include <queue>
 
 namespace irc {
 
@@ -99,7 +100,8 @@ protected:
     std::string _real;
 
 private:
-    DLL_LOCAL void mainloop();
+    DLL_LOCAL void send_queue();
+
     DLL_LOCAL void handle_message(message const& msg);
 
     DLL_LOCAL void do_disconnect();
@@ -124,6 +126,8 @@ private:
 
     std::unique_ptr<irc::async_connection> _irccon;
     std::unique_ptr<irc::environment>      _ircenv;
+
+    std::queue<irc::message> _write_queue;
 
     bool _use_ssl;
 

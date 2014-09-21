@@ -43,6 +43,7 @@ class DLL_LOCAL async_connection {
 public:
     using connect_handler = std::function<void (asio::ip::tcp::endpoint ep)>;
     using message_handler = std::function<void (message const&)>;
+    using write_confirmation_handler = std::function<void (std::size_t)>;
 
     async_connection(asio::io_service& io_svc, int flags = 0);
     ~async_connection();
@@ -61,13 +62,12 @@ public:
     void disconnect();
 
     void read_message(message_handler handler);
-    void send_message(message const& msg);
+    void send_message(message const& msg, write_confirmation_handler handler);
 
     bool connected() const;
     bool ssl() const;
 
     void use_ssl(bool ssl);
-
 
     std::string server_host() const;
     std::string server_addr() const;

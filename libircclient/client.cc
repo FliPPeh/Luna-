@@ -63,6 +63,7 @@ client::client(
       _idle_interval{boost::posix_time::milliseconds(125)},
       _irccon{nullptr},
       _ircenv{nullptr},
+      _write_queue{},
       _use_ssl{false},
 
       _session_state{START},
@@ -164,7 +165,16 @@ void client::send_message(message const& msg)
             "send_message"};
     }
 
-    _irccon->send_message(msg);
+    _write_queue.push(msg);
+
+    // If there is now only one element in the queue, start the sending process
+    if (_write_queue.size() == 1) {
+        _irccon->send_message(msg, [this] (std::size_t s) {
+            _write_queue.pop();
+
+            send_queue();
+        });
+    }
 }
 
 bool client::connected() const
@@ -294,6 +304,20 @@ void client::report_error(std::exception_ptr p, int lvl) const
 void client::set_idle_interval(int ms)
 {
     _idle_interval = boost::posix_time::milliseconds(ms);
+}
+
+
+void client::send_queue()
+{
+    if (_write_queue.empty() or not connected()) {
+        return;
+    }
+
+    _irccon->send_message(_write_queue.front(), [this] (std::size_t siz) {
+            _write_queue.pop();
+
+            send_queue();
+        });
 }
 
 

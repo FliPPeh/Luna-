@@ -113,25 +113,33 @@ void async_connection::read_message(message_handler handler)
     }
 }
 
-void async_connection::send_message(const message& msg)
+void async_connection::send_message(
+    const message& msg,
+    write_confirmation_handler handler)
 {
     if (not connected()) {
         throw connection_error{connection_error_type::not_connected,
             "send_message"};
     }
 
-    auto buf = asio::buffer(to_string(msg) + "\r\n");
-    boost::system::error_code err;
+    auto cb_write =
+        [this, handler] (boost::system::error_code const& err, std::size_t s) {
+            if (err) {
+                throw connection_error{connection_error_type::stream_error,
+                    "send_message: " + err.message()};
+            }
+
+            handler(s);
+        };
+
+    std::string payload = irc::to_string(msg) + "\r\n";
+
+    auto buf = asio::buffer(payload, payload.size());
 
     if (_use_ssl) {
-        asio::write(*_socket, buf, err);
+        asio::async_write(*_socket, buf, cb_write);
     } else {
-        asio::write(_socket->next_layer(), buf, err);
-    }
-
-    if (err) {
-        throw connection_error{connection_error_type::stream_error,
-            "send_message: " + err.message()};
+        asio::async_write(_socket->next_layer(), buf, cb_write);
     }
 }
 
