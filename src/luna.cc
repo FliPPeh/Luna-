@@ -50,8 +50,8 @@ luna::luna(
           _logger{"luna", logging_level::DEBUG, logging_flags::ANSI},
           _server{""},
           _port{6667},
-          _autojoin{},
           _scripts{},
+          _autojoin{},
           _users{},
           _userfile{"users.txt"},
           _varfile{"shared_vars.txt"},
@@ -275,7 +275,7 @@ void luna::save_users(const std::string& filename)
 }
 
 
-std::vector<luna_script>& luna::scripts()
+std::vector<std::unique_ptr<luna_script>> const& luna::scripts()
 {
     return _scripts;
 }
@@ -300,15 +300,15 @@ void luna::run()
 void luna::load_script(const std::string& script)
 {
     try {
-        luna_script s{*this, script};
+        std::unique_ptr<luna_script> s{new luna_script{*this, script}};
 
         _logger.info()
-            << "  Loaded script `" << s.name() << "': " << s.description()
-            << " (version " << s.version() << ", priority "
-            << s.priority() << ")";
+            << "  Loaded script `" << s->name() << "': " << s->description()
+            << " (version " << s->version() << ", priority "
+            << s->priority() << ")";
 
         _scripts.push_back(std::move(s));
-        _scripts.back().init_script();
+        _scripts.back()->init_script();
 
         std::sort(std::begin(_scripts), std::end(_scripts));
 
@@ -586,10 +586,10 @@ void luna::handle_core_commands(
     }
 
     auto do_load = [this] (std::string const& script) {
-        luna_script s{*this, script};
+        std::unique_ptr<luna_script> s{new luna_script{*this, script}};
 
         _scripts.push_back(std::move(s));
-        _scripts.back().init_script();
+        _scripts.back()->init_script();
 
         std::sort(std::begin(_scripts), std::end(_scripts));
     };
@@ -599,7 +599,7 @@ void luna::handle_core_commands(
                   it != std::end(_scripts);
                 ++it) {
 
-            if (irc::rfc1459_equal(it->file(), script)) {
+            if (irc::rfc1459_equal((*it)->file(), script)) {
                 _scripts.erase(it);
                 std::sort(std::begin(_scripts), std::end(_scripts));
 

@@ -44,6 +44,7 @@ state::~state()
     }
 }
 
+/*
 state::state(state&& other)
     : _l{other._l},
       _functions{std::move(other._functions)}
@@ -59,7 +60,7 @@ state& state::operator=(state&& other)
 
     return *this;
 }
-
+*/
 
 bool state::valid() const
 {

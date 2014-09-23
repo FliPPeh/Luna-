@@ -45,10 +45,10 @@ public:
 
     // There isn't really a valid state after moving from a state.
     state(state const&) = delete;
-    state(state&&);
+    state(state&&)      = delete;
 
     state& operator=(state const&) = delete;
-    state& operator=(state&&);
+    state& operator=(state&&)      = delete;
 
     bool valid() const;
 

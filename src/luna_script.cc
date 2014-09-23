@@ -285,11 +285,11 @@ void luna_script::register_script()
         [=] (lua_State* s) {
             lua_newtable(s);
 
-            for (luna_script const& scr : _context->scripts()) {
+            for (std::unique_ptr<luna_script> const& scr : _context->scripts()) {
                 mond::write(s,
-                    mond::object<luna_script_proxy>(*_context, scr.file()));
+                    mond::object<luna_script_proxy>(*_context, scr->file()));
 
-                lua_setfield(s, -2, scr.file().c_str());
+                lua_setfield(s, -2, scr->file().c_str());
             }
 
             return 1;

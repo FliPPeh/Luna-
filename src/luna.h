@@ -58,7 +58,7 @@ public:
     void save_shared_vars(std::string const& filename);
     void save_users(std::string const& filename);
 
-    std::vector<luna_script>& scripts();
+    std::vector<std::unique_ptr<luna_script>> const& scripts();
     std::vector<luna_user>&   users();
 
     using client_base::run;
@@ -156,7 +156,7 @@ private:
     void dispatch_signal(std::string const& signal, Args const&... args)
     {
         for (auto& script : _scripts) {
-            script.emit_signal(signal, args...);
+            script->emit_signal(signal, args...);
         }
     }
 
@@ -167,8 +167,8 @@ private:
         Args const&... args)
     {
         for (auto& script : _scripts) {
-            if (script != source) {
-                script.emit_signal(signal, args...);
+            if (*script != source) {
+                script->emit_signal(signal, args...);
             }
         }
     }
@@ -195,8 +195,8 @@ private:
     std::string _server;
     uint16_t _port;
 
+    std::vector<std::unique_ptr<luna_script>> _scripts;
     std::vector<std::string> _autojoin;
-    std::vector<luna_script> _scripts;
     std::vector<luna_user>   _users;
 
     std::string _userfile;

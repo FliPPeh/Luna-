@@ -70,14 +70,14 @@ luna_script& luna_script_proxy::lookup() const
 {
     auto s = std::find_if(
         std::begin(_ref->scripts()), std::end(_ref->scripts()),
-        [this] (luna_script& s2) {
-            return s2.file() == _fname;
+        [this] (std::unique_ptr<luna_script> const& s2) {
+            return s2->file() == _fname;
         });
 
     if (s == std::end(_ref->scripts())) {
         throw mond::error{"no such script: " + _fname};
     }
 
-    return *s;
+    return **s;
 
 }
