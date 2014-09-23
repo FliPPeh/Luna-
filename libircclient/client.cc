@@ -377,9 +377,9 @@ void client::login_handler(message const& msg)
         _session_state = LOGIN_SENT;
     }
 
-    if (msg.command == ERR_NICKNAMEINUSE) {
+    if (rfc1459_equal(msg.command, command::ERR_NICKNAMEINUSE)) {
         change_nick(nick() + "_");
-    } else if (msg.command == RPL_WELCOME) {
+    } else if (rfc1459_equal(msg.command, command::RPL_WELCOME)) {
         _current_handler = &client::main_handler;
 
         if (_session_state != STOP) {
@@ -387,25 +387,26 @@ void client::login_handler(message const& msg)
         }
 
         (this->*_current_handler)(msg);
-    } else if (msg.command == command::PING) {
+    } else if (rfc1459_equal(msg.command, command::PING)) {
         send_message(message{"", command::PONG, {msg.args[0]}});
-    } else if (msg.command == command::ERROR) {
+    } else if (rfc1459_equal(msg.command, command::ERROR)) {
         do_disconnect();
     }
 }
 
 void client::main_handler(message const& msg)
 {
-    if (static_cast<std::size_t>(msg.command) < _core_handlers.size()) {
-        auto& handler = _core_handlers[msg.command];
+    auto const& res = _core_handlers.find(msg.command);
+
+    if (res != std::end(_core_handlers)) {
+        auto const& handler = res->second;
 
         if (auto& fun = std::get<2>(handler)) {
             bool requires_user = std::get<1>(handler);
 
             if (not (requires_user and not is_user_prefix(msg.prefix))) {
-                std::string err = "error in core handler for `"
-                                + to_string(msg.command)
-                                + "'";
+                std::string err =
+                    "error in core handler for `" + res->first + "'";
 
                 try {
                     auto args_req = std::get<0>(handler);
@@ -414,7 +415,7 @@ void client::main_handler(message const& msg)
                         std::ostringstream errs;
 
                         errs << "expected " << args_req << "arguments "
-                             << "for `" << msg.command << "' handler, "
+                             << "for `" << res->first << "' handler, "
                              << "got " << msg.args.size();
 
                         // Just throw it here so we can print a pretty message
@@ -451,7 +452,7 @@ void client::main_handler(message const& msg)
     } catch (connection_error& ce) {
         std::throw_with_nested(
             connection_error{ce.code(),
-                "error in user handler `" + to_string(msg.command) + "'"});
+                "error in user handler `" + res->first + "'"});
 
     } catch (...) {
         report_error(std::current_exception());

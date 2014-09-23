@@ -339,7 +339,7 @@ void luna::on_raw(const irc::message& msg)
     _bytes_recvd += n;
     _bytes_recvd_sess += n;
 
-    dispatch_signal("raw", msg.prefix, irc::to_string(msg.command), msg.args);
+    dispatch_signal("raw", msg.prefix, msg.command, msg.args);
 
     if (msg.command == irc::command::RPL_ENDOFWHO) {
         dispatch_signal("self_join",

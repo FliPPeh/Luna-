@@ -28,72 +28,6 @@
 
 namespace irc {
 
-static char const* command_names[command::COMMAND_MAX] = {
-    // 3.1
-    "PASS", "NICK", "USER", "OPER", "SERVICE", "QUIT", "SQUIT",
-
-    // 3.2
-    "JOIN", "PART", "MODE", "TOPIC", "NAMES", "LIST", "INVITE", "KICK",
-    // 3.3
-    "PRIVMSG", "NOTICE",
-
-    // 3.4
-    "MOTD", "LUSERS", "VERSION", "STATS", "LINKS", "TIME",
-    "CONNECT", "TRACE", "ADMIN", "INFO",
-
-    // 3.5
-    "SERVLIST", "SQUERY",
-
-    // 3.6
-    "WHO", "WHOIS", "WHOWAS",
-
-    // 3.7
-    "KILL", "PING", "PONG", "ERROR",
-
-    // 4.0
-    "AWAY", "REHASH", "DIE", "RESTART", "SUMMON", "USERS", "WALLOPS",
-    "USERHOST", "ISON"
-};
-
-
-std::string to_string(enum command cmd)
-{
-    std::ostringstream strm;
-
-    if (is_numeric(cmd)) {
-        strm.fill('0');
-        strm.width(3);
-
-        strm << static_cast<int>(cmd);
-    } else {
-        strm << command_names[cmd - ERR_LAST_ERR_MSG - 1];
-    }
-
-    return strm.str();
-}
-
-enum command command_from_string(std::string const& cmd)
-{
-    bool is_numeric = (cmd.size() == 3) // "000" - "999"
-       and (cmd.find_first_not_of("0123456789") == std::string::npos);
-
-    if (is_numeric) {
-        return static_cast<enum command>(std::stoi(cmd));
-    } else {
-        for (std::size_t i = ERR_LAST_ERR_MSG + 1;
-                         i < command::COMMAND_MAX;
-                       ++i) {
-            enum command rcmd = static_cast<enum command>(i);
-
-            if (cmd == to_string(rcmd)) {
-                return rcmd;
-            }
-        }
-    }
-
-    throw protocol_error{protocol_error_type::invalid_command, cmd};
-}
-
 std::string to_string(message const& msg)
 {
     std::ostringstream strm;
@@ -147,12 +81,11 @@ message message_from_string(std::string str)
     if (msg.args[0][0] == ':') {
         msg.prefix = msg.args[0].substr(1);
 
-        msg.args.erase(begin(msg.args));
+        msg.args.erase(std::begin(msg.args));
     }
 
-    std::string cmd = msg.args[0];
-    msg.args.erase(begin(msg.args));
-    msg.command = command_from_string(cmd);
+    msg.command = std::move(msg.args[0]);
+    msg.args.erase(std::begin(msg.args));
 
     return msg;
 }

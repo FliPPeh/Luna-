@@ -39,9 +39,10 @@ namespace irc {
 
 //! Returns whether or not the command is a numeric one (i.e. server reply)
 extern DLL_PUBLIC
-inline bool is_numeric(enum command cmd)
+inline bool is_numeric(std::string const& cmd)
 {
-    return cmd <= ERR_LAST_ERR_MSG;
+    return (cmd.size() == 3)
+       and (cmd.find_first_not_of("0123456789") == std::string::npos);
 }
 
 //! Returns whether or not the prefix is a user prefix or single nickname.

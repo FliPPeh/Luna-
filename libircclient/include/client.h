@@ -23,6 +23,7 @@
 #include "macros.h"
 
 #include "irc_core.h"
+#include "irc_utils.h"
 
 #include <boost/asio.hpp>
 
@@ -138,7 +139,7 @@ private:
         bool,                                  // needs user prefix?
         std::function<void (message const&)>>; // callback
 
-    std::array<handler, COMMAND_MAX> _core_handlers;
+    unordered_rfc1459_map<std::string, handler> _core_handlers;
 
     void (client::*_current_handler)(message const& msg);
 };

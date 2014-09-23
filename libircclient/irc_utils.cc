@@ -68,8 +68,8 @@ std::string rfc1459_lower(std::string const& str)
     out.resize(str.size());
 
     std::transform(begin(str), end(str), begin(out), [](char c) {
-         return rfc1459_lower(c);
-     });
+        return rfc1459_lower(c);
+    });
 
     return out;
 }
@@ -82,7 +82,7 @@ std::string rfc1459_upper(std::string const& str)
 
     std::transform(begin(str), end(str), begin(out), [](char c) {
         return rfc1459_upper(c);
-     });
+    });
 
     return out;
 }

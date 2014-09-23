@@ -46,57 +46,42 @@ void client_base::send_message(const irc::message& msg)
 
 void client_base::on_message(irc::message const& msg)
 {
-    switch (msg.command) {
-    case irc::command::INVITE:
+    if (irc::rfc1459_equal(msg.command, irc::command::INVITE)) {
         if (msg.args.size() > 0) {
             on_invite(msg.prefix, msg.args[0]);
         }
 
-        break;
-
-    case irc::command::JOIN:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::JOIN)) {
         if (msg.args.size() > 0) {
             on_join(msg.prefix, msg.args[0]);
         }
 
-        break;
-
-    case irc::command::PART:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::PART)) {
         if (msg.args.size() > 1) {
             on_part(msg.prefix, msg.args[0], msg.args[1]);
         }
 
-        break;
-
-    case irc::command::QUIT:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::QUIT)) {
         if (msg.args.size() > 0) {
             on_quit(msg.prefix, msg.args[0]);
         }
 
-        break;
-
-    case irc::command::NICK:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::NICK)) {
         if (msg.args.size() > 0) {
             on_nick(msg.prefix, msg.args[0]);
         }
 
-        break;
-
-    case irc::command::KICK:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::KICK)) {
         if (msg.args.size() > 2) {
             on_kick(msg.prefix, msg.args[0], msg.args[1], msg.args[2]);
         }
 
-        break;
-
-    case irc::command::TOPIC:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::TOPIC)) {
         if (msg.args.size() > 1) {
             on_topic(msg.prefix, msg.args[0], msg.args[1]);
         }
 
-        break;
-
-    case irc::command::PRIVMSG:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::PRIVMSG)) {
         if (msg.args.size() > 1) {
             handle_direct_message(
                 msg.prefix,
@@ -106,9 +91,7 @@ void client_base::on_message(irc::message const& msg)
                 &client_base::on_ctcp_request);
         }
 
-        break;
-
-    case irc::command::NOTICE:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::NOTICE)) {
         if (msg.args.size() > 1) {
             handle_direct_message(
                 msg.prefix,
@@ -118,9 +101,7 @@ void client_base::on_message(irc::message const& msg)
                 &client_base::on_ctcp_response);
         }
 
-        break;
-
-    case irc::command::MODE:
+    } else if (irc::rfc1459_equal(msg.command, irc::command::MODE)) {
         if (msg.args.size() > 1 and environment().is_channel(msg.args[0])) {
             auto changes = environment().partition_mode_changes(
                 msg.args[0],
@@ -133,11 +114,6 @@ void client_base::on_message(irc::message const& msg)
                 on_mode(msg.prefix, msg.args[0], m.str(), std::get<2>(mc));
             }
         }
-
-        break;
-
-    default:
-        break;
     }
 
     on_raw(msg);

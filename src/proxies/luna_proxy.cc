@@ -80,7 +80,7 @@ int luna_proxy::send_message(lua_State* s)
     std::string cmd = luaL_checkstring(s, 2);
 
     try {
-        msg.command = irc::command_from_string(irc::rfc1459_upper(cmd));
+        msg.command = irc::rfc1459_upper(cmd);
     } catch (irc::protocol_error const& pe) {
         std::throw_with_nested(mond::runtime_error{"invalid command: " + cmd});
     }
