@@ -1,3 +1,10 @@
+---
+-- Luna core support library, bridges the interface between C++ and actual
+-- scripts.
+--
+-- Although it is located in scripts/lib/, it is not intended for require()ing
+-- by scripts.
+--
 local luna = {}
 --
 -- Merge __luna native library into corelib
@@ -5,70 +12,9 @@ for k, v in pairs(__luna) do
     luna[k] = v
 end
 
-
 luna.util = {}
 
 math.randomseed(os.time())
-
--- Dump a Lua value
-function luna.util.dump(t, max)
-    local ignore = {}
-
-    function wrapped(t, max)
-        max = max or 8
-
-        local res = '{'
-
-        if max == 0 then
-            return '...'
-        end
-
-        if not t then
-            return 'nil'
-        end
-
-        for key, val in pairs(t) do
-            local str = ''
-
-            if type(val) == 'string' then
-                str = string.format('%q', val)
-            elseif type(val) == 'number' then
-                str = tostring(val)
-            elseif type(val) == 'table' then
-                local found = false
-
-                for _, v in ipairs(ignore) do
-                    if v == val then
-                        str = '<recursion: ' .. tostring(val) .. '>'
-                        found = true
-                    end
-                end
-
-                if not found then
-                    table.insert(ignore, val)
-                    str = wrapped(val, max - 1)
-                end
-
-            elseif type(val) == 'function' then
-                str = '<' .. tostring(val) .. '>'
-            elseif type(val) == 'boolean' then
-                str = tostring(val)
-            else
-                str = '<unknown: ' .. type(val) .. '>'
-            end
-
-            if type(key) == 'number' then
-                res = res .. string.format('%s, ', str)
-            else
-                res = res .. string.format('%q = %s, ', key, str)
-            end
-        end
-
-        return res:sub(1, res:len() - 2) .. '}'
-    end
-
-    return wrapped(t, max)
-end
 
 
 local function splitmask(prefix)
@@ -214,6 +160,10 @@ end
 
 -- Entry function from C++
 function luna.deinit_script()
+    if not script.script_unload then
+        return true
+    end
+
     ok, res = xpcall(script.script_unload, function(err)
         log.warn('[CORE]',
             debug.traceback(
@@ -323,7 +273,7 @@ function string:split(sep)
 end
 
 
-function string:colour(f, b)
+function string:fcolour(f, b)
     if not b then
         return string.format('\x03%02d%s\x03', f, self)
     else
@@ -331,15 +281,15 @@ function string:colour(f, b)
     end
 end
 
-function string:bold()
+function string:fbold()
     return string.format('\x02%s\x02', self)
 end
 
-function string:underline()
+function string:funderline()
     return string.format('\x1f%s\x1f', self)
 end
 
-function string:reverse()
+function string:freverse()
     return string.format('\x16%s\x16', self)
 end
 

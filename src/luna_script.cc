@@ -50,6 +50,13 @@ luna_script::luna_script(luna& context, std::string file)
       _script_version{},
       _script_priority{0} // Arbitrarily define priority around zero
 {
+    constexpr char const* extra_paths =
+        "./scripts/?.lua;./scripts/?/init.lua;"
+        "./scripts/lib/?.lua;./scripts/lib/?.lua";
+
+    _lua["package"]["path"].set(
+        extra_paths + _lua["package"]["path"].get<std::string>());
+
     _lua.load_library(_file, "script");
 
     try {
