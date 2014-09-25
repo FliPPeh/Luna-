@@ -93,7 +93,13 @@ channel::mode_list const& channel::modes() const
 }
 
 
-channel_user& channel::find_user(std::string user) const
+bool channel::has_user(const std::string& user) const
+{
+    return _users.find(user) != std::end(_users);
+}
+
+
+channel_user& channel::find_user(std::string const& user) const
 {
     if (_users.find(user) == std::end(_users)) {
         throw protocol_error{protocol_error_type::no_such_user, user};

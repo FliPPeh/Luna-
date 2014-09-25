@@ -151,7 +151,7 @@ environment::channel_list const& environment::channels() const
 }
 
 
-channel& environment::find_channel(std::string channel) const
+channel& environment::find_channel(std::string const& channel) const
 {
     if (_channels.find(channel) == std::end(_channels)) {
         throw protocol_error{protocol_error_type::no_such_channel, channel};

@@ -79,7 +79,8 @@ public:
     mode_list const& modes()   const;
 
     // Operations
-    channel_user& find_user(std::string nick) const;
+    bool           has_user(std::string const& user) const;
+    channel_user& find_user(std::string const& user) const;
 
     std::vector<std::string> get_mode(       char modefl) const;
     std::string              get_mode_simple(char modefl) const;
