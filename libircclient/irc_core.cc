@@ -75,7 +75,9 @@ message message_from_string(std::string str)
     }
 
     // Push trailing arg back
-    msg.args.push_back(trail);
+    if (not trail.empty()) {
+        msg.args.push_back(trail);
+    }
 
     // Fetch prefix and remove it from args if it exists
     if (msg.args[0][0] == ':') {
