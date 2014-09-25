@@ -42,7 +42,7 @@ environment::environment()
 {
 }
 
-environment::environment(const environment& rhs)
+environment::environment(environment const& rhs)
     : _capabilities{rhs._capabilities},
       _channel_modes{rhs._channel_modes},
       _channel_prefixes{rhs._channel_prefixes},

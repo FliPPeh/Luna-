@@ -44,7 +44,7 @@ channel::channel(std::string name)
 {
 }
 
-channel::channel(const channel& c)
+channel::channel(channel const& c)
     : _modes{c._modes},
       _users{},
       _name{c._name},
@@ -58,7 +58,7 @@ channel::channel(const channel& c)
     }
 }
 
-channel& channel::operator=(const channel& c)
+channel& channel::operator=(channel const& c)
 {
     channel cpy{*this};
 
@@ -197,13 +197,13 @@ channel_user& channel::create_user(
 }
 
 
-void channel::rename_user(std::string old_nick, std::string new_nick)
+void channel::rename_user(std::string const& old_nick, std::string new_nick)
 {
     // Have it throw an exception if user not found
     find_user(old_nick);
 
     _users[new_nick] = std::move(_users[old_nick]);
-    _users[new_nick]->rename(new_nick);
+    _users[new_nick]->rename(std::move(new_nick));
 
     _users.erase(old_nick);
 }
@@ -271,7 +271,7 @@ void channel::unset_mode(
 }
 
 
-void channel::set_list_mode(char modefl, std::string argument)
+void channel::set_list_mode(char modefl, std::string const& argument)
 {
     // Try not to set "+<mode> <arg>" if arg is already set for that mode
     auto iters = _modes.equal_range(modefl);
@@ -283,16 +283,13 @@ void channel::set_list_mode(char modefl, std::string argument)
         }
     }
 
-    auto elem = mode_list::value_type{modefl, std::move(argument)};
-    _modes.insert(elem);
+    _modes.insert(mode_list::value_type{modefl, argument});
 }
 
-void channel::set_simple_mode(char modefl, std::string argument)
+void channel::set_simple_mode(char modefl, std::string const& argument)
 {
     _modes.erase(modefl);
-
-    auto elem = mode_list::value_type{modefl, std::move(argument)};
-    _modes.insert(elem);
+    _modes.insert(mode_list::value_type{modefl, argument});
 }
 
 

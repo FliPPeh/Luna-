@@ -51,9 +51,9 @@ channel_user::channel_user(
     std::string host)
         : _channel{&channel},
           _uid{uid},
-          _nick{nick},
-          _user{user},
-          _host{host},
+          _nick{std::move(nick)},
+          _user{std::move(user)},
+          _host{std::move(host)},
           _modes{""}
 {
 }

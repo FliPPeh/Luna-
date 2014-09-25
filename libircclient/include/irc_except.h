@@ -141,7 +141,7 @@ char const* typed_error_meaning(protocol_error_type t)
         return "no such mode";
 
     case protocol_error_type::not_enough_arguments:
-        return "not enough parameters";
+        return "not enough arguments";
     }
 
     return ""; // Not reached
@@ -158,16 +158,16 @@ char const* typed_error_meaning(connection_error_type t)
         return "hostname lookup error";
 
     case connection_error_type::stream_error:
-        return "Stream I/O error";
+        return "stream I/O error";
 
     case connection_error_type::io_error:
         return "I/O error";
 
     case connection_error_type::cannot_change_security:
-        return "Can not change security";
+        return "can not change security";
 
     case connection_error_type::not_connected:
-        return "Not connected";
+        return "not connected";
     }
 
     return ""; // Not reached

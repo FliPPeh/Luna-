@@ -110,7 +110,7 @@ private:
         std::string user,
         std::string host);
 
-    void rename_user(std::string old_nick, std::string new_nick);
+    void rename_user(std::string const& old_nick, std::string new_nick);
 
     void remove_user(channel_user& user);
 
@@ -125,8 +125,8 @@ private:
         std::string const& argument,
         environment const& env);
 
-    DLL_LOCAL void set_list_mode(char modefl, std::string argument);
-    DLL_LOCAL void set_simple_mode(char modefl, std::string argument);
+    DLL_LOCAL void set_list_mode(char modefl, std::string const& argument);
+    DLL_LOCAL void set_simple_mode(char modefl, std::string const& argument);
 
     DLL_LOCAL void unset_list_mode(char modefl, std::string const& argument);
     DLL_LOCAL void unset_simple_mode(char modefl);

@@ -321,7 +321,7 @@ void client::send_queue()
 }
 
 
-void client::handle_message(const message& msg)
+void client::handle_message(message const& msg)
 {
     try {
         (this->*_current_handler)(msg);
@@ -617,7 +617,8 @@ void client::init_core_handlers()
 
                 for (auto& i : channels) {
                     if (i.second->has_user(msg.prefix)) {
-                        i.second->remove_user(i.second->find_user(msg.prefix));
+                        i.second->remove_user(
+                            i.second->find_user(msg.prefix));
                     }
                 }
             } else {
@@ -663,7 +664,7 @@ void client::init_core_handlers()
             channel.set_topic(msg.args[1]);
             channel.set_topic_meta(
                 normalize_nick(msg.prefix),
-                time(nullptr));
+                std::time(nullptr));
         }
     };
 

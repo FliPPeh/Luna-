@@ -36,7 +36,7 @@ client_base::client_base(
 {
 }
 
-void client_base::send_message(const irc::message& msg)
+void client_base::send_message(irc::message const& msg)
 {
     _message_queue.push(msg);
 

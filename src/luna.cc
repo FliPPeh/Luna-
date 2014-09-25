@@ -96,7 +96,7 @@ luna::~luna()
 }
 
 
-void luna::send_message(const irc::message& msg)
+void luna::send_message(irc::message const& msg)
 {
     _logger.debug() << ">> " << msg;
 
@@ -150,7 +150,7 @@ void luna::read_config(std::string const& filename)
 }
 
 
-void luna::read_shared_vars(const std::string& filename)
+void luna::read_shared_vars(std::string const& filename)
 {
     _logger.info() << "Reading shared variables";
 
@@ -195,7 +195,7 @@ void luna::read_shared_vars(const std::string& filename)
     }
 }
 
-void luna::read_users(const std::string& filename)
+void luna::read_users(std::string const& filename)
 {
     _logger.info() << "Reading userlist `" << filename << "'";
 
@@ -238,7 +238,7 @@ void luna::read_users(const std::string& filename)
 }
 
 
-void luna::save_shared_vars(const std::string& filename)
+void luna::save_shared_vars(std::string const& filename)
 {
     std::ofstream shared{filename};
 
@@ -261,7 +261,7 @@ void luna::save_shared_vars(const std::string& filename)
     }
 }
 
-void luna::save_users(const std::string& filename)
+void luna::save_users(std::string const& filename)
 {
     std::ofstream userlist{filename};
 
@@ -297,7 +297,7 @@ void luna::run()
 }
 
 
-void luna::load_script(const std::string& script)
+void luna::load_script(std::string const& script)
 {
     try {
         std::unique_ptr<luna_script> s{new luna_script{*this, script}};
@@ -331,7 +331,7 @@ void luna::on_message(irc::message const& msg)
 
 
 
-void luna::on_raw(const irc::message& msg)
+void luna::on_raw(irc::message const& msg)
 {
     client_base::on_raw(msg);
 

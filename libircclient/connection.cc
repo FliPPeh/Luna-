@@ -56,7 +56,7 @@ async_connection::~async_connection()
 }
 
 void async_connection::connect(
-    const std::string& host,
+    std::string const& host,
     uint16_t port,
     connect_handler handler)
 {
@@ -114,7 +114,7 @@ void async_connection::read_message(message_handler handler)
 }
 
 void async_connection::send_message(
-    const message& msg,
+    message const& msg,
     write_confirmation_handler handler)
 {
     if (not connected()) {
