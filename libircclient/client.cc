@@ -572,16 +572,15 @@ void client::init_core_handlers()
 
                 send_message(message{"", command::WHO,  {msg.args[0]}});
                 send_message(message{"", command::MODE, {msg.args[0]}});
-                send_message(
-                    message{"", command::MODE, {msg.args[0], "+b"}});
+                send_message(message{"", command::MODE, {msg.args[0], "+b"}});
             } else {
                 _ircenv->find_channel(msg.args[0]).create_user(msg.prefix);
             }
         }
     };
 
-    _core_handlers[command::PART] = handler{ 2, true,
-        // channel, reason
+    _core_handlers[command::PART] = handler{ 1, true,
+        // channel, [reason]
         [this](message const& msg) {
             // me? drop channel. not me? remove user from channel.
             auto& channel = _ircenv->find_channel(msg.args[0]);
@@ -594,7 +593,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::KICK] = handler{ 3, false,
+    _core_handlers[command::KICK] = handler{ 2, false,
         // channel, kicked, reason
         [this](message const& msg) {
             // me? drop channel. not me? remove user from channel.
