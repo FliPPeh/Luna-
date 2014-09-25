@@ -104,7 +104,7 @@ void client_base::on_message(irc::message const& msg)
     } else if (irc::rfc1459_equal(msg.command, irc::command::MODE)) {
         if (msg.args.size() > 1 and environment().is_channel(msg.args[0])) {
             auto changes = environment().partition_mode_changes(
-                msg.args[0],
+                msg.args[1],
                 {std::begin(msg.args) + 1, std::end(msg.args)});
 
             for (auto& mc : changes) {
