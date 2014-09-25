@@ -472,8 +472,8 @@ void client::init_core_handlers()
     _core_handlers[command::RPL_ISUPPORT] = handler{ 1, false,
         // me, _core_handlers[args]
         [this](message const& msg) {
-            for (auto iter  = begin(msg.args) + 1;
-                      iter != end(msg.args)   - 1;
+            for (auto iter  = std::begin(msg.args) + 1;
+                      iter != std::end(msg.args)   - 1;
                     ++iter) {
                 if (iter->find('=') == std::string::npos) {
                     _ircenv->set_capability(*iter, "");
@@ -508,11 +508,11 @@ void client::init_core_handlers()
         // me, channel, mode, _core_handlers[mode_args]
         [this](message const& msg) {
             auto& channel = _ircenv->find_channel(msg.args[1]);
-            std::vector<std::string> mode_args{
-                begin(msg.args) + 3,
-                end(msg.args)};
 
-            channel.apply_modes(msg.args[2], mode_args, *_ircenv);
+            channel.apply_modes(
+                msg.args[2],
+                {std::begin(msg.args) + 3, std::end(msg.args)},
+                *_ircenv);
         }
     };
 
@@ -537,7 +537,7 @@ void client::init_core_handlers()
             auto prefixes = _ircenv->prefixes();
 
             for (char c : msg.args[6]) {
-                if (prefixes.find(c) != end(prefixes)) {
+                if (prefixes.find(c) != std::end(prefixes)) {
                     channel.apply_modes(
                         "+" + std::string{prefixes.at(c)},
                         {user.nick()}, *_ircenv);
@@ -685,11 +685,9 @@ void client::init_core_handlers()
             // msg.args is guaranteed to be at least of size 2, so
             // adding 2 to begin() would put us at end() if args were empty,
             // which is legal as long as we don't deref it.
-            std::vector<std::string> args{begin(msg.args) + 2, end(msg.args)};
-
             _ircenv->find_channel(msg.args[0]).apply_modes(
                 msg.args[1],
-                move(args),
+                {std::begin(msg.args) + 2, std::end(  msg.args)},
                 *_ircenv);
         }
     };

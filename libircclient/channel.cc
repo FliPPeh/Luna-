@@ -119,7 +119,7 @@ std::vector<std::string> channel::get_mode(char modefl) const
 
 std::string channel::get_mode_simple(char modefl) const
 {
-    if (_modes.find(modefl) == end(_modes)) {
+    if (_modes.find(modefl) == std::end(_modes)) {
         throw protocol_error{
             protocol_error_type::no_such_mode, std::string{modefl}};
     }
@@ -205,7 +205,7 @@ void channel::rename_user(std::string old_nick, std::string new_nick)
 
 void channel::remove_user(channel_user& user)
 {
-    if (_users.find(user.nick()) == end(_users))  {
+    if (_users.find(user.nick()) == std::end(_users))  {
         throw protocol_error{protocol_error_type::no_such_user, user.nick()};
     }
 

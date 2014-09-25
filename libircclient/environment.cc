@@ -104,7 +104,7 @@ environment::channel_mode_changes environment::partition_mode_changes(
     std::string const& modes,
     std::vector<std::string> const& args) const
 {
-    auto args_iter = begin(args);
+    auto args_iter = std::begin(args);
     bool setting = true;
 
     channel_mode_changes res;
@@ -125,7 +125,7 @@ environment::channel_mode_changes environment::partition_mode_changes(
              or (type == channel_mode_argument_type::required_user_list)
              or (type == channel_mode_argument_type::required_user)) {
 
-            if (args_iter == end(args)) {
+            if (args_iter == std::end(args)) {
                 std::ostringstream err;
 
                 err << "not enough arguments for mode `" << c << "' in "
@@ -153,7 +153,7 @@ environment::channel_list const& environment::channels() const
 
 channel& environment::find_channel(std::string channel) const
 {
-    if (_channels.find(channel) == end(_channels)) {
+    if (_channels.find(channel) == std::end(_channels)) {
         throw protocol_error{protocol_error_type::no_such_channel, channel};
     }
 
@@ -192,7 +192,7 @@ void environment::remove_channel(channel& channel)
 
 void environment::init_channel_modes(std::string const& chanmodes)
 {
-    if (std::count(begin(chanmodes), end(chanmodes), ',') != 3) {
+    if (std::count(std::begin(chanmodes), end(chanmodes), ',') != 3) {
         return;
     }
 
@@ -210,10 +210,10 @@ void environment::init_channel_prefixes(std::string const& prefix)
     _channel_prefixes.clear();
     _prefix_modes.clear();
 
-    auto flag_pos = begin(prefix) + 1;
-    auto pref_pos = begin(prefix) + ((prefix.size() / 2) + 1);
+    auto flag_pos = std::begin(prefix) + 1;
+    auto pref_pos = std::begin(prefix) + ((prefix.size() / 2) + 1);
 
-    while ((*flag_pos != ')') and (pref_pos != end(prefix))) {
+    while ((*flag_pos != ')') and (pref_pos != std::end(prefix))) {
         _channel_prefixes[*pref_pos] = *flag_pos;
         _prefix_modes += *flag_pos;
 
