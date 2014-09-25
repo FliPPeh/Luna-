@@ -109,6 +109,7 @@ function log.wtf(...)
     log.log('wtf', table.concat({...}, '\t'))
 end
 
+---
 -- Signal handling
 local __callbacks = {}
 local __nextid = 0
@@ -127,7 +128,100 @@ function luna.add_signal_handler(signal, id, fn)
             signal = signal,
             callback = fn
         }
+
+    return id
 end
+
+function luna.remove_signal_handler(tid)
+    for id, _ in pairs(__callbacks) do
+        if id == tid then
+            __callbacks[id] = nil
+            return
+        end
+    end
+
+    error(string.format('no signal handler with id %q found', tid), 2)
+end
+
+---
+-- Higher level signal handling
+local function splitcmdline(line, splittype)
+    if splittype == '*w' then
+        local parts = line:split(' ')
+
+        local cmd = table.remove(parts, 1)
+        local args = parts
+
+        return cmd, args
+    else
+        local _, _, cmd, args = line:find('(%w+)(%s*(.*))')
+
+        return cmd, args
+    end
+end
+
+-- TODO: private command?
+
+function luna.add_command(command, argtype, fn)
+    if type(argtype) == 'function' then
+        -- only 2 args, use default
+        fn = argtype
+        argtype = '*w'
+    end
+
+    return luna.add_signal_handler('channel_command', function(who, where, what)
+        if what and what == '' then
+            return
+        end
+
+        local cmd, args = splitcmdline(what, argtype)
+
+        if cmd:lower() == command:lower() then
+            fn(who, where, cmd, args)
+        end
+    end)
+end
+
+function luna.add_trigger_command(command, argtype, fn)
+    if type(argtype) == 'function' then
+        -- only 2 args, use default
+        fn = argtype
+        argtype = '*w'
+    end
+
+    return luna.add_signal_handler('channel_message', function(who, where, what)
+        if what and what == '' then
+            return
+        end
+
+        local cmd, args = splitcmdline(what, argtype)
+        local trigger = luna.shared['luna.trigger'] or '!'
+
+        if      cmd:sub(1, 1) == trigger
+            and cmd:sub(1):lower() == command:lower() then
+                fn(who, where, cmd, args)
+        end
+    end)
+end
+
+function luna.add_message_watcher(pattern, fn)
+    return luna.add_signal_handler('channel_message', function(who, where, what)
+        local matches = {what:find(pattern)}
+
+        if matches[1] and matches[2] then
+            fn(who, where, what, unpack(matches))
+        end
+    end)
+end
+
+function luna.add_command_watcher(cmd, fn)
+    return luna.add_signal_watcher('raw', function(prefix, command, args)
+        if command:lower() == cmd:lower() then
+            fn(prefix, command, args)
+        end
+    end)
+end
+
 
 -- Entry function from C++
 function luna.handle_signal(signal, ...)
