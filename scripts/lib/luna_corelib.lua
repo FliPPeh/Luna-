@@ -291,15 +291,15 @@ luna.shared = setmetatable({}, {
 })
 
 
-function privmsg(target, msg)
+function luna.privmsg(target, msg)
     luna.self:send_message('PRIVMSG', target, msg)
 end
 
-function notice(target, msg)
+function luna.notice(target, msg)
     luna.self:send_message('NOTICE', target, msg)
 end
 
-function join(channel, key)
+function luna.join(channel, key)
     if key then
         luna.self:send_message('JOIN', channel, key)
     else
@@ -307,7 +307,7 @@ function join(channel, key)
     end
 end
 
-function part(channel, reason)
+function luna.part(channel, reason)
     luna.self:send_message('PART', channel, reason or '')
 end
 
@@ -316,8 +316,8 @@ end
 channelX = {}
 setmetatable(luna.channel_meta.__index, { __index = channelX })
 
-function channelX:privmsg(msg) privmsg(self:name(), msg) end
-function channelX:notice(msg)  notice(self:name(),  msg) end
+function channelX:privmsg(msg) luna.privmsg(self:name(), msg) end
+function channelX:notice(msg)  luna.notice(self:name(),  msg) end
 
 channel_userX = {}
 setmetatable(luna.channel_user_meta.__index, { __index = channel_userX })
@@ -326,8 +326,8 @@ function channel_userX:nick() return ({self:user_info()})[1] end
 function channel_userX:user() return ({self:user_info()})[2] end
 function channel_userX:host() return ({self:user_info()})[3] end
 
-function channel_userX:privmsg(msg) privmsg(self:nick(), msg) end
-function channel_userX:notice(msg)  notice(self:nick(),  msg) end
+function channel_userX:privmsg(msg) luna.privmsg(self:nick(), msg) end
+function channel_userX:notice(msg)  luna.notice(self:nick(),  msg) end
 
 function channel_userX:mask(style, mtype)
     return luna.util.mask(string.format('%s!%s@%s',
