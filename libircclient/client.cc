@@ -616,7 +616,9 @@ void client::init_core_handlers()
                 auto& channels = _ircenv->channels();
 
                 for (auto& i : channels) {
-                    i.second->remove_user(i.second->find_user(msg.prefix));
+                    if (i.second->has_user(msg.prefix)) {
+                        i.second->remove_user(i.second->find_user(msg.prefix));
+                    }
                 }
             } else {
                 on_disconnect();
@@ -644,17 +646,8 @@ void client::init_core_handlers()
             auto& channels = _ircenv->channels();
 
             for (auto& i : channels) {
-                try {
+                if (i.second->has_user(msg.prefix)) {
                     i.second->rename_user(msg.prefix, msg.args[0]);
-
-                } catch (protocol_error& ce) {
-                    // For the sake of code simplicity, just attempt to
-                    // rename in all channels and ignore this particular
-                    // error.
-                    if (ce.code() != protocol_error_type::no_such_user) {
-                        std::throw_with_nested(protocol_error{ce.code(),
-                            "error renaming user"});
-                    }
                 }
             }
         }
