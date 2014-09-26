@@ -154,7 +154,7 @@ local function splitcmdline(line, splittype)
 
         return cmd, args
     else
-        local _, _, cmd, args = line:find('(%w+)(%s*(.*))')
+        local _, _, cmd, _, args = line:find('(%w+)(%s*(.*))')
 
         return cmd, args
     end
