@@ -57,7 +57,7 @@ inline bool is_user_prefix(std::string const& pref)
         return true;
     }
 
-    return not std::any_of(begin(req), end(req), [&pref](char c) {
+    return not std::any_of(std::begin(req), std::end(req), [&pref](char c) {
         return pref.find(c) == std::string::npos;
     });
 }
@@ -128,10 +128,16 @@ std::string rfc1459_upper(std::string const& src);
  */
 template <typename T>
 struct rfc1459_key_hash {
+    rfc1459_key_hash() : hasher{std::hash<T>{}}
+    {
+    }
+
     std::size_t operator()(T const& key) const
     {
-        return std::hash<T>{}(rfc1459_lower(key));
+        return hasher(rfc1459_lower(key));
     }
+
+    std::hash<T> hasher;
 };
 
 /*! \brief Comparator object using ASCII case mapping.
@@ -154,12 +160,16 @@ struct rfc1459_key_equal {
  * prefixes before comparison.
  */
 struct DLL_PUBLIC nick_hash {
-    std::size_t operator()(std::string const& key) const
+    nick_hash() : hasher{rfc1459_key_hash<std::string>{}}
     {
-        return hsh(normalize_nick(key));
     }
 
-    rfc1459_key_hash<std::string> hsh;
+    std::size_t operator()(std::string const& key) const
+    {
+        return hasher(normalize_nick(key));
+    }
+
+    rfc1459_key_hash<std::string> hasher;
 };
 
 /*! \brief Comparator object using nickname normalization.
