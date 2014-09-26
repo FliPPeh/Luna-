@@ -95,6 +95,7 @@ public:
 
     channel_list const& channels() const;
 
+    bool has_channel(std::string const& channel) const;
     channel& find_channel(std::string const& channel) const;
 
     channel_mode_argument_type get_mode_argument_type(char mode) const;

@@ -151,6 +151,11 @@ environment::channel_list const& environment::channels() const
 }
 
 
+bool environment::has_channel(std::string const& channel) const
+{
+    return _channels.find(channel) != std::end(_channels);
+}
+
 channel& environment::find_channel(std::string const& channel) const
 {
     if (_channels.find(channel) == std::end(_channels)) {
