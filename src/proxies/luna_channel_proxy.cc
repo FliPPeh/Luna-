@@ -37,6 +37,39 @@
 #include <sstream>
 
 
+///
+// Unknown users
+luna_unknown_user_proxy::luna_unknown_user_proxy(luna& ref, std::string prefix)
+    : _ref{&ref},
+      _prefix{std::move(prefix)}
+{
+}
+
+
+std::tuple<std::string,
+           std::string,
+           std::string > luna_unknown_user_proxy::user_info() const
+{
+    return irc::split_prefix(_prefix);
+}
+
+int luna_unknown_user_proxy::match(lua_State* s) const
+{
+    auto i = std::find_if(std::begin(_ref->users()), std::end(_ref->users()),
+        [this] (luna_user& u) {
+            return u.matches(_prefix);
+        });
+
+    if (i != std::end(_ref->users())) {
+        return mond::write(s, mond::object<luna_user_proxy>(*_ref, i->id()));
+    }
+
+    return mond::write(s, mond::nil{});
+}
+
+
+///
+// Channels
 luna_channel_proxy::luna_channel_proxy(luna& ref, std::string name)
     : _ref{&ref},
       _name{std::move(name)}
@@ -153,8 +186,6 @@ int luna_channel_proxy::modes(lua_State* s) const
 }
 
 
-
-
 irc::channel& luna_channel_proxy::lookup() const
 {
     auto& channels = _ref->environment().channels();
@@ -167,7 +198,8 @@ irc::channel& luna_channel_proxy::lookup() const
 }
 
 
-
+///
+// Known channel users
 luna_channel_user_proxy::luna_channel_user_proxy(
     luna& ref,
     std::string channel,

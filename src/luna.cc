@@ -340,9 +340,7 @@ void luna::on_raw(irc::message const& msg)
     _bytes_recvd_sess += n;
 
     if (msg.command == irc::command::RPL_ENDOFWHO) {
-        dispatch_signal("self_join",
-            get_channel_user_proxy(msg.args[0], msg.args[1]),
-            get_channel_proxy(msg.args[1]));
+        dispatch_signal_helper("user_join", msg.args[0], msg.args[1]);
     }
 
     dispatch_signal("raw", msg.prefix, msg.command, msg.args);
@@ -358,15 +356,15 @@ void luna::on_idle()
 
 void luna::on_invite(std::string const& source, std::string const& channel)
 {
-    dispatch_signal("invite", source, channel);
+    dispatch_signal("invite", get_unknown_user_proxy(source), channel);
 }
 
 void luna::on_join(std::string const& source, std::string const& channel)
 {
     if (not is_me(source)) {
-        dispatch_signal("user_join",
-            get_channel_user_proxy(source, channel),
-            get_channel_proxy(channel));
+        irc::channel const& chan = environment().find_channel(channel);
+
+        dispatch_signal_helper("user_join", source, channel);
     }
 }
 
@@ -375,27 +373,17 @@ void luna::on_part(
     std::string const& channel,
     std::string const& reason)
 {
-    if (not is_me(source)) {
-        dispatch_signal("user_part",
-            source,
-            get_channel_proxy(channel),
-            reason);
-    } else {
-        dispatch_signal("self_part",
-            source,
-            channel,
-            reason);
-    }
+    dispatch_signal_helper("user_part", source, channel, reason);
 }
 
 void luna::on_quit(std::string const& source, std::string const& reason)
 {
-    dispatch_signal("user_quit", source, reason);
+    dispatch_signal("user_quit", get_unknown_user_proxy(source), reason);
 }
 
 void luna::on_nick(std::string const& source, std::string const& new_nick)
 {
-    dispatch_signal("nick_change", source, new_nick);
+    dispatch_signal("nick_change", get_unknown_user_proxy(source), new_nick);
 }
 
 void luna::on_kick(
@@ -404,11 +392,22 @@ void luna::on_kick(
     std::string const& kicked,
     std::string const& reason)
 {
-    dispatch_signal("user_kick",
-        get_channel_user_proxy(source, channel),
-        get_channel_proxy(channel),
-        kicked,
-        reason);
+    irc::channel const& chan = environment().find_channel(channel);
+
+    // Could be chanserv kicking
+    if (chan.has_user(source)) {
+        dispatch_signal("channel_user_kick",
+            get_channel_user_proxy(chan.find_user(source), chan),
+            get_channel_proxy(chan),
+            get_channel_user_proxy(chan.find_user(kicked), chan),
+            reason);
+    } else {
+        dispatch_signal("channel_user_kick",
+            get_unknown_user_proxy(source),
+            get_channel_proxy(chan),
+            get_channel_user_proxy(chan.find_user(kicked), chan),
+            reason);
+    }
 }
 
 void luna::on_topic(
@@ -416,10 +415,7 @@ void luna::on_topic(
     std::string const& channel,
     std::string const& new_topic)
 {
-    dispatch_signal("topic_change",
-        get_channel_user_proxy(source, channel),
-        get_channel_proxy(channel),
-        new_topic);
+    dispatch_signal_helper("topic_change", source, channel, new_topic);
 }
 
 void luna::on_privmsg(
@@ -433,18 +429,13 @@ void luna::on_privmsg(
         if (irc::rfc1459_equal(msg.substr(0, trigger.size()), trigger)) {
             handle_core_commands(source, target, msg.substr(trigger.size()));
 
-            dispatch_signal("channel_command",
-                get_channel_user_proxy(source, target),
-                get_channel_proxy(target),
-                msg.substr(trigger.size()));
+            dispatch_signal_helper("command",
+                source, target, msg.substr(trigger.size()));
         } else {
-            dispatch_signal("channel_message",
-                get_channel_user_proxy(source, target),
-                get_channel_proxy(target),
-                msg);
+            dispatch_signal_helper("message", source, target, msg);
        }
     } else {
-        dispatch_signal("message", source, msg);
+        dispatch_signal_helper("message", source, target, msg);
     }
 }
 
@@ -453,14 +444,7 @@ void luna::on_notice(
     std::string const& target,
     std::string const& msg)
 {
-    if (environment().is_channel(target)) {
-        dispatch_signal("channel_notice",
-            get_channel_user_proxy(source, target),
-            get_channel_proxy(target),
-            msg);
-    } else {
-        dispatch_signal("notice", source, msg);
-    }
+    dispatch_signal_helper("notice", source, target, msg);
 }
 
 void luna::on_ctcp_request(
@@ -471,15 +455,7 @@ void luna::on_ctcp_request(
 {
     handle_core_ctcp(source, target, ctcp, args);
 
-    if (environment().is_channel(target)) {
-        dispatch_signal("channel_ctcp_request",
-            get_channel_user_proxy(source, target),
-            get_channel_proxy(target),
-            ctcp,
-            args);
-    } else {
-        dispatch_signal("ctcp_request", source, ctcp, args);
-    }
+    dispatch_signal_helper("ctcp_request", source, target, ctcp, args);
 }
 
 void luna::on_ctcp_response(
@@ -488,15 +464,7 @@ void luna::on_ctcp_response(
     std::string const& ctcp,
     std::string const& args)
 {
-    if (environment().is_channel(target)) {
-        dispatch_signal("channel_ctcp_response",
-            get_channel_user_proxy(source, target),
-            get_channel_proxy(target),
-            ctcp,
-            args);
-    } else {
-       dispatch_signal("ctcp_response", source, ctcp, args);
-    }
+    dispatch_signal_helper("ctcp_response", source, target, ctcp, args);
 }
 
 void luna::on_mode(
@@ -505,13 +473,7 @@ void luna::on_mode(
     std::string const& mode,
     std::string const& arg)
 {
-    if (environment().is_channel(target)) {
-        dispatch_signal("channel_mode",
-            get_channel_user_proxy(source, target),
-            get_channel_proxy(target),
-            mode,
-            arg);
-    }
+    dispatch_signal_helper("mode", source, target, mode, arg);
 }
 
 void luna::on_connect()

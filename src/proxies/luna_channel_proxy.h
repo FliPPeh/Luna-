@@ -35,6 +35,23 @@ namespace irc {
     class channel_user;
 }
 
+
+class luna_unknown_user_proxy {
+public:
+    static constexpr char const* metatable = "luna.unknown_user";
+
+    luna_unknown_user_proxy(luna& ref, std::string prefix);
+
+    std::tuple<std::string, std::string, std::string> user_info() const;
+    int match(lua_State* s) const;
+
+private:
+    luna* _ref;
+
+    std::string _prefix;
+};
+
+
 class luna_channel_proxy {
 public:
     static constexpr char const* metatable = "luna.channel";
@@ -61,6 +78,7 @@ private:
     std::string _name;
 };
 
+
 class luna_channel_user_proxy {
 public:
     static constexpr char const* metatable = "luna.channel.user";
@@ -68,11 +86,11 @@ public:
     luna_channel_user_proxy(luna& ref, std::string channel, uint64_t uid);
 
     std::tuple<std::string, std::string, std::string> user_info() const;
-    std::string modes() const;
+    int match(lua_State* s) const;
 
+    std::string modes() const;
     int channel(lua_State* s) const;
 
-    int match(lua_State* s) const;
 
 private:
     irc::channel_user& lookup() const;

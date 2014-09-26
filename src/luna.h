@@ -161,32 +161,48 @@ private:
     }
 
     template <typename... Args>
-    void broadcast_signal(
-        luna_script const& source,
+    auto dispatch_signal_helper(
         std::string const& signal,
-        Args const&... args)
+        std::string const& user,
+        std::string const& target,
+        Args&&... args)
     {
-        for (auto& script : _scripts) {
-            if (*script != source) {
-                script->emit_signal(signal, args...);
+        if (environment().is_channel(target)) {
+            irc::channel const& chan = environment().find_channel(target);
+
+            if (chan.has_user(user)) {
+                dispatch_signal("channel_" + signal,
+                    get_channel_user_proxy(chan.find_user(user), chan),
+                    get_channel_proxy(chan),
+                    std::forward<Args>(args)...);
+            } else {
+                dispatch_signal("channel_" + signal,
+                    get_unknown_user_proxy(user),
+                    get_channel_proxy(chan),
+                    std::forward<Args>(args)...);
             }
+        } else {
+            dispatch_signal(signal,
+                get_unknown_user_proxy(user), std::forward<Args>(args)...);
         }
     }
 
-    auto get_channel_proxy(std::string const& channel)
+    auto get_channel_proxy(irc::channel const& channel)
     {
-        (void)environment().find_channel(channel);
-        return mond::object<luna_channel_proxy>(*this, channel);
+        return mond::object<luna_channel_proxy>(*this, channel.name());
+    }
+
+    auto get_unknown_user_proxy(std::string prefix)
+    {
+        return mond::object<luna_unknown_user_proxy>(*this, std::move(prefix));
     }
 
     auto get_channel_user_proxy(
-        std::string const& user,
-        std::string const& channel)
+        irc::channel_user const& user,
+        irc::channel const& channel)
     {
-        irc::channel& c = environment().find_channel(channel);
-        irc::channel_user& u = c.find_user(user);
-
-        return mond::object<luna_channel_user_proxy>(*this, channel, u.uid());
+        return mond::object<luna_channel_user_proxy>(
+            *this, channel.name(), user.uid());
     }
 
 private:

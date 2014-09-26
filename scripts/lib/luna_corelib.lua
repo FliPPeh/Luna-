@@ -328,30 +328,60 @@ function luna.bytes_received()       return ({luna.traffic_info()})[4] end
 
 
 -- Augment basic types
-channelX = {}
-setmetatable(luna.channel_meta.__index, { __index = channelX })
+--
+-- Augmented channel class
+local channel_meta_aux = {}
 
-function channelX:privmsg(msg) luna.privmsg(self:name(), msg) end
-function channelX:notice(msg)  luna.notice(self:name(),  msg) end
+setmetatable(luna.channel_meta.__index, {
+        __index = channel_meta_aux
+    })
 
-channel_userX = {}
-setmetatable(luna.channel_user_meta.__index, { __index = channel_userX })
 
-function channel_userX:nick() return ({self:user_info()})[1] end
-function channel_userX:user() return ({self:user_info()})[2] end
-function channel_userX:host() return ({self:user_info()})[3] end
+function channel_meta_aux:privmsg(msg) luna.privmsg(self:name(), msg) end
+function channel_meta_aux:notice(msg)  luna.notice(self:name(),  msg) end
 
-function channel_userX:privmsg(msg) luna.privmsg(self:nick(), msg) end
-function channel_userX:notice(msg)  luna.notice(self:nick(),  msg) end
 
-function channel_userX:mask(style, mtype)
+-- Augmented unknown user class
+local unknown_user_meta_aux = {}
+
+setmetatable(luna.unknown_user_meta.__index, {
+        __index = unknown_user_meta_aux
+    })
+
+
+function unknown_user_meta_aux:is_me()
+    return self:nick():rfc1459lower() == luna.own_nick():rfc1459lower()
+end
+
+function unknown_user_meta_aux:nick() return ({self:user_info()})[1] end
+function unknown_user_meta_aux:user() return ({self:user_info()})[2] end
+function unknown_user_meta_aux:host() return ({self:user_info()})[3] end
+
+function unknown_user_meta_aux:mask(style, mtype)
     return luna.util.mask(string.format('%s!%s@%s',
         self:nick(), self:user(), self:host()), style, mtype)
 end
 
-function channel_userX:respond(msg)
+
+-- Augmented channel user class
+--    (lookup order: luna.channel_user_meta
+--                -> channel_user_meta_aux
+--                -> unknown_user_meta_aux)
+--
+local channel_user_meta_aux = setmetatable({}, {
+        __index = unknown_user_meta_aux
+    })
+
+setmetatable(luna.channel_user_meta.__index, {
+        __index = channel_user_meta_aux
+    })
+
+
+function channel_user_meta_aux:respond(msg)
     return self:channel():privmsg(self:nick() .. ': ' .. msg)
 end
+
+
 
 -- Also augment core types for fun and profit
 function string:split(sep)
