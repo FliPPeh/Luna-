@@ -568,7 +568,9 @@ void client::init_core_handlers()
         [this](message const& msg) {
             // me? add channel. not me? add user to channel.
             if (is_me(msg.prefix)) {
-                _ircenv->create_channel(msg.args[0]);
+                auto& channel = _ircenv->create_channel(msg.args[0]);
+
+                channel.create_user(msg.prefix);
 
                 send_message(message{"", command::WHO,  {msg.args[0]}});
                 send_message(message{"", command::MODE, {msg.args[0]}});
@@ -639,8 +641,7 @@ void client::init_core_handlers()
         [this](message const& msg) {
             // me? rename. not me or me? rename user in all channels.
             if (is_me(msg.prefix)) {
-                // Never trust a stupidly programmed server
-                _nick = normalize_nick(msg.prefix);
+                _nick = msg.args[0];
             }
 
             auto& channels = _ircenv->channels();
