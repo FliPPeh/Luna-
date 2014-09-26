@@ -101,6 +101,13 @@ protected:
     std::string _real;
 
 private:
+    using handler = std::tuple<
+        std::size_t,                           // minimum number of arguments
+        bool,                                  // needs user prefix?
+        bool,                                  // run *after* user handler?
+        std::function<void (message const&)>>; // callback
+
+
     DLL_LOCAL void send_queue();
 
     DLL_LOCAL void handle_message(message const& msg);
@@ -110,6 +117,8 @@ private:
 
     DLL_LOCAL void login_handler(message const& msg);
     DLL_LOCAL void main_handler(message const& msg);
+
+    DLL_LOCAL void run_core_handler(handler const& handler, message const& msg);
 
     DLL_LOCAL void init_core_handlers();
 
@@ -133,11 +142,6 @@ private:
     bool _use_ssl;
 
     session_state _session_state;
-
-    using handler = std::tuple<
-        std::size_t,                           // minimum number of arguments
-        bool,                                  // needs user prefix?
-        std::function<void (message const&)>>; // callback
 
     unordered_rfc1459_map<std::string, handler> _core_handlers;
 

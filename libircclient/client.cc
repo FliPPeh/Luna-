@@ -397,53 +397,10 @@ void client::login_handler(message const& msg)
 void client::main_handler(message const& msg)
 {
     auto const& res = _core_handlers.find(msg.command);
-
-    if (res != std::end(_core_handlers)) {
-        auto const& handler = res->second;
-
-        if (auto& fun = std::get<2>(handler)) {
-            bool requires_user = std::get<1>(handler);
-
-            if (not (requires_user and not is_user_prefix(msg.prefix))) {
-                std::string err =
-                    "error in core handler for `" + res->first + "'";
-
-                try {
-                    auto args_req = std::get<0>(handler);
-
-                    if (msg.args.size() < args_req) {
-                        std::ostringstream errs;
-
-                        errs << "expected " << args_req << "arguments "
-                             << "for `" << res->first << "' handler, "
-                             << "got " << msg.args.size();
-
-                        // Just throw it here so we can print a pretty message
-                        // down there.
-                        throw protocol_error{
-                            protocol_error_type::not_enough_arguments,
-                            errs.str()};
-                    }
-
-                    fun(msg);
-                } catch (protocol_error& p) {
-                    // protocol errors are not fatal, report and move on
-                    report_error(std::current_exception());
-
-                } catch (connection_error& c) {
-                    // but connection errors and unknown errors are fatal!
-                    std::throw_with_nested(connection_error{c.code(), err});
-
-                } catch (...) {
-                    std::throw_with_nested(std::runtime_error{err});
-
-                }
-            }
-        }
+    if (res != std::end(_core_handlers) and not std::get<2>(res->second)) {
+        run_core_handler(res->second, msg);
     }
 
-    // Same rules for user handlers, but a bit more tolerant towards unknown
-    // errors. Connection errors still bad.
     try {
         on_message(msg);
     } catch (protocol_error& pe) {
@@ -452,10 +409,61 @@ void client::main_handler(message const& msg)
     } catch (connection_error& ce) {
         std::throw_with_nested(
             connection_error{ce.code(),
-                "error in user handler `" + res->first + "'"});
+                "error in user handler `" + msg.command + "'"});
 
     } catch (...) {
         report_error(std::current_exception());
+    }
+
+
+    if (res != std::end(_core_handlers) and std::get<2>(res->second)) {
+        run_core_handler(res->second, msg);
+    }
+}
+
+
+void client::run_core_handler(
+    client::handler const& handler,
+    message const& msg)
+{
+    if (auto& fun = std::get<3>(handler)) {
+        bool requires_user = std::get<1>(handler);
+
+        if (not (requires_user and not is_user_prefix(msg.prefix))) {
+            std::string err =
+                "error in core handler for `" + msg.command + "'";
+
+            try {
+                auto args_req = std::get<0>(handler);
+
+                if (msg.args.size() < args_req) {
+                    std::ostringstream errs;
+
+                    errs << "expected " << args_req << "arguments "
+                            << "for `" << msg.command << "' handler, "
+                            << "got " << msg.args.size();
+
+                    // Just throw it here so we can print a pretty message
+                    // down there.
+                    throw protocol_error{
+                        protocol_error_type::not_enough_arguments,
+                        errs.str()};
+                }
+
+                fun(msg);
+            } catch (protocol_error& p) {
+                // protocol errors are not fatal, report and move on
+                report_error(std::current_exception());
+
+            } catch (connection_error& c) {
+                // but connection errors and unknown errors are fatal!
+                std::throw_with_nested(connection_error{c.code(), err});
+
+            } catch (...) {
+                std::throw_with_nested(std::runtime_error{err});
+
+            }
+        }
     }
 }
 
@@ -463,13 +471,13 @@ void client::main_handler(message const& msg)
 void client::init_core_handlers()
 {
     // Core event handlers responsible for state and housekeeping
-    _core_handlers[command::RPL_WELCOME] = handler{ 0, false,
+    _core_handlers[command::RPL_WELCOME] = handler{ 0, false, false,
         [this](message const& msg) {
             on_connect();
         }
     };
 
-    _core_handlers[command::RPL_ISUPPORT] = handler{ 1, false,
+    _core_handlers[command::RPL_ISUPPORT] = handler{ 1, false, false,
         // me, _core_handlers[args]
         [this](message const& msg) {
             for (auto iter  = std::begin(msg.args) + 1;
@@ -486,7 +494,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::RPL_TOPIC] = handler{ 3, false,
+    _core_handlers[command::RPL_TOPIC] = handler{ 3, false, false,
         // me, channel, topic
         [this](message const& msg) {
             auto& channel = _ircenv->find_channel(msg.args[1]);
@@ -494,7 +502,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::RPL_TOPICWHOTIME] = handler{ 4, false,
+    _core_handlers[command::RPL_TOPICWHOTIME] = handler{ 4, false, false,
         // me, channel, creator, time
         [this](message const& msg) {
             auto& channel = _ircenv->find_channel(msg.args[1]);
@@ -504,7 +512,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::RPL_CHANNELMODEIS] = handler{ 3, false,
+    _core_handlers[command::RPL_CHANNELMODEIS] = handler{ 3, false, false,
         // me, channel, mode, _core_handlers[mode_args]
         [this](message const& msg) {
             auto& channel = _ircenv->find_channel(msg.args[1]);
@@ -516,7 +524,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::RPL_CREATIONTIME] = handler{ 3, false,
+    _core_handlers[command::RPL_CREATIONTIME] = handler{ 3, false, false,
         // me, channel, ctime
         [this](message const& msg) {
             auto& channel = _ircenv->find_channel(msg.args[1]);
@@ -524,7 +532,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::RPL_WHOREPLY] = handler{ 7, false,
+    _core_handlers[command::RPL_WHOREPLY] = handler{ 7, false, false,
         // me, channel, user, host, server, nick, mode, <...>
         [this](message const& msg) {
             auto& channel = _ircenv->find_channel(msg.args[1]);
@@ -546,7 +554,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::RPL_BANLIST] = handler{ 3, false,
+    _core_handlers[command::RPL_BANLIST] = handler{ 3, false, false,
         // me, channel, entry
         [this](message const& msg) {
             auto& channel = _ircenv->find_channel(msg.args[1]);
@@ -555,7 +563,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::PING] = handler{ 1, false,
+    _core_handlers[command::PING] = handler{ 1, false, false,
         // server
         [this](message const& msg) {
             send_message(message{"", command::PONG, {msg.args[0]}});
@@ -563,7 +571,7 @@ void client::init_core_handlers()
     };
 
     // Channel user events
-    _core_handlers[command::JOIN] = handler{ 1, true,
+    _core_handlers[command::JOIN] = handler{ 1, true, false,
         // channel
         [this](message const& msg) {
             // me? add channel. not me? add user to channel.
@@ -581,7 +589,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::PART] = handler{ 1, true,
+    _core_handlers[command::PART] = handler{ 1, true, true,
         // channel, [reason]
         [this](message const& msg) {
             // me? drop channel. not me? remove user from channel.
@@ -595,7 +603,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::KICK] = handler{ 2, false,
+    _core_handlers[command::KICK] = handler{ 2, false, true,
         // channel, kicked, reason
         [this](message const& msg) {
             // me? drop channel. not me? remove user from channel.
@@ -609,7 +617,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::QUIT] = handler{ 1, true,
+    _core_handlers[command::QUIT] = handler{ 1, true, true,
         // reason
         [this](message const& msg) {
             // me? unlikely. not me? remove user from all channels.
@@ -629,14 +637,14 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::ERROR] = handler{ 1, false,
+    _core_handlers[command::ERROR] = handler{ 1, false, false,
         [this](message const& msg) {
             on_disconnect();
             do_disconnect();
         }
     };
 
-    _core_handlers[command::NICK] = handler{ 1, true,
+    _core_handlers[command::NICK] = handler{ 1, true, true,
         // new nick
         [this](message const& msg) {
             // me? rename. not me or me? rename user in all channels.
@@ -655,7 +663,7 @@ void client::init_core_handlers()
     };
 
     // Channel events
-    _core_handlers[command::TOPIC] = handler{ 2, false,
+    _core_handlers[command::TOPIC] = handler{ 2, false, false,
         // channel, new topic
         [this](message const& msg) {
             // set topic info in channel
@@ -668,7 +676,7 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::MODE] = handler{ 2, false,
+    _core_handlers[command::MODE] = handler{ 2, false, false,
         // channel, modestring, [args]
         [this](message const& msg) {
             if (not _ircenv->is_channel(msg.args[0])) {
