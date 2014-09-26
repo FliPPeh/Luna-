@@ -19,7 +19,6 @@
 
 #include "luna_script.h"
 
-#include "proxies/luna_proxy.h"
 #include "proxies/luna_script_proxy.h"
 #include "proxies/luna_channel_proxy.h"
 #include "proxies/luna_user_proxy.h"
@@ -262,16 +261,64 @@ void luna_script::register_environment()
 
 void luna_script::register_self()
 {
-    _lua[api].new_metatable<luna_proxy>()
-        << mond::method("send_message", &luna_proxy::send_message)
-        << mond::method("runtime_info", &luna_proxy::runtime_info)
-        << mond::method("user_info",    &luna_proxy::user_info)
-        << mond::method("server_info",  &luna_proxy::server_info)
-        << mond::method("traffic_info", &luna_proxy::traffic_info);
+    _lua[api]["send_message"] = std::function<int (lua_State* s)>{
+        [=] (lua_State* s) {
+            irc::message msg;
 
-    _lua[api]["self"] = mond::object<luna_proxy>(*_context);
+            std::string cmd = luaL_checkstring(s, 1);
 
-    _lua[api]["self_meta"].export_metatable<luna_proxy>();
+            try {
+                msg.command = irc::rfc1459_upper(cmd);
+            } catch (irc::protocol_error const& pe) {
+                std::throw_with_nested(mond::runtime_error{
+                    "invalid command: " + cmd});
+            }
+
+            int n = lua_gettop(s) - 1;
+
+            for (int i = 2; i < (2 + n); ++i) {
+                if (not lua_isnil(s, i)) {
+                    msg.args.push_back(luaL_checkstring(s, i));
+                }
+            }
+
+            _context->send_message(msg);
+
+            return 0;
+        }};
+
+    _lua[api]["runtime_info"] =
+        std::function<std::tuple<std::time_t, std::time_t> ()>{[=] {
+            return std::make_tuple(_context->_started, _context->_connected);
+        }};
+
+    _lua[api]["user_info"] =
+        std::function<std::tuple<std::string, std::string> ()>{[=] {
+            return std::make_tuple(_context->nick(), _context->user());
+        }};
+
+    _lua[api]["server_info"] =
+        std::function<std::tuple<std::string, std::string, uint16_t> ()>{[=] {
+            return std::make_tuple(
+                _context->server_host(),
+                _context->server_addr(),
+                _context->server_port());
+        }};
+
+    _lua[api]["traffic_info"] =
+        std::function<
+            std::tuple<
+                std::size_t,
+                std::size_t,
+                std::size_t,
+                std::size_t> ()>{[=] {
+
+            return std::make_tuple(
+                _context->_bytes_sent,
+                _context->_bytes_sent_sess,
+                _context->_bytes_recvd,
+                _context->_bytes_recvd_sess);
+        }};
 }
 
 void luna_script::register_script()

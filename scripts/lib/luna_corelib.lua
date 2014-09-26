@@ -291,25 +291,40 @@ luna.shared = setmetatable({}, {
 })
 
 
-function luna.privmsg(target, msg)
-    luna.self:send_message('PRIVMSG', target, msg)
-end
-
-function luna.notice(target, msg)
-    luna.self:send_message('NOTICE', target, msg)
-end
+function luna.privmsg(target, msg) luna.send_message('PRIVMSG', target, msg) end
+function luna.notice(target, msg)  luna.send_message('NOTICE', target, msg)  end
 
 function luna.join(channel, key)
     if key then
-        luna.self:send_message('JOIN', channel, key)
+        luna.send_message('JOIN', channel, key or '')
     else
-        luna.self:send_message('JOIN', channel)
+        luna.send_message('JOIN', channel)
     end
 end
 
 function luna.part(channel, reason)
-    luna.self:send_message('PART', channel, reason or '')
+    luna.send_message('PART', channel, reason or '')
 end
+
+-- Wrap up luna.runtime_info()
+function luna.started()   return ({luna.runtime_info()})[1] end
+function luna.connected() return ({luna.runtime_info()})[2] end
+
+-- Wrap up luna.user_info()
+function luna.own_nick() return ({luna.user_info()})[1] end
+function luna.own_user() return ({luna.user_info()})[2] end
+
+-- Wrap up luna.server_info()
+function luna.server_host() return ({luna.server_info()})[1] end
+function luna.server_addr() return ({luna.server_info()})[2] end
+function luna.server_port() return ({luna.server_info()})[3] end
+
+-- Wrap up luna.traffic_info()
+function luna.bytes_sent_total()     return ({luna.traffic_info()})[1] end
+function luna.bytes_sent()           return ({luna.traffic_info()})[2] end
+function luna.bytes_received_total() return ({luna.traffic_info()})[3] end
+function luna.bytes_received()       return ({luna.traffic_info()})[4] end
+
 
 
 -- Augment basic types

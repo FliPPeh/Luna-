@@ -8,8 +8,6 @@ set(SRC
     luna_user.cc
     luna_script.h
     luna_script.cc
-    proxies/luna_proxy.h
-    proxies/luna_proxy.cc
     proxies/luna_channel_proxy.h
     proxies/luna_channel_proxy.cc
     proxies/luna_script_proxy.h
