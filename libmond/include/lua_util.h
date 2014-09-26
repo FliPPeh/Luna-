@@ -59,6 +59,13 @@ struct _seq_gen<0, Is...> {
 template <std::size_t N>
 using seq_gen = typename _seq_gen<N>::type;
 
+// Apparently GCC doesn't like it when read here is called with an empty
+// parameter pack for `Ns' and complains about `args' being set but
+// unused. Clang is less shouty.
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
+#endif
 
 template <typename Ret, typename Fun, typename... Args, std::size_t... Ns>
 Ret _lift(Fun f, std::tuple<Args...> args, impl::seq<Ns...>)
@@ -66,6 +73,9 @@ Ret _lift(Fun f, std::tuple<Args...> args, impl::seq<Ns...>)
     return f(std::get<Ns>(args)...);
 }
 
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC diagnostic pop
+#endif
 
 template <bool b> struct _bool {};
 

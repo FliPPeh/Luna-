@@ -187,12 +187,23 @@ T check(lua_State* l, int i)
     return static_cast<T>(_check(impl::tag<impl::mapped_type_t<T>>{}, l, i));
 }
 
+// Apparently GCC doesn't like it when read here is called with an empty
+// parameter pack for `Ns' and complains about `l' and `offset' being set but
+// unused. Clang is less shouty.
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC diagnostic push
+#   pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
+#endif
 
 template <typename... Ts, std::size_t... Ns>
 auto check(lua_State* l, int offset, impl::seq<Ns...>)
 {
     return std::make_tuple(check<Ts>(l, offset + Ns + 1)...);
 }
+
+#if defined(__GNUC__) && !defined(__clang__)
+#   pragma GCC diagnostic pop
+#endif
 
 template <typename T, std::size_t N>
 auto check(lua_State* l, int offset, impl::seq<N>)
