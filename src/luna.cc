@@ -65,7 +65,8 @@ luna::luna(
     read_shared_vars(_varfile);
     read_users(_userfile);
 
-    luna_script::shared_vars["luna.version"]  = "6.283";
+    //                                           6.2831853071796
+    luna_script::shared_vars["luna.version"]  = "6.2831";
     luna_script::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
     luna_script::shared_vars["luna.trigger"] = "!";
 
