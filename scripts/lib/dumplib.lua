@@ -2,6 +2,8 @@
 -- Dumper library for easy dumping of Lua values
 -- and basic serialization to and from files.
 --
+local base64 = require 'base64'
+
 local dump = {}
 
 -- Determine if a table is an array
@@ -25,8 +27,9 @@ function dump.make_dumper(args)
     local indent_width = args.indent_width or 3
     local indent_char  = args.indent_char  or ' '
     local indent_level = 0
-    local depth        = args.depth  or math.huge
-    local inline       = args.inline or false
+    local depth        = args.depth     or math.huge
+    local inline       = args.inline    or false
+    local serialize    = args.serialize or false
 
     local indent = ''
 
@@ -43,7 +46,12 @@ function dump.make_dumper(args)
                 return tostring(v)
 
         elseif type(v) == 'function' then
-            return '<' .. tostring(v) .. '>'
+            if serialize then
+                return string.format('loadstring(b.decode(%q))',
+                    base64.encode(string.dump(v)))
+            else
+                return '<' .. tostring(v) .. '>'
+            end
 
         elseif type(v) == 'string' then
             return string.format('%q', v)
@@ -69,8 +77,13 @@ function dump.make_dumper(args)
                         if list then
                             dump = dump .. string.format('%s, ', dumper(v))
                         else
-                            dump = dump .. string.format('%s = %s, ',
-                                k, dumper(v))
+                            if serialize then
+                                dump = dump .. string.format('[%q] = %s, ',
+                                    k, dumper(v))
+                            else
+                                dump = dump .. string.format('%s = %s, ',
+                                    k, dumper(v))
+                            end
                         end
                     end
                 else
@@ -91,8 +104,13 @@ function dump.make_dumper(args)
                             dump = dump .. string.format('%s%s,\n',
                                 indent, dumper(v))
                         else
-                            dump = dump .. string.format('%s%s = %s,\n',
-                                indent, k, dumper(v))
+                            if serialize then
+                                dump = dump .. string.format('%s[%q] = %s,\n',
+                                    indent, k, dumper(v))
+                            else
+                                dump = dump .. string.format('%s%s = %s,\n',
+                                    indent, k, dumper(v))
+                            end
                         end
                     end
                 else
@@ -127,7 +145,7 @@ function dump.file_serializer.new(file)
 end
 
 function dump.file_serializer:write(v)
-    d = dump.make_dumper{inline = false}
+    d = dump.make_dumper{inline = false, dump_funs = true}
 
     f = io.open(self.file, 'w')
     f:write('return ' .. d(v) .. '\n')
@@ -142,5 +160,25 @@ function dump.file_serializer:read()
         error(ret)
     end
 end
+
+----
+-- String serializer, like file serializer but with strings
+----
+function dump.serialize(t)
+    return dump.make_dumper{inline = true, serialize = true}(t)
+end
+
+function dump.unserialize(str)
+    local err, res = pcall(function()
+        return loadstring('b=require\'base64\';return ' .. str)()
+    end)
+
+    if err then
+        return res
+    else
+        return nil, res
+    end
+end
+
 
 return dump
