@@ -108,6 +108,17 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
                 // GCC wants `this'
                 this->handle_message(msg);
             });
+
+            // prefix irc:: to these helpers to disambiguate from our
+            // member functions
+            if (not _pass.empty()) {
+                this->send_message(irc::pass(_pass));
+            }
+
+            this->send_message(irc::nick(_nick));
+            this->send_message(irc::user(_user, "0", _real));
+
+            this->_session_state = LOGIN_SENT;
         });
 
 
@@ -365,18 +376,6 @@ void client::do_idle()
 
 void client::login_handler(message const& msg)
 {
-    // prefix irc:: to these helpers to disambiguate from our member functions
-    if (_session_state == START) {
-        if (not _pass.empty()) {
-            send_message(irc::pass(_pass));
-        }
-
-        send_message(irc::nick(_nick));
-        send_message(irc::user(_user, "0", _real));
-
-        _session_state = LOGIN_SENT;
-    }
-
     if (rfc1459_equal(msg.command, command::ERR_NICKNAMEINUSE)) {
         change_nick(nick() + "_");
     } else if (rfc1459_equal(msg.command, command::RPL_WELCOME)) {
