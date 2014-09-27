@@ -178,8 +178,7 @@ local function command_handler(who, where, what)
         return
     end
 
-    local _, _, rcmd, _, args = what:find('(%w+)(%s*(.*))')
-
+    local _, _, rcmd, _, args = what:find('^([^%s]+)(%s*(.*))')
     local commands = dupkeys(__commands)
 
     for _, cmd in ipairs(commands) do
@@ -202,8 +201,7 @@ local function trigger_handler(who, where, what)
         return
     end
 
-    local _, _, cmd, _, args = what:sub(#trigger + 1):find('^(%w+)(%s*(.*))')
-
+    local _, _, cmd, _, args = what:sub(#trigger + 1):find('^([^%s]+)(%s*(.*))')
     local triggers = dupkeys(__triggers)
 
     for _, trig in ipairs(triggers) do
