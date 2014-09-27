@@ -89,24 +89,32 @@ function print(...)
     log.info(...)
 end
 
+local function merge(vals)
+    for i, _ in ipairs(vals) do
+        vals[i] = tostring(vals[i])
+    end
+
+    return table.concat(vals, '\t')
+end
+
 function log.debug(...)
-    log.log('info', table.concat({...}, '\t'))
+    log.log('debug', merge{...})
 end
 
 function log.info(...)
-    log.log('info', table.concat({...}, '\t'))
+    log.log('info', merge{...})
 end
 
 function log.warn(...)
-    log.log('warn', table.concat({...}, '\t'))
+    log.log('warn', merge{...})
 end
 
 function log.err(...)
-    log.log('error', table.concat({...}, '\t'))
+    log.log('error', merge{...})
 end
 
 function log.wtf(...)
-    log.log('wtf', table.concat({...}, '\t'))
+    log.log('wtf', merge{...})
 end
 
 ---
@@ -118,8 +126,9 @@ function luna.add_signal_handler(signal, id, fn)
     if not fn then
         fn = id
 
-        id = '__unique_' .. tostring(__nextid)
-                  .. '_' .. tostring(math.random(999))
+        id = string.format('__unique_%s_%s',
+                tostring(__nextid),
+                tostring(math.random(999)))
 
         __nextid = __nextid + 1
     end
@@ -145,22 +154,71 @@ end
 
 ---
 -- Higher level signal handling
-local function splitcmdline(line, splittype)
-    if splittype == '*w' then
-        local parts = line:split(' ')
+-- TODO: private command?
+--
+local __command_handler_registered = false
+local __commands = {}
 
-        local cmd = table.remove(parts, 1)
-        local args = parts
+local __trigger_handler_registered = false
+local __triggers = {}
 
-        return cmd, args
-    else
-        local _, _, cmd, _, args = line:find('(%w+)(%s*(.*))')
 
-        return cmd, args
+local function dupkeys(t)
+    local keys = {}
+
+    for k, v in pairs(t) do
+        table.insert(keys, k)
+    end
+
+    return keys
+end
+
+local function command_handler(who, where, what)
+    if what and what == '' then
+        return
+    end
+
+    local _, _, rcmd, _, args = what:find('(%w+)(%s*(.*))')
+
+    local commands = dupkeys(__commands)
+
+    for _, cmd in ipairs(commands) do
+        local cmdopts = __commands[cmd]
+
+        if cmdopts and cmd:lower() == rcmd:lower() then
+            if cmdopts.argtype == '*w' then
+                args = args:split(' ')
+            end
+
+            cmdopts.func(who, where, cmd, args)
+        end
     end
 end
 
--- TODO: private command?
+local function trigger_handler(who, where, what)
+    local trigger = luna.shared['luna.trigger'] or '!'
+
+    if what and what == '' or what:sub(1, #trigger) ~= trigger then
+        return
+    end
+
+    local _, _, cmd, _, args = what:sub(#trigger + 1):find('^(%w+)(%s*(.*))')
+
+    local triggers = dupkeys(__triggers)
+
+    for _, trig in ipairs(triggers) do
+        local trigopts = __triggers[trig]
+
+        if trigopts and trig:lower() == cmd:lower() then
+            if trigopts.argtype == '*w' then
+                args = args:split(' ')
+            end
+
+            trigopts.func(who, where, cmd, args)
+        end
+    end
+end
+
 
 function luna.add_command(command, argtype, fn)
     if type(argtype) == 'function' then
@@ -169,40 +227,46 @@ function luna.add_command(command, argtype, fn)
         argtype = '*w'
     end
 
-    return luna.add_signal_handler('channel_command', function(who, where, what)
-        if what and what == '' then
-            return
-        end
+    __commands[command] = {
+            argtype = argtype,
+            func    = fn
+        }
 
-        local cmd, args = splitcmdline(what, argtype)
+    if not __command_handler_registered then
+        __command_handler_registered = true
 
-        if cmd:lower() == command:lower() then
-            fn(who, where, cmd, args)
-        end
-    end)
+        luna.add_signal_handler('channel_command', command_handler)
+    end
 end
 
-function luna.add_trigger_command(command, argtype, fn)
+function luna.remove_command(command)
+    __commands[command] = nil
+end
+
+
+function luna.add_trigger(command, argtype, fn)
     if type(argtype) == 'function' then
         -- only 2 args, use default
         fn = argtype
         argtype = '*w'
     end
 
-    return luna.add_signal_handler('channel_message', function(who, where, what)
-        if what and what == '' then
-            return
-        end
+    __triggers[command] = {
+        argtype = argtype,
+        func    = fn
+    }
 
-        local cmd, args = splitcmdline(what, argtype)
-        local trigger = luna.shared['luna.trigger'] or '!'
+    if not __trigger_handler_registered then
+        __trigger_handler_registered = true
 
-        if      cmd:sub(1, 1) == trigger
-            and cmd:sub(1):lower() == command:lower() then
-                fn(who, where, cmd, args)
-        end
-    end)
+        luna.add_signal_handler('channel_message', trigger_handler)
+    end
 end
+
+function luna.remove_trigger(command)
+    __triggers[command] = nil
+end
+
 
 function luna.add_message_watcher(pattern, fn)
     return luna.add_signal_handler('channel_message', function(who, where, what)
@@ -227,8 +291,14 @@ end
 function luna.handle_signal(signal, ...)
     local args = {...}
 
-    for id, handler in pairs(__callbacks) do
-        if handler.signal == signal then
+    -- Make a copy of all keys here so we can add and remove signal handlers
+    -- while handling signals.
+    local __callbacks_keys = dupkeys(__callbacks)
+
+    for _, id in ipairs(__callbacks_keys) do
+        local handler = __callbacks[id]
+
+        if handler and handler.signal == signal then
             status, err = xpcall(handler.callback, function(err)
                 log.warn('[CORE]',
                     debug.traceback(
@@ -240,8 +310,11 @@ function luna.handle_signal(signal, ...)
     end
 end
 
+
+
 -- Entry function from C++
 function luna.init_script()
+    -- Then initialize script
     ok, res = xpcall(script.script_load, function(err)
         log.warn('[CORE]',
             debug.traceback(
