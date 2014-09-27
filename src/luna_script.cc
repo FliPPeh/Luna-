@@ -228,9 +228,11 @@ void luna_script::register_environment()
     _lua[api]["shared"]["set"] = std::function<int (lua_State*)>{
         [=, _context = this->_context] (lua_State* s) {
             std::string key = luaL_checkstring(s, 1);
-            std::string val = luaL_checkstring(s, 2);
 
-            shared_vars[key] = val;
+            std::size_t n;
+            char const* val = luaL_checklstring(s, 2, &n);
+
+            shared_vars[key] = std::string{val, n};
             _context->save_shared_vars(_context->_varfile);
 
             return 0;

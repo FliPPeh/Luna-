@@ -7,8 +7,6 @@
 --
 local luna = {}
 
-local base64 = require 'base64'
-
 --
 -- Merge __luna native library into corelib
 for k, v in pairs(__luna) do
@@ -437,37 +435,43 @@ function channel_meta_aux:notice(msg)
     luna.notice(self:name(), msg)
 end
 
+function channel_meta_aux:_trigger_key()
+    return string.format('luna.channel.%s.trigger', self:name())
+end
+
+function channel_meta_aux:_filter_key()
+    return string.format('luna.channel.%s.message_filter', self:name())
+end
+
+
 function channel_meta_aux:trigger()
-    return luna.shared[string.format('luna.channel.%s.trigger', self:name())]
+    return luna.shared[self:_trigger_key()]
         or luna.shared['luna.trigger']
         or '!'
 end
 
 function channel_meta_aux:set_trigger(trig)
-    luna.shared[string.format('luna.channel.%s.trigger', self:name())] = trig
+    luna.shared[self:_trigger_key()] = trig
 end
 
 function channel_meta_aux:unset_trigger()
-    luna.shared[string.format('luna.channel.%s.trigger', self:name())] = nil
+    luna.shared[self:_trigger_key()] = nil
 end
 
 function channel_meta_aux:message_filter()
-    filter = luna.shared[string.format('luna.channel.%s.message_filter',
-        self:name())]
+    filter = luna.shared[self:_filter_key()]
 
     if filter then
-        return loadstring(base64.decode(filter))
+        return loadstring(filter)
     end
 end
 
 function channel_meta_aux:set_message_filter(filter)
-    luna.shared[string.format('luna.channel.%s.message_filter', self:name())]
-        = base64.encode(string.dump(filter))
+    luna.shared[self:_filter_key()] = string.dump(filter)
 end
 
 function channel_meta_aux:unset_message_filter(r)
-    luna.shared[string.format('luna.channel.%s.message_filter', self:name())]
-        = nil
+    luna.shared[self:_filter_key()] = nil
 end
 
 -- Shared functions
