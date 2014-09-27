@@ -549,6 +549,15 @@ void luna::handle_core_commands(
     }
 
     auto do_load = [this] (std::string const& script) {
+        for (auto it  = std::begin(_scripts);
+                  it != std::end(_scripts);
+                ++it) {
+
+            if (irc::rfc1459_equal((*it)->file(), script)) {
+                throw std::runtime_error{"script already loaded"};
+            }
+        }
+
         std::unique_ptr<luna_script> s{new luna_script{*this, script}};
 
         _scripts.push_back(std::move(s));
