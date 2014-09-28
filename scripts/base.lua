@@ -29,7 +29,16 @@ function base.script_load()
             if ok then
                 who:respond(tostring(r))
             else
-                who:respond('Error: ' .. tostring(r))
+                log.err(r)
+
+                local errs = tostring(r):split('\n')
+
+                if #errs > 1 then
+                    who:respond(string.format('Error: %s (+%d lines)',
+                     errs[1], #errs - 1))
+                else
+                    who:respond(string.format('Error: %s', errs[1]))
+                end
             end
         end
     end)
