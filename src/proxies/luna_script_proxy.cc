@@ -67,7 +67,7 @@ luna_script& luna_script_proxy::lookup() const
     auto s = std::find_if(
         std::begin(_ref->scripts()), std::end(_ref->scripts()),
         [this] (std::unique_ptr<luna_script> const& s2) {
-            return s2->file() == _fname;
+            return s2 and (s2->file() == _fname);
         });
 
     if (s == std::end(_ref->scripts())) {

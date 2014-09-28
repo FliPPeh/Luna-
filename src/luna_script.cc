@@ -308,6 +308,25 @@ void luna_script::register_self()
         }};
 }
 
+namespace {
+
+bool strcaseequal(std::string const& a, std::string const& b)
+{
+    if (a.size() != b.size()) {
+        return false;
+    }
+
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        if (::tolower(a[i]) != ::tolower(b[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+} // namespace
+
 void luna_script::register_script()
 {
     _lua[api].new_metatable<luna_script_proxy>()
@@ -326,13 +345,57 @@ void luna_script::register_script()
             lua_newtable(s);
 
             for (std::unique_ptr<luna_script> const& scr : _context->scripts()) {
-                mond::write(s,
-                    mond::object<luna_script_proxy>(*_context, scr->file()));
+                if (scr) {
+                    mond::write(s,
+                        mond::object<luna_script_proxy>(
+                            *_context, scr->file()));
 
-                lua_setfield(s, -2, scr->file().c_str());
+                    lua_setfield(s, -2, scr->file().c_str());
+                }
             }
 
             return 1;
+        }};
+
+    _lua[api]["scripts"]["load"] = std::function<int (lua_State*)>{
+        [=] (lua_State* s) {
+            std::string scr = luaL_checkstring(s, 1);
+
+            for (std::unique_ptr<luna_script> const& sc : _context->scripts()) {
+                if (sc and strcaseequal(scr, sc->file())) {
+                    throw mond::error{"script `" + scr + "' already loaded"};
+                }
+            }
+
+            std::unique_ptr<luna_script> script{new luna_script{
+                *_context, scr}};
+
+            _context->_scripts.push_back(std::move(script));
+            _context->_scripts.back()->init_script();
+
+            return mond::write(s,
+                mond::object<luna_script_proxy>(*_context, scr));
+        }};
+
+    _lua[api]["scripts"]["unload"] = std::function<int (lua_State*)>{
+        [=] (lua_State* s) {
+            std::string scr = luaL_checkstring(s, 1);
+
+            if (strcaseequal(scr, this->_file)) {
+                throw mond::error{"can not unload self"};
+            }
+
+            for (auto it  = std::begin(_context->_scripts);
+                      it != std::end(_context->_scripts);
+                    ++it) {
+                if (*it and strcaseequal(scr, (*it)->file())) {
+                    it->reset(nullptr);
+
+                    return 0;
+                }
+            }
+
+            throw mond::error{"script `" + scr + "' not loaded"};
         }};
 
     _lua[api]["script_meta"].export_metatable<luna_script_proxy>();

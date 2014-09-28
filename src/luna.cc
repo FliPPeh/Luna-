@@ -569,9 +569,7 @@ void luna::handle_core_commands(
                 ++it) {
 
             if (irc::rfc1459_equal((*it)->file(), script)) {
-                _scripts.erase(it);
-                std::sort(std::begin(_scripts), std::end(_scripts));
-
+                it->reset(nullptr);
                 return;
             }
         }

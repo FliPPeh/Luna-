@@ -155,9 +155,25 @@ private:
     template <typename... Args>
     void dispatch_signal(std::string const& signal, Args const&... args)
     {
-        for (auto& script : _scripts) {
-            script->emit_signal(signal, args...);
+        std::size_t i = 0;
+
+        // Since the list can grow while we iterate it, keep updating size.
+        while (i < _scripts.size()) {
+            if (_scripts[i]) {
+                _scripts[i]->emit_signal(signal, args...);
+            }
+
+            ++i;
         }
+
+        // Unloadind a script only resets the unique_ptr to nullptr, drop all
+        // unloaded scripts from the list when it's safe to shrink.
+        _scripts.erase(
+            std::remove_if(std::begin(_scripts), std::end(_scripts),
+                [] (std::unique_ptr<luna_script> const& scr) {
+                    return not scr;
+                }),
+            std::end(_scripts));
     }
 
     template <typename... Args>
