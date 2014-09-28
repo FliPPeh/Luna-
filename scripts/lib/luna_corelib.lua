@@ -415,32 +415,11 @@ setmetatable(luna.channel_meta.__index, {
     })
 
 
-function channel_meta_aux:privmsg(msg)
-    local filter = self:message_filter()
-
-    if filter then
-        msg = filter(msg)
-    end
-
-    luna.privmsg(self:name(), msg)
-end
-
-function channel_meta_aux:notice(msg)
-    local filter = self:message_filter()
-
-    if filter then
-        msg = filter(msg)
-    end
-
-    luna.notice(self:name(), msg)
-end
+function channel_meta_aux:privmsg(msg) luna.privmsg(self:name(), msg) end
+function channel_meta_aux:notice(msg)  luna.notice(self:name(), msg)  end
 
 function channel_meta_aux:_trigger_key()
     return string.format('luna.channel.%s.trigger', self:name())
-end
-
-function channel_meta_aux:_filter_key()
-    return string.format('luna.channel.%s.message_filter', self:name())
 end
 
 
@@ -458,21 +437,6 @@ function channel_meta_aux:unset_trigger()
     luna.shared[self:_trigger_key()] = nil
 end
 
-function channel_meta_aux:message_filter()
-    filter = luna.shared[self:_filter_key()]
-
-    if filter then
-        return loadstring(filter)
-    end
-end
-
-function channel_meta_aux:set_message_filter(filter)
-    luna.shared[self:_filter_key()] = string.dump(filter)
-end
-
-function channel_meta_aux:unset_message_filter(r)
-    luna.shared[self:_filter_key()] = nil
-end
 
 -- Shared functions
 local function nick(self) return ({self:user_info()})[1] end
