@@ -346,6 +346,14 @@ end
 -- table.
 local __shared = luna.shared
 
+function luna.save_shared()
+    __shared.save()
+end
+
+function luna.reload_shared()
+    __shared.reload()
+end
+
 luna.shared = setmetatable({}, {
     __index = function(tab, key)
         return __shared.get(key)

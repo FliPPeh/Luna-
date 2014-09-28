@@ -199,6 +199,17 @@ void luna_script::register_environment()
             }};
 
     _lua[api]["shared"] = mond::table{};
+
+    _lua[api]["shared"]["save"] = std::function<void ()>{[=] {
+            _context->save_shared_vars(_context->_varfile);
+        }};
+
+    _lua[api]["shared"]["reload"] = std::function<void ()>{[=] {
+            luna_script::shared_vars.clear();
+
+            _context->read_shared_vars(_context->_varfile);
+        }};
+
     _lua[api]["shared"]["get"] = std::function<int (lua_State*)>{
         [=] (lua_State* s) {
             std::string key = luaL_checkstring(s, 1);
@@ -218,7 +229,6 @@ void luna_script::register_environment()
             char const* val = luaL_checklstring(s, 2, &n);
 
             shared_vars[key] = std::string{val, n};
-            _context->save_shared_vars(_context->_varfile);
 
             return 0;
         }};
