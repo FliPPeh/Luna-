@@ -439,6 +439,15 @@ void luna_script::register_user()
             return 1;
         }};
 
+    _lua[api]["users"]["save"] = std::function<void ()>{[=] {
+            _context->save_users(_context->_userfile);
+        }};
+
+    _lua[api]["users"]["reload"] = std::function<void ()>{[=] {
+            _context->_users.clear();
+            _context->read_users(_context->_userfile);
+        }};
+
     _lua[api]["users"]["create"] = std::function<int (lua_State*)>{
         [=] (lua_State* s) {
             std::string id    = luaL_checkstring(s, 1);
@@ -459,7 +468,6 @@ void luna_script::register_user()
             _context->users().emplace_back(
                 id, mask, title, flags_from_string(flags));
 
-            _context->save_users(_context->_userfile);
             return mond::write(s, mond::object<luna_user_proxy>(*_context, id));
         }};
 
