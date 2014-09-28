@@ -305,13 +305,10 @@ void luna::load_script(std::string const& script)
 
         _logger.info()
             << "  Loaded script `" << s->name() << "': " << s->description()
-            << " (version " << s->version() << ", priority "
-            << s->priority() << ")";
+            << " (version " << s->version() << ")";
 
         _scripts.push_back(std::move(s));
         _scripts.back()->init_script();
-
-        std::sort(std::begin(_scripts), std::end(_scripts));
 
     } catch (mond::runtime_error const& e) {
         _logger.error() << "  Could not load script `" << script << "': "

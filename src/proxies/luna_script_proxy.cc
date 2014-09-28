@@ -54,10 +54,6 @@ std::string luna_script_proxy::version() const
     return lookup().version();
 }
 
-int luna_script_proxy::priority() const
-{
-    return lookup().priority();
-}
 
 int luna_script_proxy::is_self(lua_State* s) const
 {

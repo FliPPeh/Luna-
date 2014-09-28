@@ -39,7 +39,6 @@ public:
     std::string name() const;
     std::string description() const;
     std::string version() const;
-    int         priority() const;
 
     int is_self(lua_State* s) const;
 

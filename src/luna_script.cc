@@ -46,8 +46,7 @@ luna_script::luna_script(luna& context, std::string file)
       _lua{},
       _script_name{},
       _script_descr{},
-      _script_version{},
-      _script_priority{0} // Arbitrarily define priority around zero
+      _script_version{}
 {
     constexpr char const* extra_paths =
         "./scripts/?.lua;./scripts/?/init.lua;"
@@ -67,10 +66,6 @@ luna_script::luna_script(luna& context, std::string file)
 
         _script_version =
             _lua["script"]["info"]["version"].get<std::string>();
-
-        if (auto prio = _lua["script"]["info"]["priority"]) {
-            _script_priority = prio.get<int>();
-        }
 
     } catch (mond::error const& e) {
         std::throw_with_nested(mond::error{"invalid script info table"});
@@ -125,11 +120,6 @@ std::string luna_script::version() const
     return _script_version;
 }
 
-int luna_script::priority() const
-{
-    return _script_priority;
-}
-
 
 bool operator==(luna_script const& a, luna_script const& b)
 {
@@ -139,11 +129,6 @@ bool operator==(luna_script const& a, luna_script const& b)
 bool operator!=(luna_script const& a, luna_script const& b)
 {
     return !(a == b);
-}
-
-bool operator<(luna_script const& a, luna_script const& b)
-{
-    return !(a.priority() < b.priority());
 }
 
 
@@ -330,7 +315,6 @@ void luna_script::register_script()
         << mond::method("name",        &luna_script_proxy::name)
         << mond::method("description", &luna_script_proxy::description)
         << mond::method("version",     &luna_script_proxy::version)
-        << mond::method("priority",    &luna_script_proxy::priority)
         << mond::method("is_self",     &luna_script_proxy::is_self);
 
     _lua[api]["scripts"] = mond::table{};

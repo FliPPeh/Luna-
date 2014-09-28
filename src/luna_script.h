@@ -61,11 +61,9 @@ public:
     std::string name()        const;
     std::string description() const;
     std::string version()     const;
-    int         priority()    const;
 
     friend bool operator==(luna_script const& me, luna_script const& other);
     friend bool operator!=(luna_script const& me, luna_script const& other);
-    friend bool operator<(luna_script const& me, luna_script const& other);
 
     static irc::unordered_rfc1459_map<std::string, std::string> shared_vars;
 
@@ -88,11 +86,10 @@ private:
 
     std::string _file;
     mutable mond::state _lua;
-   
+
     std::string _script_name;
     std::string _script_descr;
     std::string _script_version;
-    int         _script_priority;
 };
 
 #endif // defined LUNA_SCRIPT_H
