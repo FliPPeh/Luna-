@@ -148,10 +148,6 @@ end
 local __command_handler_registered = false
 local __commands = {}
 
-local __trigger_handler_registered = false
-local __triggers = {}
-
-
 local function dupkeys(t)
     local keys = {}
 
@@ -163,47 +159,29 @@ local function dupkeys(t)
 end
 
 local function command_handler(who, where, what)
-    if what and what == '' then
-        return
-    end
+    local triggers = {
+        luna.shared['luna.trigger'],                   -- !command
+        luna.own_nick():literalpattern() .. '[:,]?%s*' -- mynick: command
+    }
 
-    local _, _, rcmd, _, args = what:find('^([^%s]+)(%s*(.*))')
-    local commands = dupkeys(__commands)
+    for _, trigger in ipairs(triggers) do
+        local a, b, rcmd, args =
+            what:find('^' .. trigger .. '([^%s]+)%s*(.*)')
 
-    for _, cmd in ipairs(commands) do
-        local cmdopts = __commands[cmd]
+        if a then
+            for _, cmd in ipairs(dupkeys(__commands)) do
+                local cmdopts = __commands[cmd]
 
-        if cmdopts and cmd:lower() == rcmd:lower() then
-            if cmdopts.argtype == '*w' then
-                args = args:split(' ')
-            elseif cmdopts.argtype:find('%*(%d+)w') then
+                if cmdopts and cmd:lower() == rcmd:lower() then
+                    if cmdopts.argtype == '*w' then
+                        args = args:split(' ')
+                    end
 
+                    cmdopts.func(who, where, cmd, args)
+                end
             end
 
-            cmdopts.func(who, where, cmd, args)
-        end
-    end
-end
-
-local function trigger_handler(who, where, what)
-    local trigger = where:trigger()
-
-    if what and what == '' or what:sub(1, #trigger) ~= trigger then
-        return
-    end
-
-    local _, _, cmd, _, args = what:sub(#trigger + 1):find('^([^%s]+)(%s*(.*))')
-    local triggers = dupkeys(__triggers)
-
-    for _, trig in ipairs(triggers) do
-        local trigopts = __triggers[trig]
-
-        if trigopts and trig:lower() == cmd:lower() then
-            if trigopts.argtype == '*w' then
-                args = args:split(' ')
-            end
-
-            trigopts.func(who, where, cmd, args)
+            break
         end
     end
 end
@@ -224,36 +202,12 @@ function luna.add_command(command, argtype, fn)
     if not __command_handler_registered then
         __command_handler_registered = true
 
-        luna.add_signal_handler('channel_command', command_handler)
+        luna.add_signal_handler('channel_message', command_handler)
     end
 end
 
 function luna.remove_command(command)
     __commands[command] = nil
-end
-
-
-function luna.add_trigger(command, argtype, fn)
-    if type(argtype) == 'function' then
-        -- only 2 args, use default
-        fn = argtype
-        argtype = '*w'
-    end
-
-    __triggers[command] = {
-        argtype = argtype,
-        func    = fn
-    }
-
-    if not __trigger_handler_registered then
-        __trigger_handler_registered = true
-
-        luna.add_signal_handler('channel_message', trigger_handler)
-    end
-end
-
-function luna.remove_trigger(command)
-    __triggers[command] = nil
 end
 
 
@@ -603,6 +557,10 @@ function string:irctoansi()
                     end
                 end)
         })[1]
+end
+
+function string:literalpattern()
+    return self:gsub('[^%w%s]', '%%%1')
 end
 
 

@@ -427,8 +427,7 @@ void luna::on_privmsg(
         if (irc::rfc1459_equal(msg.substr(0, trigger.size()), trigger)) {
             handle_core_commands(source, target, msg.substr(trigger.size()));
 
-            dispatch_signal_helper("command",
-                source, target, msg.substr(trigger.size()));
+            dispatch_signal_helper("message", source, target, msg);
         } else {
             dispatch_signal_helper("message", source, target, msg);
        }
