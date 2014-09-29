@@ -68,21 +68,24 @@ function base.script_load()
         end
     end)
 
-    luna.add_command('setvar', function(who, where, what, args)
+    luna.add_command('setvar', '*l', function(who, where, what, args)
         local u = who:match_reguser()
 
         if u and u:flags():find('o') then
-            local key = args[1]
+            print(args)
+            local a, b, key, val = args:find('([^%s]+)%s*(.*)')
 
-            if #args > 1 then
-                local val = table.concat(args, ' ', 2)
+            print(key, val)
 
+            if val and val ~= '' then
                 luna.shared[key] = val
                 who:respond(string.format('%q -> %q.', key, val))
             else
                 luna.shared[key] = nil
-                who:respond(string.format('cleared %q.', key, val))
+                who:respond(string.format('cleared %q.', key))
             end
+
+            luna.save_shared()
         end
     end)
 
