@@ -7,6 +7,8 @@
 --
 local luna = {}
 
+local base64 = require 'base64'
+
 --
 -- Merge __luna native library into corelib
 for k, v in pairs(__luna) do
@@ -120,6 +122,15 @@ function luna.add_signal_handler(signal, id, fn)
 
         __nextid = __nextid + 1
     end
+
+    if signal == 'channel_message' then
+        local oldfn = fn
+
+        fn = function(who, where, what)
+            oldfn(who, where, where:incoming_filter()(where, what))
+        end
+    end
+
 
     __callbacks[id] = {
             signal = signal,
@@ -357,27 +368,44 @@ setmetatable(luna.channel_meta.__index, {
     })
 
 
-function channel_meta_aux:privmsg(msg) luna.privmsg(self:name(), msg) end
+function channel_meta_aux:privmsg(msg)
+    luna.privmsg(self:name(), self:outgoing_filter()(self, msg))
+end
+
 function channel_meta_aux:notice(msg)  luna.notice(self:name(), msg)  end
 
-function channel_meta_aux:_trigger_key()
-    return string.format('luna.channel.%s.trigger', self:name())
+function channel_meta_aux:_filter_in_key()
+    return string.format('luna.channel.%s.filter_in', self:name())
+end
+
+function channel_meta_aux:_filter_out_key()
+    return string.format('luna.channel.%s.filter_out', self:name())
 end
 
 
-function channel_meta_aux:trigger()
-    return luna.shared[self:_trigger_key()]
-        or luna.shared['luna.trigger']
-        or '!'
+function channel_meta_aux:set_incoming_filter(fun)
+    luna.shared[self:_filter_in_key()] =
+        fun and base64.encode(string.dump(fun)) or nil
 end
 
-function channel_meta_aux:set_trigger(trig)
-    luna.shared[self:_trigger_key()] = trig
+function channel_meta_aux:set_outgoing_filter(fun)
+    luna.shared[self:_filter_out_key()] =
+        fun and base64.encode(string.dump(fun)) or nil
 end
 
-function channel_meta_aux:unset_trigger()
-    luna.shared[self:_trigger_key()] = nil
+
+function channel_meta_aux:incoming_filter(fun)
+    return luna.shared[self:_filter_in_key()]
+        and loadstring(base64.decode(luna.shared[self:_filter_in_key()]))
+        or  function(where, msg) return msg end
 end
+
+function channel_meta_aux:outgoing_filter(fun)
+    return luna.shared[self:_filter_out_key()]
+        and loadstring(base64.decode(luna.shared[self:_filter_out_key()]))
+        or  function(where, msg) return msg end
+end
+
 
 
 -- Shared functions
