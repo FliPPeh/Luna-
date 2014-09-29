@@ -98,28 +98,15 @@ local function merge(vals)
     return table.concat(vals, '\t')
 end
 
-function log.debug(...)
-    log.log('debug', merge{...})
-end
-
-function log.info(...)
-    log.log('info', merge{...})
-end
-
-function log.warn(...)
-    log.log('warn', merge{...})
-end
-
-function log.err(...)
-    log.log('error', merge{...})
-end
-
-function log.wtf(...)
-    log.log('wtf', merge{...})
-end
+function log.debug(...) log.log('debug', merge{...}) end
+function log.info(...)  log.log('info',  merge{...}) end
+function log.warn(...)  log.log('warn',  merge{...}) end
+function log.err(...)   log.log('error', merge{...}) end
+function log.wtf(...)   log.log('wtf',   merge{...}) end
 
 ---
 -- Signal handling
+--
 local __callbacks = {}
 local __nextid = 0
 
@@ -152,6 +139,7 @@ function luna.remove_signal_handler(tid)
 
     error(string.format('no signal handler with id %q found', tid), 2)
 end
+
 
 ---
 -- Higher level signal handling
@@ -373,19 +361,11 @@ luna.shared = setmetatable({}, {
 })
 
 
-function luna.privmsg(target, msg)
-    luna.send_message('PRIVMSG', target, msg)
-end
-
-
-function luna.notice(target, msg)  luna.send_message('NOTICE', target, msg)  end
+function luna.privmsg(tar, msg) luna.send_message('PRIVMSG', tar, msg) end
+function luna.notice(tar, msg)  luna.send_message('NOTICE', tar, msg)  end
 
 function luna.join(channel, key)
-    if key then
-        luna.send_message('JOIN', channel, key or '')
-    else
-        luna.send_message('JOIN', channel)
-    end
+    luna.send_message('JOIN', channel, key)
 end
 
 function luna.part(channel, reason)
