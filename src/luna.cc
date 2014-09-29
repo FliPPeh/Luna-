@@ -549,7 +549,7 @@ void luna::handle_core_commands(
                   it != std::end(_scripts);
                 ++it) {
 
-            if (irc::rfc1459_equal((*it)->file(), script)) {
+            if (*it and irc::rfc1459_equal((*it)->file(), script)) {
                 throw std::runtime_error{"script already loaded"};
             }
         }
@@ -558,8 +558,6 @@ void luna::handle_core_commands(
 
         _scripts.push_back(std::move(s));
         _scripts.back()->init_script();
-
-        std::sort(std::begin(_scripts), std::end(_scripts));
     };
 
     auto do_unload = [this] (std::string const& script) {
@@ -567,7 +565,7 @@ void luna::handle_core_commands(
                   it != std::end(_scripts);
                 ++it) {
 
-            if (irc::rfc1459_equal((*it)->file(), script)) {
+            if (*it and irc::rfc1459_equal((*it)->file(), script)) {
                 it->reset(nullptr);
                 return;
             }
