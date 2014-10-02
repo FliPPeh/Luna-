@@ -470,8 +470,9 @@ void client::run_core_handler(
 void client::init_core_handlers()
 {
     // Core event handlers responsible for state and housekeeping
-    _core_handlers[command::RPL_WELCOME] = handler{ 0, false, false,
+    _core_handlers[command::RPL_WELCOME] = handler{ 1, false, false,
         [this](message const& msg) {
+            _nick = msg.args[0];
             on_connect();
         }
     };
