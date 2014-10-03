@@ -438,7 +438,7 @@ void client::run_core_handler(
                 if (msg.args.size() < args_req) {
                     std::ostringstream errs;
 
-                    errs << "expected " << args_req << "arguments "
+                    errs << "expected " << args_req << " arguments "
                             << "for `" << msg.command << "' handler, "
                             << "got " << msg.args.size();
 
