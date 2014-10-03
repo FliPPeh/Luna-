@@ -54,6 +54,44 @@ function base.script_load()
             luna.shared['luna.compiler']))
     end)
 
+    luna.add_command('settrigger', '*l', function(who, where, what, args)
+        local u = who:match_reguser()
+
+        if u and u:flags():find('o') then
+            local a, b, target, newtrigger = args:find('(#[^%s]+)%s*(.*)')
+
+            if not a then
+                target, newtrigger = where:name(), args
+            end
+
+            luna.set_channel_trigger(target, newtrigger)
+
+            if #newtrigger > 0 then
+                who:respond(string.format('Set trigger for %q to: %q',
+                    target, newtrigger))
+            else
+                who:respond(
+                    string.format('Disabled non-highlight trigger for %q',
+                        target))
+            end
+
+            luna.save_shared()
+        end
+    end)
+
+    luna.add_command('unsettrigger', function(who, where, what, args)
+        local u = who:match_reguser()
+
+        if u and u:flags():find('o') then
+            local target = args[1] or where:name()
+
+            luna.set_channel_trigger(target, nil)
+            who:respond(string.format('Reset trigger for %q', target))
+
+            luna.save_shared()
+        end
+    end)
+
     luna.add_command('getvar', function(who, where, what, args)
         local u = who:match_reguser()
 

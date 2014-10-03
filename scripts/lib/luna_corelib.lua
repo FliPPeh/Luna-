@@ -127,7 +127,9 @@ function luna.add_signal_handler(signal, id, fn)
         local oldfn = fn
 
         fn = function(who, where, what)
-            oldfn(who, where, where:incoming_filter()(where, what))
+            local filter = where:incoming_filter()
+
+            oldfn(who, where, filter and filter(where, what) or what)
         end
     end
 
@@ -171,13 +173,17 @@ end
 
 local function command_handler(who, where, what)
     local triggers = {
-        luna.shared['luna.trigger'],                   -- !command
+        where:trigger(),                               -- !command
         luna.own_nick():literalpattern() .. '[:,]?%s*' -- mynick: command
     }
 
     for _, trigger in ipairs(triggers) do
-        local a, b, rcmd, args =
-            what:find('^' .. trigger .. '([^%s]+)%s*(.*)')
+        -- To allow per-channel or global disabling of non-highlight trigger
+        if not (#trigger > 0) then
+            goto continue
+        end
+
+        local a, b, rcmd, args = what:find('^' .. trigger .. '([^%s]+)%s*(.*)')
 
         if a then
             for _, cmd in ipairs(dupkeys(__commands)) do
@@ -193,7 +199,10 @@ local function command_handler(who, where, what)
             end
 
             break
+
         end
+
+        ::continue::
     end
 end
 
@@ -357,6 +366,47 @@ function luna.bytes_received_total() return ({luna.traffic_info()})[3] end
 function luna.bytes_received()       return ({luna.traffic_info()})[4] end
 
 
+-- Per-Channel filters and triggers
+local function trigger_key(channel)
+    return string.format('luna.channel.%s.trigger', channel:lower())
+end
+
+function luna.set_channel_trigger(channel, trigger)
+    luna.shared[trigger_key(channel)] = trigger
+end
+
+function luna.channel_trigger(channel)
+    return luna.shared[trigger_key(channel)] or luna.shared['luna.trigger']
+end
+
+
+local function filter_in_key(channel)
+    return string.format('luna.channel.%s.filter_in', channel:lower())
+end
+
+local function filter_out_key(channel)
+    return string.format('luna.channel.%s.filter_out', channel:lower())
+end
+
+function luna.set_channel_incoming_filter(channel, fun)
+    luna.shared[filter_in_key(channel)] =
+        fun and base64.encode(string.dump(fun)) or nil
+end
+
+function luna.set_channel_outgoing_filter(channel, fun)
+    luna.shared[filter_out_key(channel)] =
+        fun and base64.encode(string.dump(fun)) or nil
+end
+
+function luna.channel_incoming_filter(channel)
+    return luna.shared[filter_in_key(channel)]
+       and loadstring(base64.decode(luna.shared[filter_in_key(channel)]))
+end
+
+function luna.channel_outgoing_filter(channel)
+    return luna.shared[filter_out_key(channel)]
+       and loadstring(base64.decode(luna.shared[filter_out_key(channel)]))
+end
 
 -- Augment basic types
 --
@@ -369,41 +419,38 @@ setmetatable(luna.channel_meta.__index, {
 
 
 function channel_meta_aux:privmsg(msg)
-    luna.privmsg(self:name(), self:outgoing_filter()(self, msg))
+    local filter = self:outgoing_filter()
+
+    luna.privmsg(self:name(), filter and filter(self, msg) or msg)
 end
 
-function channel_meta_aux:notice(msg)  luna.notice(self:name(), msg)  end
-
-function channel_meta_aux:_filter_in_key()
-    return string.format('luna.channel.%s.filter_in', self:name())
+function channel_meta_aux:notice(msg)
+    luna.notice(self:name(), msg)
 end
-
-function channel_meta_aux:_filter_out_key()
-    return string.format('luna.channel.%s.filter_out', self:name())
-end
-
 
 function channel_meta_aux:set_incoming_filter(fun)
-    luna.shared[self:_filter_in_key()] =
-        fun and base64.encode(string.dump(fun)) or nil
+    luna.channel_set_incoming_filter(self:name(), fun)
 end
 
 function channel_meta_aux:set_outgoing_filter(fun)
-    luna.shared[self:_filter_out_key()] =
-        fun and base64.encode(string.dump(fun)) or nil
+    luna.channel_set_outgoing_filter(self:name(), fun)
 end
 
 
 function channel_meta_aux:incoming_filter(fun)
-    return luna.shared[self:_filter_in_key()]
-        and loadstring(base64.decode(luna.shared[self:_filter_in_key()]))
-        or  function(where, msg) return msg end
+    return luna.channel_incoming_filter(self:name())
 end
 
 function channel_meta_aux:outgoing_filter(fun)
-    return luna.shared[self:_filter_out_key()]
-        and loadstring(base64.decode(luna.shared[self:_filter_out_key()]))
-        or  function(where, msg) return msg end
+    return luna.channel_outgoing_filter(self:name())
+end
+
+function channel_meta_aux:set_trigger(trigger)
+    luna.set_channel_trigger(self:name(), trigger)
+end
+
+function channel_meta_aux:trigger()
+    return luna.channel_trigger(self:name())
 end
 
 
