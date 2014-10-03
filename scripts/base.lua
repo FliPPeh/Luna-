@@ -58,7 +58,7 @@ function base.script_load()
         local u = who:match_reguser()
 
         if u and u:flags():find('o') then
-            local a, b, target, newtrigger = args:find('(#[^%s]+)%s*(.*)')
+            local a, b, target, newtrigger = args:find('(#[^%s]+)%s*(.+)')
 
             if not a then
                 target, newtrigger = where:name(), args
