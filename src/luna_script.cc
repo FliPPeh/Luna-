@@ -430,8 +430,8 @@ void luna_script::register_user()
             lua_newtable(s);
 
             for (auto const& u : _context->users()) {
-                mond::object<luna_user_proxy>(
-                    *_context, u.id());
+                mond::write(s,
+                    mond::object<luna_user_proxy>(*_context, u.id()));
 
                 lua_setfield(s, -2, u.id().c_str());
             }
