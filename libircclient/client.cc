@@ -617,8 +617,8 @@ void client::init_core_handlers()
         }
     };
 
-    _core_handlers[command::QUIT] = handler{ 1, true, true,
-        // reason
+    _core_handlers[command::QUIT] = handler{ 0, true, true,
+        // [reason]
         [this](message const& msg) {
             // me? unlikely. not me? remove user from all channels.
             if (not is_me(msg.prefix)) {
