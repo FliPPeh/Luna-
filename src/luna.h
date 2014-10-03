@@ -141,11 +141,6 @@ protected:
         int lvl) const override;
 
 private:
-    void handle_core_commands(
-        std::string const& prefix,
-        std::string const& channel,
-        std::string const& msg);
-
     void handle_core_ctcp(
         std::string const& prefix,
         std::string const& target,

@@ -4,5 +4,5 @@ server_port = 6697
 
 ssl = true
 
-scripts = {'base'}
+scripts = {'scriptloader', 'base'}
 autojoin = {}

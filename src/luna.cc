@@ -421,19 +421,7 @@ void luna::on_privmsg(
     std::string const& target,
     std::string const& msg)
 {
-    if (environment().is_channel(target)) {
-        std::string trigger = nick() + ": ";
-
-        if (irc::rfc1459_equal(msg.substr(0, trigger.size()), trigger)) {
-            handle_core_commands(source, target, msg.substr(trigger.size()));
-
-            dispatch_signal_helper("message", source, target, msg);
-        } else {
-            dispatch_signal_helper("message", source, target, msg);
-       }
-    } else {
-        dispatch_signal_helper("message", source, target, msg);
-    }
+    dispatch_signal_helper("message", source, target, msg);
 }
 
 void luna::on_notice(
@@ -525,116 +513,6 @@ void luna::pretty_print_exception(std::exception_ptr p, int lvl) const
         _logger.error() << prefix << "[Exception] " << e.what();
     } catch (...) {
         _logger.error() << prefix << "[???] ?";
-    }
-}
-
-
-void luna::handle_core_commands(
-    std::string const& prefix,
-    std::string const& channel,
-    std::string const& msg)
-{
-    auto r = std::find_if(std::begin(_users), std::end(_users),
-        [&] (luna_user const& u) {
-            return u.matches(prefix)
-               and u.flags() & luna_user::flag::flag_owner;
-        });
-
-    if (r == std::end(_users)) {
-        return;
-    }
-
-    auto do_load = [this] (std::string const& script) {
-        for (auto it  = std::begin(_scripts);
-                  it != std::end(_scripts);
-                ++it) {
-
-            if (*it and irc::rfc1459_equal((*it)->file(), script)) {
-                throw std::runtime_error{"script already loaded"};
-            }
-        }
-
-        std::unique_ptr<luna_script> s{new luna_script{*this, script}};
-
-        _scripts.push_back(std::move(s));
-        _scripts.back()->init_script();
-    };
-
-    auto do_unload = [this] (std::string const& script) {
-        for (auto it  = std::begin(_scripts);
-                  it != std::end(_scripts);
-                ++it) {
-
-            if (*it and irc::rfc1459_equal((*it)->file(), script)) {
-                it->reset(nullptr);
-                return;
-            }
-        }
-
-        throw std::runtime_error{"no such script"};
-    };
-
-
-    std::vector<std::string> args = split_noempty(msg, " ");
-
-    if (irc::rfc1459_equal(args[0], "load")) {
-        if (args.size() < 2) {
-            return send_message(
-                irc::response(prefix, channel, "usage: load <script>."));
-        }
-
-        try {
-            do_load(args[1]);
-
-            send_message(irc::response(prefix, channel, "Script loaded."));
-        } catch (std::runtime_error const& e) {
-            report_error(std::current_exception());
-
-            send_message(irc::response(prefix, channel,
-                "Error loading script :("));
-        }
-    } else if (irc::rfc1459_equal(args[0], "unload")) {
-        if (args.size() < 2) {
-            return send_message(
-                irc::response(prefix, channel, "usage: unload <script>."));
-        }
-
-        try {
-            do_unload(args[1]);
-
-            send_message(irc::response(prefix, channel, "Script unloaded."));
-        } catch (std::runtime_error const& e) {
-            report_error(std::current_exception());
-
-            send_message(irc::response(prefix, channel,
-                "Error unloading script. :("));
-        }
-    } else if (irc::rfc1459_equal(args[0], "reload")) {
-        if (args.size() < 2) {
-            return send_message(
-                irc::response(prefix, channel, "usage: reload <script>."));
-        }
-
-        try {
-            do_unload(args[1]);
-            do_load(args[1]);
-
-            send_message(irc::response(prefix, channel, "Script reloaded."));
-        } catch (std::runtime_error const& e) {
-            report_error(std::current_exception());
-
-            send_message(irc::response(prefix, channel,
-                "Error reloading script. :("));
-        }
-    } else if (irc::rfc1459_equal(args[0], "reloadusers")) {
-        _users.clear();
-
-        read_users(_userfile);
-
-        std::ostringstream rsp;
-
-        rsp << "reloaded " << _users.size() << " users.";
-        send_message(irc::response(prefix, channel, rsp.str()));
     }
 }
 
