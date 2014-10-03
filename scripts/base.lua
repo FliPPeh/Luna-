@@ -142,6 +142,21 @@ function base.script_load()
         end
     end)
 
+    luna.add_command('reloadvars', function(who, where, what, args)
+        local u = who:match_reguser()
+
+        if u and u:flags():find('a') then
+            luna.reload_shared()
+            local n = 0
+
+            for _, _ in pairs(luna.shared) do
+                n = n + 1
+            end
+
+            who:respond(string.format('Reloaded %d variables', n))
+        end
+    end)
+
     luna.add_command('join', function(who, where, what, args)
         local u = who:match_reguser()
 
