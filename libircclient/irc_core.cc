@@ -22,6 +22,7 @@
 #include "irc_utils.h"
 
 #include <cstddef>
+#include <cctype>
 
 #include <algorithm>
 #include <sstream>
@@ -45,7 +46,12 @@ std::string to_string(message const& msg)
             strm << ':';
         }
 
-        strm << param;
+        // Filter out all control characters
+        for (char c : param) {
+            if (not (std::iscntrl(c) and std::isspace(c))) {
+                strm << c;
+            }
+        }
     }
 
     return strm.str();
