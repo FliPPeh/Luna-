@@ -68,7 +68,6 @@ luna::luna(
     //                                           6.2831853071796
     luna_script::shared_vars["luna.version"]  = "6.2831";
     luna_script::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
-    luna_script::shared_vars["luna.trigger"] = "!";
 
     std::ostringstream compiler;
 
@@ -85,6 +84,12 @@ luna::luna(
 #endif
 
     luna_script::shared_vars["luna.compiler"] = compiler.str();
+
+    if (luna_script::shared_vars.find("luna.trigger")
+            == std::end(luna_script::shared_vars)) {
+
+        luna_script::shared_vars["luna.trigger"] = "!";
+    }
 
     read_config("config.lua");
 }
