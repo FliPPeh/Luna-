@@ -33,12 +33,6 @@
 namespace irc {
 
 environment::environment()
-    : _capabilities{},
-      _channel_modes{channel_mode_types{"beI", "k", "l", "imnpstaqr"}},
-      _channel_prefixes{channel_prefixes{{'@', 'o'}, {'%', 'h'}, {'+', 'v'}}},
-      _prefix_modes{"ohv"},
-      _channel_types{"#&"},
-      _channels{}
 {
 }
 
@@ -47,8 +41,7 @@ environment::environment(environment const& rhs)
       _channel_modes{rhs._channel_modes},
       _channel_prefixes{rhs._channel_prefixes},
       _prefix_modes{rhs._prefix_modes},
-      _channel_types{rhs._channel_types},
-      _channels{}
+      _channel_types{rhs._channel_types}
 {
     for (auto& c : rhs._channels) {
         _channels[c.first] = std::make_unique<channel>(*(c.second));

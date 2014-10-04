@@ -125,7 +125,8 @@ private:
     void work_through_queue();
 
 private:
-    tokenbucket _bucket;
+    tokenbucket _bucket{512, 64, 128};
+
     std::queue<irc::message> _message_queue;
 };
 

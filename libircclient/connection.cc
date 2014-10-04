@@ -41,7 +41,6 @@ async_connection::async_connection(asio::io_service& io_svc, int flags)
       _ssl{asio::ssl::context::sslv23_client},
       _resolver{*_io_service},
       _socket{nullptr},
-      _buffer{},
       _connect_handler{nullptr},
       _use_ssl{(flags & connection_flags::SSL) > 0}
 {

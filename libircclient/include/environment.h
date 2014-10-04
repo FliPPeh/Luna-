@@ -114,11 +114,13 @@ private:
 private:
     unordered_rfc1459_map<std::string, std::string> _capabilities;
 
-    // cached here for good luck
-    channel_mode_types _channel_modes;
-    channel_prefixes   _channel_prefixes;
-    std::string _prefix_modes;
-    std::string _channel_types;
+    // Initialize with sensible default values until the server updates it.
+    channel_mode_types _channel_modes =
+        channel_mode_types{"beI", "k", "l", "imnpstaqr"};
+
+    channel_prefixes _channel_prefixes = {{'@', 'o'}, {'%', 'h'}, {'+', 'v'}};
+    std::string _prefix_modes  = "ovh";
+    std::string _channel_types = "#&";
 
     channel_list _channels;
 };

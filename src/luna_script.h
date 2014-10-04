@@ -85,7 +85,7 @@ private:
     logger _logger;
 
     std::string _file;
-    mutable mond::state _lua;
+    mond::state _lua;
 
     std::string _script_name;
     std::string _script_descr;

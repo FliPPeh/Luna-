@@ -130,22 +130,23 @@ private:
         STOP
     };
 
+    session_state _session_state = START;
+
     boost::asio::io_service         _io_service;
     boost::asio::deadline_timer     _idle_timer;
-    boost::posix_time::milliseconds _idle_interval;
+    boost::posix_time::milliseconds _idle_interval{125};
 
     std::unique_ptr<irc::async_connection> _irccon;
     std::unique_ptr<irc::environment>      _ircenv;
 
     std::queue<irc::message> _write_queue;
 
-    bool _use_ssl;
-
-    session_state _session_state;
+    bool _use_ssl = false;
 
     unordered_rfc1459_map<std::string, handler> _core_handlers;
 
-    void (client::*_current_handler)(message const& msg);
+    void (client::*_current_handler)(message const& msg) =
+        &client::login_handler;
 };
 
 }

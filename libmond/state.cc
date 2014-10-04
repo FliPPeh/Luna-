@@ -28,8 +28,7 @@
 namespace mond {
 
 state::state()
-    : _l{luaL_newstate()},
-      _functions{}
+    : _l{luaL_newstate()}
 {
     luaL_openlibs(_l);
 }

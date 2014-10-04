@@ -46,21 +46,7 @@ luna::luna(
     std::string const& user,
     std::string const& realname,
     std::string const& password)
-        : client_base{nick, user, realname, password},
-          _logger{"luna", logging_level::DEBUG, logging_flags::ANSI},
-          _server{""},
-          _port{6667},
-          _scripts{},
-          _autojoin{},
-          _users{},
-          _userfile{"users.txt"},
-          _varfile{"shared_vars.txt"},
-          _started{std::time(nullptr)},
-          _connected{0},
-          _bytes_sent{0},
-          _bytes_sent_sess{0},
-          _bytes_recvd{0},
-          _bytes_recvd_sess{0}
+        : client_base{nick, user, realname, password}
 {
     read_shared_vars(_varfile);
     read_users(_userfile);

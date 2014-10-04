@@ -217,30 +217,30 @@ private:
     }
 
 private:
-    logger _logger;
+    logger _logger{"luna", logging_level::DEBUG, logging_flags::ANSI};
 
-    std::string _server;
-    uint16_t _port;
+    std::string _server = "";
+    uint16_t _port      = 6667;
 
     std::vector<std::unique_ptr<luna_script>> _scripts;
     std::vector<std::string> _autojoin;
     std::vector<luna_user>   _users;
 
-    std::string _userfile;
-    std::string _varfile;
+    std::string _userfile = "users.txt";
+    std::string _varfile  = "shared_vars.txt";
 
 private:
     friend class luna_script;
     friend class luna_user_proxy;
     friend class luna_proxy;
 
-    std::time_t _started;
-    std::time_t _connected;
+    std::time_t _started   = std::time(nullptr);
+    std::time_t _connected = 0;
 
-    std::size_t _bytes_sent;
-    std::size_t _bytes_sent_sess;
-    std::size_t _bytes_recvd;
-    std::size_t _bytes_recvd_sess;
+    std::size_t _bytes_sent       = 0;
+    std::size_t _bytes_sent_sess  = 0;
+    std::size_t _bytes_recvd      = 0;
+    std::size_t _bytes_recvd_sess = 0;
 };
 
 #endif // defined LUNA_H

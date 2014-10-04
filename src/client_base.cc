@@ -30,9 +30,7 @@ client_base::client_base(
     std::string const& user,
     std::string const& realname,
     std::string const& password)
-        : irc::client{nick, user, realname, password},
-          _bucket{512, 64, 128},
-          _message_queue{}
+        : irc::client{nick, user, realname, password}
 {
 }
 

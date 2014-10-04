@@ -29,7 +29,6 @@ luna_script_proxy::luna_script_proxy(luna& ref, std::string fname)
     : _ref{&ref},
       _fname{std::move(fname)}
 {
-
 }
 
 

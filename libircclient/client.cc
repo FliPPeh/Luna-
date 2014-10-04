@@ -58,16 +58,9 @@ client::client(
       _user{std::move(user)},
       _real{std::move(realname)},
 
-      _io_service{},
       _idle_timer{_io_service},
-      _idle_interval{boost::posix_time::milliseconds(125)},
       _irccon{nullptr},
-      _ircenv{nullptr},
-      _write_queue{},
-      _use_ssl{false},
-
-      _session_state{START},
-      _current_handler{&client::login_handler}
+      _ircenv{nullptr}
 {
     init_core_handlers();
 }

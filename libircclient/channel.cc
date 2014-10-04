@@ -35,18 +35,12 @@
 namespace irc {
 
 channel::channel(std::string name)
-    : _modes{},
-      _users{},
-      _name{std::move(name)},
-      _created{},
-      _topic{},
-      _next_uid{0}
+    : _name{std::move(name)}
 {
 }
 
 channel::channel(channel const& c)
     : _modes{c._modes},
-      _users{},
       _name{c._name},
       _created{c._created},
       _topic{c._topic},

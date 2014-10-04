@@ -36,17 +36,11 @@
 #include <stdexcept>
 #include <regex>
 
-irc::unordered_rfc1459_map<std::string, std::string>
-luna_script::shared_vars{};
+irc::unordered_rfc1459_map<std::string, std::string> luna_script::shared_vars{};
 
 luna_script::luna_script(luna& context, std::string file)
     : _context{&context},
-      _logger{},
-      _file{std::move(file)},
-      _lua{},
-      _script_name{},
-      _script_descr{},
-      _script_version{}
+      _file{std::move(file)}
 {
     constexpr char const* extra_paths =
         "./scripts/?.lua;"

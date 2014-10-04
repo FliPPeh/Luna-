@@ -32,13 +32,8 @@ channel_user::channel_user(
     class channel& channel,
     uint64_t uid,
     std::string prefix)
-
-    : _channel{&channel},
-      _uid{uid},
-      _nick{},
-      _user{},
-      _host{},
-      _modes{""}
+        : _channel{&channel},
+          _uid{uid}
 {
     std::tie(_nick, _user, _host) = split_prefix(prefix);
 }
@@ -53,8 +48,7 @@ channel_user::channel_user(
           _uid{uid},
           _nick{std::move(nick)},
           _user{std::move(user)},
-          _host{std::move(host)},
-          _modes{""}
+          _host{std::move(host)}
 {
 }
 

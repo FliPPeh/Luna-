@@ -139,7 +139,7 @@ private:
     std::time_t _created;
     topic_info  _topic;
 
-    uint64_t _next_uid;
+    uint64_t _next_uid = 0;
 };
 
 }
