@@ -49,8 +49,10 @@ luna_script::luna_script(luna& context, std::string file)
       _script_version{}
 {
     constexpr char const* extra_paths =
-        "./scripts/?.lua;./scripts/?/init.lua;"
-        "./scripts/lib/?.lua;./scripts/lib/?.lua";
+        "./scripts/?.lua;"
+        "./scripts/?/init.lua;"
+        "./scripts/lib/?.lua;"
+        "./scripts/lib/?/init.lua;";
 
     _lua["package"]["path"].set(
         extra_paths + _lua["package"]["path"].get<std::string>());
