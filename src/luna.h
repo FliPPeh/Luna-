@@ -37,8 +37,7 @@
 
 class luna_user;
 
-class luna : public client_base
-{
+class luna final : public client_base {
 public:
     luna(
         std::string const& nick,
