@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef LUNA_CHANNEL_PROXY_H
-#define LUNA_CHANNEL_PROXY_H
+#ifndef LUNA_LUNA_CHANNEL_PROXY_HH_INCLUDED
+#define LUNA_LUNA_CHANNEL_PROXY_HH_INCLUDED
 
 #include <lua.hpp>
 
@@ -103,4 +103,4 @@ private:
 
 };
 
-#endif // defined LUNA_CHANNEL_PROXY_H
+#endif // defined LUNA_LUNA_CHANNEL_PROXY_HH_INCLUDED

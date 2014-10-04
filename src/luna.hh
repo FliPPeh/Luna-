@@ -18,20 +18,20 @@
  */
 
 #pragma once
-#ifndef LUNA_H
-#define LUNA_H
+#ifndef LUNA_LUNA_HH_INCLUDED
+#define LUNA_LUNA_HH_INCLUDED
 
-#include <channel.h>
-#include <channel_user.h>
-#include <environment.h>
+#include <channel.hh>
+#include <channel_user.hh>
+#include <environment.hh>
 
-#include "proxies/luna_channel_proxy.h"
+#include "proxies/luna_channel_proxy.hh"
 
-#include "client_base.h"
-#include "luna_script.h"
-#include "logging.h"
+#include "client_base.hh"
+#include "luna_script.hh"
+#include "logging.hh"
 
-#include <mond.h>
+#include <mond.hh>
 
 #include <string>
 
@@ -242,4 +242,4 @@ private:
     std::size_t _bytes_recvd_sess = 0;
 };
 
-#endif // defined LUNA_H
+#endif // defined LUNA_LUNA_HH_INCLUDED

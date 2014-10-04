@@ -5,15 +5,15 @@ find_package(OpenSSL      REQUIRED)
 add_definitions(-DBOOST_ASIO_HAS_MOVE=1)
 
 set(EXPORTED_INCLUDES
-    include/client.h
-    include/connection.h
-    include/irc_core.h
-    include/irc_utils.h
-    include/irc_helpers.h
-    include/irc_except.h
-    include/environment.h
-    include/channel.h
-    include/channel_user.h
+    include/client.hh
+    include/connection.hh
+    include/irc_core.hh
+    include/irc_utils.hh
+    include/irc_helpers.hh
+    include/irc_except.hh
+    include/environment.hh
+    include/channel.hh
+    include/channel_user.hh
     include/macros.h)
 
 set(SRC

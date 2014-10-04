@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef LUNA_SCRIPT_PROXY_H
-#define LUNA_SCRIPT_PROXY_H
+#ifndef LUNA_LUNA_SCRIPT_PROXY_HH_INCLUDED
+#define LUNA_LUNA_SCRIPT_PROXY_HH_INCLUDED
 
 #include <lua.hpp>
 
@@ -50,4 +50,4 @@ private:
     std::string _fname;
 };
 
-#endif // defined LUNA_SCRIPT_PROXY_H
+#endif // defined LUNA_LUNA_SCRIPT_PROXY_HH_INCLUDED

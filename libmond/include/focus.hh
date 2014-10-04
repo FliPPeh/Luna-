@@ -18,19 +18,19 @@
  */
 
 #pragma once
-#ifndef FOCUS_H
-#define FOCUS_H
+#ifndef LIBMOND_FOCUS_HH_INCLUDED
+#define LIBMOND_FOCUS_HH_INCLUDED
 
 #include "macros.h"
 
 #include <lua.hpp>
 
-#include "lua_write.h"
-#include "lua_read.h"
-#include "lua_types.h"
-#include "function.h"
-#include "tape.h"
-#include "state.h"
+#include "lua_write.hh"
+#include "lua_read.hh"
+#include "lua_types.hh"
+#include "function.hh"
+#include "tape.hh"
+#include "state.hh"
 
 #include <sstream>
 #include <string>
@@ -185,4 +185,4 @@ private:
 
 } // namespace mond
 
-#endif // defined FOCUS_H
+#endif // defined LIBMOND_FOCUS_HH_INCLUDED

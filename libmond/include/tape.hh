@@ -17,15 +17,25 @@
  * License along with libmond.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#pragma once
-//#ifndef MOND_H
-//#define MOND_H
+#pragma once
+#ifndef LIBMOND_TAPE_HH_INCLUDED
+#define LIBMOND_TAPE_HH_INCLUDED
 
-#include "state.h"
-#include "focus.h"
-#include "tape.h"
-#include "iterator.h"
-#include "metatable.h"
-#include "lua_types.h"
+#include "macros.h"
 
-//#endif // defined MOND_H
+#include <lua.hpp>
+
+class DLL_PUBLIC tape {
+public:
+    tape(int bottom, lua_State* state, bool* s);
+    tape(tape&& other);
+
+    ~tape();
+
+private:
+    int _bottom;
+    lua_State* _state;
+    bool* _seeking;
+};
+
+#endif // defined LIBMOND_TAPE_HH_INCLUDED

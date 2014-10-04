@@ -17,16 +17,16 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "client.h"
+#include "client.hh"
 
-#include "irc_core.h"
-#include "irc_except.h"
-#include "irc_helpers.h"
-#include "irc_utils.h"
-#include "connection.h"
-#include "environment.h"
-#include "channel.h"
-#include "channel_user.h"
+#include "irc_core.hh"
+#include "irc_except.hh"
+#include "irc_helpers.hh"
+#include "irc_utils.hh"
+#include "connection.hh"
+#include "environment.hh"
+#include "channel.hh"
+#include "channel_user.hh"
 
 #include <ctime>
 #include <cstddef>

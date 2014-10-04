@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef LUAH_TYPES_H
-#define LUAH_TYPES_H
+#ifndef LIBMOND_LUA_TYPES_HH_INCLUDED
+#define LIBMOND_LUA_TYPES_HH_INCLUDED
 
 #include <lua.hpp>
 
@@ -178,4 +178,4 @@ public:
 
 } // namespace mond
 
-#endif // defined LUAH_TYPES_H
+#endif // defined LIBMOND_LUA_TYPES_HH_INCLUDED

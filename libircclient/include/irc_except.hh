@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef IRC_EXCEPT_H
-#define IRC_EXCEPT_H
+#ifndef LIBIRCCLIENT_IRC_EXCEPT_HH_INCLUDED
+#define LIBIRCCLIENT_IRC_EXCEPT_HH_INCLUDED
 
 #include "macros.h"
 
@@ -181,4 +181,4 @@ using connection_error = typed_error<connection_error_type>;
 
 }
 
-#endif // defined IRC_EXCEPT_H
+#endif // defined LIBIRCCLIENT_IRC_EXCEPT_HH_INCLUDED

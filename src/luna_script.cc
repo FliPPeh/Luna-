@@ -17,19 +17,19 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "luna_script.h"
+#include "luna_script.hh"
 
-#include "proxies/luna_script_proxy.h"
-#include "proxies/luna_channel_proxy.h"
-#include "proxies/luna_user_proxy.h"
+#include "proxies/luna_script_proxy.hh"
+#include "proxies/luna_channel_proxy.hh"
+#include "proxies/luna_user_proxy.hh"
 
-#include "luna_user.h"
-#include "logging.h"
-#include "luna.h"
+#include "luna_user.hh"
+#include "logging.hh"
+#include "luna.hh"
 
-#include "mond.h"
+#include "mond.hh"
 
-#include <irc_except.h>
+#include <irc_except.hh>
 
 #include <sstream>
 #include <string>

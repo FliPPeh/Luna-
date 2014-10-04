@@ -17,11 +17,11 @@
  * License along with libmond.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "focus.h"
+#include "focus.hh"
 
-#include "state.h"
-#include "tape.h"
-#include "lua_types.h"
+#include "state.hh"
+#include "tape.hh"
+#include "lua_types.hh"
 
 #include <lua.hpp>
 

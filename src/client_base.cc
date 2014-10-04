@@ -17,11 +17,11 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "client_base.h"
+#include "client_base.hh"
 
-#include <environment.h>
+#include <environment.hh>
 
-#include "tokenbucket.h"
+#include "tokenbucket.hh"
 
 #include <iostream>
 

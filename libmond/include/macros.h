@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef MACRO_H
-#define MACRO_H
+#ifndef LIBMOND_MACROS_H_INCLUDED
+#define LIBMOND_MACROS_H_INCLUDED
 
 #if __GNUC__ >= 4
   #define HELPER_DLL_IMPORT __attribute__ ((visibility ("default")))
@@ -34,4 +34,4 @@
 #define DLL_PUBLIC HELPER_DLL_EXPORT
 #define DLL_LOCAL  HELPER_DLL_LOCAL
 
-#endif // defined MACRO_H
+#endif // defined LIBMOND_MACROS_H_INCLUDED

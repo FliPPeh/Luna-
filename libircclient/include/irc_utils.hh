@@ -18,14 +18,14 @@
  */
 
 #pragma once
-#ifndef IRC_UTILS_H
-#define IRC_UTILS_H
+#ifndef LIBIRCCLIENT_IRC_UTILS_HH_INCLUDED
+#define LIBIRCCLIENT_IRC_UTILS_HH_INCLUDED
 
 /*! \file
  *  \brief Common, but not cruicial, IRC helpers.
  */
 
-#include "irc_core.h"
+#include "irc_core.hh"
 
 #include <cstddef>
 
@@ -212,4 +212,4 @@ std::vector<std::string> split_noempty(
     std::string const& src,
     std::string const& sep);
 
-#endif // defined IRC_UTILS_H
+#endif // defined LIBIRCCLIENT_IRC_UTILS_HH_INCLUDED

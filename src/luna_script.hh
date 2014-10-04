@@ -17,14 +17,15 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUNA_SCRIPT_H
-#define LUNA_SCRIPT_H
+#pragma once
+#ifndef LUNA_LUNA_SCRIPT_HH_INCLUDED
+#define LUNA_LUNA_SCRIPT_HH_INCLUDED
 
-#include "logging.h"
+#include "logging.hh"
 
-#include "irc_utils.h"
+#include "irc_utils.hh"
 
-#include <mond.h>
+#include <mond.hh>
 
 #include <string>
 
@@ -92,4 +93,4 @@ private:
     std::string _script_version;
 };
 
-#endif // defined LUNA_SCRIPT_H
+#endif // defined LUNA_LUNA_SCRIPT_HH_INCLUDED

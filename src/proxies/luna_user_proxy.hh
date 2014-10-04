@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef LUNA_USER_PROXY_H
-#define LUNA_USER_PROXY_H
+#ifndef LUNA_LUNA_USER_PROXY_HH_INCLUDED
+#define LUNA_LUNA_USER_PROXY_HH_INCLUDED
 
 #include <string>
 
@@ -50,4 +50,4 @@ private:
     std::string _id;
 };
 
-#endif // defined LUNA_USER_PROXY_H
+#endif // defined LUNA_LUNA_USER_PROXY_HH_INCLUDED

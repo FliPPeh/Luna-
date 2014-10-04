@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef IRC_CORE_H
-#define IRC_CORE_H
+#ifndef LIBIRCCLIENT_IRC_CORE_HH_INCLUDED
+#define LIBIRCCLIENT_IRC_CORE_HH_INCLUDED
 
 #include "macros.h"
 
@@ -425,4 +425,4 @@ inline std::ostream& operator<<(std::ostream& strm, message const& msg)
 
 }
 
-#endif // defined IRC_CORE_H
+#endif // defined LIBIRCCLIENT_IRC_CORE_HH_INCLUDED

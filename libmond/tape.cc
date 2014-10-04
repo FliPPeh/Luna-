@@ -17,7 +17,7 @@
  * License along with libmond.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tape.h"
+#include "tape.hh"
 
 #include <algorithm>
 

@@ -17,8 +17,8 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LUNA_USER_H
-#define LUNA_USER_H
+#ifndef LUNA_LUNA_USER_HH_INCLUDED
+#define LUNA_LUNA_USER_HH_INCLUDED
 
 #include <string>
 
@@ -62,4 +62,4 @@ private:
 int flags_from_string(std::string const& flags);
 std::string flags_to_string(int flags);
 
-#endif // defined LUNA_USER_H
+#endif // defined LUNA_LUNA_USER_HH_INCLUDED

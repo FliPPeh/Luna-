@@ -17,13 +17,14 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CLIENT_H
-#define CLIENT_H
+#pragma once
+#ifndef LIBIRCCLIENT_CLIENT_HH_INCLUDED
+#define LIBIRCCLIENT_CLIENT_HH_INCLUDED
 
 #include "macros.h"
 
-#include "irc_core.h"
-#include "irc_utils.h"
+#include "irc_core.hh"
+#include "irc_utils.hh"
 
 #include <boost/asio.hpp>
 
@@ -151,4 +152,4 @@ private:
 
 }
 
-#endif
+#endif // defined LIBIRCCLIENT_CLIENT_HH_INCLUDED

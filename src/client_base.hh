@@ -18,12 +18,12 @@
  */
 
 #pragma once
-#ifndef CLIENT_BASE_H
-#define CLIENT_BASE_H
+#ifndef LUNA_CLIENT_BASE_HH_INCLUDED
+#define LUNA_CLIENT_BASE_HH_INCLUDED
 
-#include <client.h>
+#include <client.hh>
 
-#include "tokenbucket.h"
+#include "tokenbucket.hh"
 
 #include <string>
 #include <queue>
@@ -130,4 +130,4 @@ private:
     std::queue<irc::message> _message_queue;
 };
 
-#endif // defined CLIENT_BASE_H
+#endif // defined LUNA_CLIENT_BASE_HH_INCLUDED

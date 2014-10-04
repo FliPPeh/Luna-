@@ -18,10 +18,10 @@
  */
 
 #pragma once
-#ifndef LUA_UTIL_H
-#define LUA_UTIL_H
+#ifndef LIBMOND_LUA_UTIL_HH_INCLUDED
+#define LIBMOND_LUA_UTIL_HH_INCLUDED
 
-#include "lua_types.h"
+#include "lua_types.hh"
 
 #include <lua.hpp>
 
@@ -132,4 +132,4 @@ auto lift_result(Fun f, Args&&... args)
 } // namespace mond
 
 
-#endif // defined LUA_UTIL_H
+#endif // defined LIBMOND_LUA_UTIL_HH_INCLUDED

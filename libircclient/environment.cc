@@ -17,12 +17,12 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "environment.h"
+#include "environment.hh"
 
-#include "irc_utils.h"
-#include "irc_except.h"
-#include "channel.h"
-#include "channel_user.h"
+#include "irc_utils.hh"
+#include "irc_except.hh"
+#include "channel.hh"
+#include "channel_user.hh"
 
 #include <algorithm>
 #include <sstream>

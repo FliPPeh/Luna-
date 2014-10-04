@@ -18,11 +18,11 @@
  */
 
 #pragma once
-#ifndef LUAH_WRITE_H
-#define LUAH_WRITE_H
+#ifndef LIBMOND_LUA_WRITE_HH_INCLUDED
+#define LIBMOND_LUA_WRITE_HH_INCLUDED
 
-#include "lua_types.h"
-#include "lua_util.h"
+#include "lua_types.hh"
+#include "lua_util.hh"
 
 #include <lua.hpp>
 
@@ -158,4 +158,4 @@ int write(lua_State* l, std::tuple<Args...> const& args)
 
 } // namespace mond
 
-#endif // defined LUAH_WRITE_H
+#endif // defined LIBMOND_LUA_WRITE_HH_INCLUDED

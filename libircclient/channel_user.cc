@@ -17,9 +17,9 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "channel_user.h"
+#include "channel_user.hh"
 
-#include "irc_utils.h"
+#include "irc_utils.hh"
 
 #include <cstdint>
 

@@ -17,12 +17,12 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "channel.h"
+#include "channel.hh"
 
-#include "channel_user.h"
+#include "channel_user.hh"
 
-#include "irc_except.h"
-#include "environment.h"
+#include "irc_except.hh"
+#include "environment.hh"
 
 #include <tuple>
 #include <vector>

@@ -17,7 +17,7 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tokenbucket.h"
+#include "tokenbucket.hh"
 
 #include <cstdint>
 

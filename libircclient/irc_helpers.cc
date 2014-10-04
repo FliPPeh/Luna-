@@ -17,10 +17,10 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "irc_helpers.h"
+#include "irc_helpers.hh"
 
-#include "irc_core.h"
-#include "irc_utils.h"
+#include "irc_core.hh"
+#include "irc_utils.hh"
 
 #include <sstream>
 #include <string>

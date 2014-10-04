@@ -18,10 +18,10 @@
  */
 
 #pragma once
-#ifndef LUAH_READ_H
-#define LUAH_READ_H
+#ifndef LIBMOND_LUA_READ_HH_INCLUDED
+#define LIBMOND_LUA_READ_HH_INCLUDED
 
-#include "lua_types.h"
+#include "lua_types.hh"
 
 #include <lua.hpp>
 
@@ -222,4 +222,4 @@ auto check(lua_State* l)
 
 } // namespace mond
 
-#endif // defined LUAH_READ_H
+#endif // defined LIBMOND_LUA_READ_HH_INCLUDED

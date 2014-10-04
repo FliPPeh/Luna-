@@ -18,14 +18,14 @@
  */
 
 #pragma once
-#ifndef ITERATOR_H
-#define ITERATOR_H
+#ifndef LIBMOND_ITERATOR_HH_INCLUDED
+#define LIBMOND_ITERATOR_HH_INCLUDED
 
 #include <lua.hpp>
 
 #include <cstddef>
 
-#include "lua_read.h"
+#include "lua_read.hh"
 
 #include <iterator>
 
@@ -143,4 +143,4 @@ using array_iterator = iterator<std::size_t, T>;
 
 } // namespace mond
 
-#endif // defined ITERATOR_H
+#endif // defined LIBMOND_ITERATOR_HH_INCLUDED

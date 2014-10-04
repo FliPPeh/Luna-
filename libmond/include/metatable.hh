@@ -18,11 +18,11 @@
  */
 
 #pragma once
-#ifndef LUA_METATABLE_H
-#define LUA_METATABLE_H
+#ifndef LIBMOND_METATABLE_HH_INCLUDED
+#define LIBMOND_METATABLE_HH_INCLUDED
 
-#include "state.h"
-#include "function.h"
+#include "state.hh"
+#include "function.hh"
 
 #include <lua.hpp>
 
@@ -243,4 +243,4 @@ private:
 
 } // namespace mond
 
-#endif // defined LUA_METATABLE_H
+#endif // defined LIBMOND_METATABLE_HH_INCLUDED

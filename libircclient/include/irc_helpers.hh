@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef LIBIRCCLIENT_IRC_HELPERS_HH_INCLUDED
+#define LIBIRCCLIENT_IRC_HELPERS_HH_INCLUDED
 
 #include "macros.h"
 
@@ -79,4 +79,4 @@ message ctcp_response(
 
 }
 
-#endif // defined HELPERS_H
+#endif // defined LIBIRCCLIENT_IRC_HELPERS_HH_INCLUDED

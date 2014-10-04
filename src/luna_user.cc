@@ -17,7 +17,7 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "luna_user.h"
+#include "luna_user.hh"
 
 #include <string>
 #include <regex>

@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef LUAH_STATE_H
-#define LUAH_STATE_H
+#ifndef LIBMOND_STATE_HH_INCLUDED
+#define LIBMOND_STATE_HH_INCLUDED
 
 #include "macros.h"
 
@@ -79,4 +79,4 @@ private:
 
 } // namespace mond
 
-#endif // defined LUA_STATE_H
+#endif // defined LIBMOND_STATE_HH_INCLUDED

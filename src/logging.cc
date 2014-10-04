@@ -17,7 +17,7 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "logging.h"
+#include "logging.hh"
 
 #include <ctime>
 

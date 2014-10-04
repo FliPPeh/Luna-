@@ -17,17 +17,17 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "luna.h"
-#include "luna_user.h"
-#include "luna_script.h"
-#include "logging.h"
+#include "luna.hh"
+#include "luna_user.hh"
+#include "luna_script.hh"
+#include "logging.hh"
 
-#include <irc_core.h>
-#include <irc_except.h>
-#include <irc_helpers.h>
-#include <environment.h>
+#include <irc_core.hh>
+#include <irc_except.hh>
+#include <irc_helpers.hh>
+#include <environment.hh>
 
-#include <mond.h>
+#include <mond.hh>
 
 #include <lua.hpp>
 

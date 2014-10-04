@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef LOGGING_H
-#define LOGGING_H
+#ifndef LUNA_LOGGING_HH_INCLUDED
+#define LUNA_LOGGING_HH_INCLUDED
 
 #include <string>
 #include <sstream>
@@ -102,4 +102,4 @@ private:
 
 };
 
-#endif // defined LOGGING_H
+#endif // defined LUNA_LOGGING_HH_INCLUDED

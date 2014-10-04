@@ -17,9 +17,9 @@
  * License along with libmond.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "state.h"
+#include "state.hh"
 
-#include "focus.h"
+#include "focus.hh"
 
 #include <lua.hpp>
 

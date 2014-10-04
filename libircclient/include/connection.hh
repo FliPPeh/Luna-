@@ -17,8 +17,9 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONNECTION_H
-#define CONNECTION_H
+#pragma once
+#ifndef LIBIRCCLIENT_CONNECTION_HH_INCLUDED
+#define LIBIRCCLIENT_CONNECTION_HH_INCLUDED
 
 #include "macros.h"
 
@@ -102,4 +103,4 @@ private:
 
 }
 
-#endif
+#endif // defined LIBIRCCLIENT_CONNECTION_HH_INCLUDED

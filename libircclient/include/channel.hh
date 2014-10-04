@@ -18,12 +18,12 @@
  */
 
 #pragma once
-#ifndef CHANNEL_H
-#define CHANNEL_H
+#ifndef LIBIRCCLIENT_CHANNEL_HH_INCLUDED
+#define LIBIRCCLIENT_CHANNEL_HH_INCLUDED
 
 #include "macros.h"
 
-#include "irc_utils.h"
+#include "irc_utils.hh"
 
 #include <ctime>
 
@@ -144,4 +144,4 @@ private:
 
 }
 
-#endif // defined CHANNEL_H
+#endif // defined LIBIRCCLIENT_CHANNEL_HH_INCLUDED

@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef CHANNEL_USER_H
-#define CHANNEL_USER_H
+#ifndef LIBIRCCLIENT_CHANNEL_USER_HH_INCLUDED
+#define LIBIRCCLIENT_CHANNEL_USER_HH_INCLUDED
 
 #include "macros.h"
 
@@ -84,5 +84,5 @@ private:
 
 }
 
-#endif // defined CHANNEL_USER_H
+#endif // defined LIBIRCCLIENT_CHANNEL_USER_HH_INCLUDED
 

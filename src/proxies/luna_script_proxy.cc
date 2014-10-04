@@ -17,10 +17,10 @@
  * along with Luna++.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "luna_script_proxy.h"
+#include "luna_script_proxy.hh"
 
-#include "luna.h"
-#include "luna_script.h"
+#include "luna.hh"
+#include "luna_script.hh"
 
 #include <string>
 #include <utility>

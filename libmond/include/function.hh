@@ -18,13 +18,13 @@
  */
 
 #pragma once
-#ifndef LUAH_FUNCTION_H
-#define LUAH_FUNCTION_H
+#ifndef LIBMOND_FUNCTION_HH_INCLUDED
+#define LIBMOND_FUNCTION_HH_INCLUDED
 
-#include "lua_util.h"
-#include "lua_read.h"
-#include "lua_write.h"
-#include "lua_types.h"
+#include "lua_util.hh"
+#include "lua_read.hh"
+#include "lua_write.hh"
+#include "lua_types.hh"
 
 #include <lua.hpp>
 
@@ -265,4 +265,4 @@ std::unique_ptr<function_base> write_constructor(
 
 } // namespace mond
 
-#endif // defined LUA_FUNCTION_H
+#endif // defined LIBMOND_FUNCTION_HH_INCLUDED

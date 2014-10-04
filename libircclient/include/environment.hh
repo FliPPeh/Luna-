@@ -17,10 +17,11 @@
  * License along with libircclient.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATE_H
-#define STATE_H
+#pragma once
+#ifndef LIBIRCCLIENT_ENVIRONMENT_HH_INCLUDED
+#define LIBIRCCLIENT_ENVIRONMENT_HH_INCLUDED
 
-#include "irc_utils.h"
+#include "irc_utils.hh"
 
 #include <ctime>
 
@@ -127,4 +128,4 @@ private:
 
 }
 
-#endif
+#endif // defined LIBIRCCLIENT_ENVIRONMENT_HH_INCLUDED

@@ -18,8 +18,8 @@
  */
 
 #pragma once
-#ifndef TOKENBUCKET_H
-#define TOKENBUCKET_H
+#ifndef LUNA_TOKENBUCKET_HH_INCLUDED
+#define LUNA_TOKENBUCKET_HH_INCLUDED
 
 #include <cstdint>
 #include <chrono>
@@ -75,4 +75,4 @@ private:
         _last_update;      //!< Last update.
 };
 
-#endif // defined TOKENBUCKET_H
+#endif // defined LUNA_TOKENBUCKET_HH_INCLUDED
