@@ -515,9 +515,12 @@ void luna::handle_core_ctcp(
     std::string const& ctcp,
     std::string const& args)
 {
-    std::string const& rtarget = environment().is_channel(target)
-        ? target
-        : irc::normalize_nick(prefix);
+    std::string rtarget = prefix;
+
+    if (irc::is_user_prefix(prefix)) {
+        std::tie(rtarget, std::ignore, std::ignore) = irc::split_prefix(prefix);
+    }
+
 
     if (irc::rfc1459_equal(ctcp, "VERSION")) {
         send_message(irc::ctcp_response(rtarget,
