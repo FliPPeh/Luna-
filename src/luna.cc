@@ -31,6 +31,8 @@
 
 #include <lua.hpp>
 
+#include <cstring>
+#include <cerrno>
 #include <ctime>
 
 #include <algorithm>
