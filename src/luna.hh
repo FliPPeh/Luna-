@@ -35,6 +35,10 @@
 
 #include <string>
 
+//                    6.2831853071796
+#define LUNA_VERSION "6.2831"
+
+
 class luna_user;
 
 class luna final : public client_base {

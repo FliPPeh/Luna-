@@ -53,8 +53,7 @@ luna::luna(
     read_shared_vars(_varfile);
     read_users(_userfile);
 
-    //                                           6.2831853071796
-    luna_script::shared_vars["luna.version"]  = "6.2831";
+    luna_script::shared_vars["luna.version"]  = LUNA_VERSION;
     luna_script::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
 
     std::ostringstream compiler;
@@ -521,7 +520,9 @@ void luna::handle_core_ctcp(
         : irc::normalize_nick(prefix);
 
     if (irc::rfc1459_equal(ctcp, "VERSION")) {
-        send_message(irc::ctcp_response(rtarget, "VERSION", "Luna++ vTau"));
+        send_message(irc::ctcp_response(rtarget,
+             "VERSION", "Luna++ " LUNA_VERSION));
+
     } else if (irc::rfc1459_equal(ctcp, "PING")) {
         // :)
         send_message(irc::ctcp_response(rtarget, "PING", "0"));
