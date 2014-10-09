@@ -429,11 +429,11 @@ function channel_meta_aux:notice(msg)
 end
 
 function channel_meta_aux:set_incoming_filter(fun)
-    luna.channel_set_incoming_filter(self:name(), fun)
+    luna.set_channel_incoming_filter(self:name(), fun)
 end
 
 function channel_meta_aux:set_outgoing_filter(fun)
-    luna.channel_set_outgoing_filter(self:name(), fun)
+    luna.set_channel_outgoing_filter(self:name(), fun)
 end
 
 
