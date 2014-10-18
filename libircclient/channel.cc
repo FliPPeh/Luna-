@@ -191,13 +191,15 @@ channel_user& channel::create_user(
 }
 
 
-void channel::rename_user(std::string const& old_nick, std::string new_nick)
+void channel::rename_user(
+    std::string const& old_nick,
+    std::string const& new_nick)
 {
     // Have it throw an exception if user not found
     find_user(old_nick);
 
     _users[new_nick] = std::move(_users[old_nick]);
-    _users[new_nick]->rename(std::move(new_nick));
+    _users[new_nick]->rename(new_nick);
 
     _users.erase(old_nick);
 }

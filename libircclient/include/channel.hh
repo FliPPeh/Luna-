@@ -110,7 +110,9 @@ private:
         std::string user,
         std::string host);
 
-    void rename_user(std::string const& old_nick, std::string new_nick);
+    void rename_user(
+        std::string const& old_nick,
+        std::string const& new_nick);
 
     void remove_user(channel_user& user);
 
