@@ -44,11 +44,8 @@
 
 
 luna::luna(
-    std::string const& nick,
-    std::string const& user,
-    std::string const& realname,
-    std::string const& password)
-        : client_base{nick, user, realname, password}
+    std::string const& cfgfile)
+        : client_base{"", "", ""}
 {
     read_shared_vars(_varfile);
     read_users(_userfile);
@@ -78,7 +75,7 @@ luna::luna(
         luna_script::shared_vars["luna.trigger"] = "!";
     }
 
-    read_config("config.lua");
+    read_config(cfgfile);
 }
 
 
@@ -554,7 +551,7 @@ void cleanup(int sig)
 
 int main(int argc, char** argv)
 {
-    luna cl{"Luna^", "Luna", "I am a robot beep boop"};
+    luna cl{argc > 1 ? argv[1] : "config.lua"};
     lref = &cl;
 
     signal(SIGINT, cleanup);

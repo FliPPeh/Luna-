@@ -43,11 +43,7 @@ class luna_user;
 
 class luna final : public client_base {
 public:
-    luna(
-        std::string const& nick,
-        std::string const& user,
-        std::string const& realname,
-        std::string const& password = "");
+    luna(std::string const& cfgfile);
 
     ~luna();
 
