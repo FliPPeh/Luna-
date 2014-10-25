@@ -87,6 +87,76 @@ function luna.util.mask(prefix, style, mtype)
                                        or '%s!%s@%s', unpack(masks[mtype]))
 end
 
+-- Collects mode changes
+--   e.g.:
+--     luna.util.collect_modechanges{
+--        '+o user1',       -- as plain string
+--        {'+o', 'user2'},  -- as separated mode and argument
+--        '-o user3',
+--        '+t'}             -- as plain string without argument
+--     => '+oot-o user1 user2 user3'
+function luna.util.collect_modechanges(modes)
+    table.sort(modes, function(a, b)
+        if type(a) == 'table' then
+            a = a[1]
+        end
+
+        if type(b) == 'table' then
+            b = b[1]
+        end
+
+        return a:sub(2,2) > b:sub(2,2)
+    end)
+
+    local   set,   seta = {}, {}
+    local unset, unseta = {}, {}
+
+    for i, modeset in ipairs(modes) do
+        local m, a
+
+        if type(modeset) == 'table' then
+            if #modeset > 1 then
+                m, a = unpack(modeset)
+            else
+                m, a = modeset[1], ''
+            end
+        else
+            _, _, m, a = modeset:find('([%+%-]%a)%s*(%w*)')
+        end
+
+
+        m = m:gsub('^%s*(.-)%s*$', '%1')
+        a = a:gsub('^%s*(.-)%s*$', '%1')
+
+        if m:sub(1, 1) == '+' then
+            table.insert(set, m:sub(2, 2))
+
+            if #a > 0 then
+                table.insert(seta, a)
+            end
+        else
+            table.insert(unset, m:sub(2, 2))
+
+            if #a > 0 then
+                table.insert(unseta, a)
+            end
+        end
+    end
+
+    rv = ''
+
+    if #set > 0 then
+        rv = '+' .. table.concat(set)
+    end
+
+    if #unset > 0 then
+        rv = rv .. '-' .. table.concat(unset)
+    end
+
+    return rv .. ' ' .. table.concat(seta,   ' ')
+              .. ' ' .. table.concat(unseta, ' ')
+end
+
 -- Logging functionality
 function print(...)
     log.info(...)
