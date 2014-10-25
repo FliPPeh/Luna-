@@ -87,6 +87,7 @@ public:
     channel_prefixes const&   prefixes()  const;
     channel_mode_types const& chanmodes() const;
 
+    std::string channel_types() const;
     bool is_channel(std::string const& subj) const;
 
     // Distributes channel modes with their respective flags

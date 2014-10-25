@@ -410,7 +410,25 @@ void luna::on_privmsg(
     std::string const& target,
     std::string const& msg)
 {
-    dispatch_signal_helper("message", source, target, msg);
+    std::size_t chanstart =
+        target.find_first_of(environment().channel_types());
+
+    if (chanstart != std::string::npos) {
+        // >= 0 = channel
+        std::string real_target = target;
+        std::string message_level = ""; // default: everbody
+
+        if (chanstart != 0) {
+            // +#channel, @#channel, @+&channel, ...
+            message_level = target.substr(0, chanstart);
+            real_target   = target.substr(chanstart);
+        }
+
+        dispatch_signal_helper("message",
+            source, real_target, msg, message_level);
+    } else {
+        dispatch_signal_helper("message", source, target, msg);
+    }
 }
 
 void luna::on_notice(
@@ -418,7 +436,25 @@ void luna::on_notice(
     std::string const& target,
     std::string const& msg)
 {
-    dispatch_signal_helper("notice", source, target, msg);
+    std::size_t chanstart =
+        target.find_first_of(environment().channel_types());
+
+    if (chanstart != std::string::npos) {
+        // >= 0 = channel
+        std::string real_target = target;
+        std::string message_level = ""; // default: everbody
+
+        if (chanstart != 0) {
+            // +#channel, @#channel, @+&channel, ...
+            message_level = target.substr(0, chanstart);
+            real_target   = target.substr(chanstart);
+        }
+
+        dispatch_signal_helper("notice",
+            source, real_target, msg, message_level);
+    } else {
+        dispatch_signal_helper("notice", source, target, msg);
+    }
 }
 
 void luna::on_ctcp_request(

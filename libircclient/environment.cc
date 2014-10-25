@@ -87,6 +87,11 @@ environment::channel_mode_types const& environment::chanmodes() const
 }
 
 
+std::string environment::channel_types() const
+{
+    return _channel_types;
+}
+
 bool environment::is_channel(std::string const& subj) const
 {
     return _channel_types.find(subj.front()) != std::string::npos;

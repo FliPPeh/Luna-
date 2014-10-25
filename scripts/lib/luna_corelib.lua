@@ -126,10 +126,10 @@ function luna.add_signal_handler(signal, id, fn)
     if signal == 'channel_message' then
         local oldfn = fn
 
-        fn = function(who, where, what)
+        fn = function(who, where, what, lvl)
             local filter = where:incoming_filter()
 
-            oldfn(who, where, filter and filter(where, what) or what)
+            oldfn(who, where, filter and filter(where, what) or what, lvl)
         end
     end
 
@@ -418,14 +418,17 @@ setmetatable(luna.channel_meta.__index, {
     })
 
 
-function channel_meta_aux:privmsg(msg)
+function channel_meta_aux:privmsg(msg, lvl)
     local filter = self:outgoing_filter()
+    lvl = lvl or ''
 
-    luna.privmsg(self:name(), filter and filter(self, msg) or msg)
+    luna.privmsg(lvl .. self:name(), filter and filter(self, msg) or msg)
 end
 
-function channel_meta_aux:notice(msg)
-    luna.notice(self:name(), msg)
+function channel_meta_aux:notice(msg, lvl)
+    lvl = lvl or ''
+
+    luna.notice(lvl .. self:name(), msg)
 end
 
 function channel_meta_aux:set_incoming_filter(fun)
@@ -504,8 +507,8 @@ setmetatable(luna.channel_user_meta.__index, {
     })
 
 
-function channel_user_aux:respond(msg)
-    return self:channel():privmsg(self:nick() .. ': ' .. msg)
+function channel_user_aux:respond(msg, lvl)
+    return self:channel():privmsg(self:nick() .. ': ' .. msg, lvl)
 end
 
 
