@@ -170,6 +170,24 @@ private:
             std::end(_scripts));
     }
 
+    auto get_channel_proxy(irc::channel const& channel)
+    {
+        return mond::object<luna_channel_proxy>(*this, channel.name());
+    }
+
+    auto get_unknown_user_proxy(std::string prefix)
+    {
+        return mond::object<luna_unknown_user_proxy>(*this, std::move(prefix));
+    }
+
+    auto get_channel_user_proxy(
+        irc::channel_user const& user,
+        irc::channel const& channel)
+    {
+        return mond::object<luna_channel_user_proxy>(
+            *this, channel.name(), user.uid());
+    }
+
     template <typename... Args>
     auto dispatch_signal_helper(
         std::string const& signal,
@@ -195,24 +213,6 @@ private:
             dispatch_signal(signal,
                 get_unknown_user_proxy(user), std::forward<Args>(args)...);
         }
-    }
-
-    auto get_channel_proxy(irc::channel const& channel)
-    {
-        return mond::object<luna_channel_proxy>(*this, channel.name());
-    }
-
-    auto get_unknown_user_proxy(std::string prefix)
-    {
-        return mond::object<luna_unknown_user_proxy>(*this, std::move(prefix));
-    }
-
-    auto get_channel_user_proxy(
-        irc::channel_user const& user,
-        irc::channel const& channel)
-    {
-        return mond::object<luna_channel_user_proxy>(
-            *this, channel.name(), user.uid());
     }
 
 private:
