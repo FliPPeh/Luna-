@@ -79,7 +79,7 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
     }
 
     for (;;) {
-        _session_state = START;
+        _session_state = session_state::start;
         _current_handler = &client::login_handler;
 
         int flags = _use_ssl ? connection_flags::SSL : 0;
@@ -111,7 +111,7 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
             this->send_message(irc::nick(_nick));
             this->send_message(irc::user(_user, "0", _real));
 
-            this->_session_state = LOGIN_SENT;
+            this->_session_state = session_state::login_sent;
         });
 
 
@@ -125,7 +125,7 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
 
         _io_service.reset();
 
-        if (_session_state == STOP) {
+        if (_session_state == session_state::stop) {
             return;
         }
 
@@ -135,7 +135,7 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
 
 void client::stop()
 {
-    _session_state = STOP;
+    _session_state = session_state::stop;
 }
 
 
@@ -154,7 +154,7 @@ void client::change_nick(std::string const& nick)
 
         // If we're not logged yet, we won't get the nick confirmation message
         // that we normally use to update the nickname
-        if (_session_state != LOGGED_IN) {
+        if (_session_state != session_state::logged_in) {
             _nick = nick;
         }
     } else {
@@ -374,8 +374,8 @@ void client::login_handler(message const& msg)
     } else if (rfc1459_equal(msg.command, command::RPL_WELCOME)) {
         _current_handler = &client::main_handler;
 
-        if (_session_state != STOP) {
-            _session_state = LOGGED_IN;
+        if (_session_state != session_state::stop) {
+            _session_state = session_state::logged_in;
         }
 
         (this->*_current_handler)(msg);

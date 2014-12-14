@@ -124,14 +124,14 @@ private:
     DLL_LOCAL void init_core_handlers();
 
 private:
-    enum session_state {
-        START,
-        LOGIN_SENT,
-        LOGGED_IN,
-        STOP
+    enum class session_state {
+        start,
+        stop,
+        login_sent,
+        logged_in
     };
 
-    session_state _session_state = START;
+    session_state _session_state = session_state::start;
 
     boost::asio::io_service         _io_service;
     boost::asio::deadline_timer     _idle_timer;
