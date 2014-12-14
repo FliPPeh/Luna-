@@ -104,7 +104,7 @@ int _write(lua_State* l, std::vector<T> const& vec)
 {
     lua_newtable(l);
 
-    for (size_t i = 0; i < vec.size(); ++i) {
+    for (std::size_t i = 0; i < vec.size(); ++i) {
         _write(l, vec[i]);
         lua_rawseti(l, -2, i+1);
     }

@@ -75,7 +75,7 @@ std::vector<T> _read(tag<std::vector<T>>, lua_State* l, int i)
 {
     std::vector<T> ret;
 
-    for (size_t j = 1; j <= lua_rawlen(l, i); ++j) {
+    for (std::size_t j = 1; j <= lua_rawlen(l, i); ++j) {
         lua_rawgeti(l, -1, j);
 
         ret.emplace_back(_read(tag<T>{}, l, -1));
