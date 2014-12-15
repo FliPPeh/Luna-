@@ -6,14 +6,18 @@ set(SRC
     luna.cc
     luna_user.hh
     luna_user.cc
-    luna_script.hh
-    luna_script.cc
-    proxies/luna_channel_proxy.hh
-    proxies/luna_channel_proxy.cc
-    proxies/luna_script_proxy.hh
-    proxies/luna_script_proxy.cc
-    proxies/luna_user_proxy.hh
-    proxies/luna_user_proxy.cc
+    luna_extension.hh
+    luna_extension.cc
+
+    lua/luna_script.hh
+    lua/luna_script.cc
+    lua/proxies/luna_channel_proxy.hh
+    lua/proxies/luna_channel_proxy.cc
+    lua/proxies/luna_extension_proxy.hh
+    lua/proxies/luna_extension_proxy.cc
+    lua/proxies/luna_user_proxy.hh
+    lua/proxies/luna_user_proxy.cc
+
     client_base.hh
     client_base.cc
     tokenbucket.hh

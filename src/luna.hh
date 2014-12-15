@@ -21,21 +21,19 @@
 #ifndef LUNA_LUNA_HH_INCLUDED
 #define LUNA_LUNA_HH_INCLUDED
 
+#include "client_base.hh"
+#include "logging.hh"
+
 #include <channel.hh>
 #include <channel_user.hh>
 #include <environment.hh>
-
-#include "proxies/luna_channel_proxy.hh"
-
-#include "client_base.hh"
-#include "luna_script.hh"
-#include "logging.hh"
 
 #include <mond.hh>
 
 #include <string>
 
 class luna_user;
+class luna_extension;
 
 class luna final : public client_base {
 public:
@@ -53,8 +51,8 @@ public:
     void save_shared_vars(std::string const& filename);
     void save_users(std::string const& filename);
 
-    std::vector<std::unique_ptr<luna_script>> const& scripts();
-    std::vector<luna_user>&   users();
+    std::vector<std::unique_ptr<luna_extension>> const& extensions();
+    std::vector<luna_user>& users();
 
     using client_base::run;
 
@@ -142,73 +140,28 @@ private:
         std::string const& ctcp,
         std::string const& args);
 
-    template <typename... Args>
-    void dispatch_signal(std::string const& signal, Args const&... args)
+    template <typename Ret, typename... Args>
+    void dispatch_event(Ret (luna_extension::*fn)(Args...), Args&&... args)
     {
         std::size_t i = 0;
 
         // Since the list can grow while we iterate it, keep updating size.
-        while (i < _scripts.size()) {
-            if (_scripts[i]) {
-                _scripts[i]->emit_signal(signal, args...);
+        while (i < _exts.size()) {
+            if (_exts[i]) {
+                (_exts[i].get()->*fn)(std::forward<Args>(args)...);
             }
 
             ++i;
         }
 
-        // Unloadind a script only resets the unique_ptr to nullptr, drop all
+        // Unloadind a script only resets the unique_ptr to nullptr. Drop all
         // unloaded scripts from the list when it's safe to shrink.
-        _scripts.erase(
-            std::remove_if(std::begin(_scripts), std::end(_scripts),
-                [] (std::unique_ptr<luna_script> const& scr) {
+        _exts.erase(
+            std::remove_if(std::begin(_exts), std::end(_exts),
+                [] (std::unique_ptr<luna_extension> const& scr) {
                     return not scr;
                 }),
-            std::end(_scripts));
-    }
-
-    auto get_channel_proxy(irc::channel const& channel)
-    {
-        return mond::object<luna_channel_proxy>(*this, channel.name());
-    }
-
-    auto get_unknown_user_proxy(std::string prefix)
-    {
-        return mond::object<luna_unknown_user_proxy>(*this, std::move(prefix));
-    }
-
-    auto get_channel_user_proxy(
-        irc::channel_user const& user,
-        irc::channel const& channel)
-    {
-        return mond::object<luna_channel_user_proxy>(
-            *this, channel.name(), user.uid());
-    }
-
-    template <typename... Args>
-    auto dispatch_signal_helper(
-        std::string const& signal,
-        std::string const& user,
-        std::string const& target,
-        Args&&... args)
-    {
-        if (environment().is_channel(target)) {
-            irc::channel const& chan = environment().find_channel(target);
-
-            if (chan.has_user(user)) {
-                dispatch_signal("channel_" + signal,
-                    get_channel_user_proxy(chan.find_user(user), chan),
-                    get_channel_proxy(chan),
-                    std::forward<Args>(args)...);
-            } else {
-                dispatch_signal("channel_" + signal,
-                    get_unknown_user_proxy(user),
-                    get_channel_proxy(chan),
-                    std::forward<Args>(args)...);
-            }
-        } else {
-            dispatch_signal(signal,
-                get_unknown_user_proxy(user), std::forward<Args>(args)...);
-        }
+            std::end(_exts));
     }
 
 private:
@@ -217,7 +170,7 @@ private:
     std::string _server = "";
     uint16_t _port      = 6667;
 
-    std::vector<std::unique_ptr<luna_script>> _scripts;
+    std::vector<std::unique_ptr<luna_extension>> _exts;
     std::vector<std::string> _autojoin;
     std::vector<luna_user>   _users;
 

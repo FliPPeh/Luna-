@@ -18,36 +18,36 @@
  */
 
 #pragma once
-#ifndef LUNA_LUNA_SCRIPT_PROXY_HH_INCLUDED
-#define LUNA_LUNA_SCRIPT_PROXY_HH_INCLUDED
-
-#include <lua.hpp>
+#ifndef LUNA_LUA_LUNA_USER_PROXY_HH_INCLUDED
+#define LUNA_LUA_LUNA_USER_PROXY_HH_INCLUDED
 
 #include <string>
 
 class luna;
-class luna_script;
+class luna_user;
 
-class luna_script_proxy {
+class luna_user_proxy {
 public:
-    static constexpr char const* metatable = "luna.script";
+    static constexpr char const* metatable = "luna.user";
 
-    luna_script_proxy(luna& ref, std::string fname);
+    luna_user_proxy(luna& ref, std::string id);
 
-    std::string file() const;
+    std::string id() const;
+    std::string hostmask() const;
+    std::string title() const;
+    std::string flags() const;
 
-    std::string name() const;
-    std::string description() const;
-    std::string version() const;
-
-    int is_self(lua_State* s) const;
+    void set_id(std::string id);
+    void set_hostmask(std::string hostmask);
+    void set_title(std::string title);
+    void set_flags(std::string flags);
 
 private:
-    luna_script& lookup() const;
+    luna_user& lookup() const;
 
 private:
     luna* _ref;
-    std::string _fname;
+    std::string _id;
 };
 
-#endif // defined LUNA_LUNA_SCRIPT_PROXY_HH_INCLUDED
+#endif // defined LUNA_LUA_LUNA_USER_PROXY_HH_INCLUDED

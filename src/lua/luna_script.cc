@@ -19,9 +19,11 @@
 
 #include "luna_script.hh"
 
-#include "proxies/luna_script_proxy.hh"
-#include "proxies/luna_channel_proxy.hh"
-#include "proxies/luna_user_proxy.hh"
+#include "luna_extension.hh"
+
+#include "lua/proxies/luna_channel_proxy.hh"
+#include "lua/proxies/luna_extension_proxy.hh"
+#include "lua/proxies/luna_user_proxy.hh"
 
 #include "luna_user.hh"
 #include "logging.hh"
@@ -29,6 +31,7 @@
 
 #include "mond.hh"
 
+#include <irc_core.hh>
 #include <irc_except.hh>
 
 #include <sstream>
@@ -36,10 +39,8 @@
 #include <stdexcept>
 #include <regex>
 
-irc::unordered_rfc1459_map<std::string, std::string> luna_script::shared_vars{};
-
 luna_script::luna_script(luna& context, std::string file)
-    : _context{&context},
+    : luna_extension{context},
       _file{std::move(file)}
 {
     constexpr char const* extra_paths =
@@ -67,8 +68,7 @@ luna_script::luna_script(luna& context, std::string file)
         std::throw_with_nested(mond::error{"invalid script info table"});
     }
 
-    _logger = logger{
-        name() + " (script)",
+    _logger = logger{name() + " (script)",
         logging_level::DEBUG,
         logging_flags::ANSI};
 
@@ -79,23 +79,11 @@ luna_script::luna_script(luna& context, std::string file)
 
 luna_script::~luna_script()
 {
-    if (_lua.valid()) {
-        try {
-            _lua["luna"]["deinit_script"].call();
-        } catch (...) {
-            ;
-        }
-    }
+    destroy();
 }
 
 
-void luna_script::init_script()
-{
-    _lua["luna"]["init_script"].call();
-}
-
-
-std::string luna_script::file() const
+std::string luna_script::id() const
 {
     return _file;
 }
@@ -183,10 +171,10 @@ void luna_script::register_environment()
     _lua[api]["environment"] = mond::table{};
     _lua[api]["environment"]["server_supports"] =
         std::function<int (lua_State*)>{
-            [=, _context = this->_context] (lua_State* s) {
+            [=] (lua_State* s) {
                 lua_newtable(s);
 
-                for (auto& v : _context->environment().capabilities()) {
+                for (auto& v : context().environment().capabilities()) {
                     lua_pushstring(s, v.second.c_str());
                     lua_setfield(s, -2, v.first.c_str());
                 }
@@ -197,13 +185,13 @@ void luna_script::register_environment()
     _lua[api]["shared"] = mond::table{};
 
     _lua[api]["shared"]["save"] = std::function<void ()>{[=] {
-            _context->save_shared_vars(_context->_varfile);
+            context().save_shared_vars(context()._varfile);
         }};
 
     _lua[api]["shared"]["reload"] = std::function<void ()>{[=] {
             luna_script::shared_vars.clear();
 
-            _context->read_shared_vars(_context->_varfile);
+            context().read_shared_vars(context()._varfile);
         }};
 
     _lua[api]["shared"]["get"] = std::function<int (lua_State*)>{
@@ -218,7 +206,7 @@ void luna_script::register_environment()
         }};
 
     _lua[api]["shared"]["set"] = std::function<int (lua_State*)>{
-        [=, _context = this->_context] (lua_State* s) {
+        [=] (lua_State* s) {
             std::string key = luaL_checkstring(s, 1);
 
             std::size_t n;
@@ -230,11 +218,11 @@ void luna_script::register_environment()
         }};
 
     _lua[api]["shared"]["clear"] = std::function<int (lua_State*)>{
-        [=, _context = this->_context] (lua_State* s) {
+        [=] (lua_State* s) {
             std::string key = luaL_checkstring(s, 1);
 
             shared_vars.erase(key);
-            _context->save_shared_vars(_context->_varfile);
+            context().save_shared_vars(context()._varfile);
 
             return 0;
         }};
@@ -275,27 +263,27 @@ void luna_script::register_self()
                 }
             }
 
-            _context->send_message(msg);
+            context().send_message(msg);
 
             return 0;
         }};
 
     _lua[api]["runtime_info"] =
         std::function<std::tuple<std::time_t, std::time_t> ()>{[=] {
-            return std::make_tuple(_context->_started, _context->_connected);
+            return std::make_tuple(context()._started, context()._connected);
         }};
 
     _lua[api]["user_info"] =
         std::function<std::tuple<std::string, std::string> ()>{[=] {
-            return std::make_tuple(_context->nick(), _context->user());
+            return std::make_tuple(context().nick(), context().user());
         }};
 
     _lua[api]["server_info"] =
         std::function<std::tuple<std::string, std::string, uint16_t> ()>{[=] {
             return std::make_tuple(
-                _context->server_host(),
-                _context->server_addr(),
-                _context->server_port());
+                context().server_host(),
+                context().server_addr(),
+                context().server_port());
         }};
 
     _lua[api]["traffic_info"] =
@@ -307,10 +295,10 @@ void luna_script::register_self()
                 std::size_t> ()>{[=] {
 
             return std::make_tuple(
-                _context->_bytes_sent,
-                _context->_bytes_sent_sess,
-                _context->_bytes_recvd,
-                _context->_bytes_recvd_sess);
+                context()._bytes_sent,
+                context()._bytes_sent_sess,
+                context()._bytes_recvd,
+                context()._bytes_recvd_sess);
         }};
 }
 
@@ -335,55 +323,59 @@ bool strcaseequal(std::string const& a, std::string const& b)
 
 void luna_script::register_script()
 {
-    _lua[api].new_metatable<luna_script_proxy>()
-        << mond::method("file",        &luna_script_proxy::file)
-        << mond::method("name",        &luna_script_proxy::name)
-        << mond::method("description", &luna_script_proxy::description)
-        << mond::method("version",     &luna_script_proxy::version)
-        << mond::method("is_self",     &luna_script_proxy::is_self);
+    _lua[api].new_metatable<luna_extension_proxy>()
+        << mond::method("id",          &luna_extension_proxy::id)
+        << mond::method("name",        &luna_extension_proxy::name)
+        << mond::method("description", &luna_extension_proxy::description)
+        << mond::method("version",     &luna_extension_proxy::version)
+        << mond::method("is_self",     &luna_extension_proxy::is_self);
 
-    _lua[api]["scripts"] = mond::table{};
-    _lua[api]["scripts"]["self"] = mond::object<luna_script_proxy>(
-        *_context, _file);
+    _lua[api]["extensions"] = mond::table{};
+    _lua[api]["extensions"]["self"] = mond::object<luna_extension_proxy>(
+        context(), _file);
 
-    _lua[api]["scripts"]["list"] = std::function<int (lua_State*)>{
+    _lua[api]["extensions"]["list"] = std::function<int (lua_State*)>{
         [=] (lua_State* s) {
             lua_newtable(s);
 
-            for (std::unique_ptr<luna_script> const& scr : _context->scripts()) {
+            for (std::unique_ptr<luna_extension> const& scr :
+                    context().extensions()) {
+
                 if (scr) {
                     mond::write(s,
-                        mond::object<luna_script_proxy>(
-                            *_context, scr->file()));
+                        mond::object<luna_extension_proxy>(
+                            context(), scr->id()));
 
-                    lua_setfield(s, -2, scr->file().c_str());
+                    lua_setfield(s, -2, scr->id().c_str());
                 }
             }
 
             return 1;
         }};
 
-    _lua[api]["scripts"]["load"] = std::function<int (lua_State*)>{
+    _lua[api]["extensions"]["load"] = std::function<int (lua_State*)>{
         [=] (lua_State* s) {
             std::string scr = luaL_checkstring(s, 1);
 
-            for (std::unique_ptr<luna_script> const& sc : _context->scripts()) {
-                if (sc and strcaseequal(scr, sc->file())) {
+            for (std::unique_ptr<luna_extension> const& sc :
+                    context().extensions()) {
+
+                if (sc and strcaseequal(scr, sc->id())) {
                     throw mond::error{"script `" + scr + "' already loaded"};
                 }
             }
 
-            std::unique_ptr<luna_script> script{new luna_script{
-                *_context, scr}};
+            std::unique_ptr<luna_extension> script{new luna_script{
+                context(), scr}};
 
-            _context->_scripts.push_back(std::move(script));
-            _context->_scripts.back()->init_script();
+            context()._exts.push_back(std::move(script));
+            context()._exts.back()->init();
 
             return mond::write(s,
-                mond::object<luna_script_proxy>(*_context, scr));
+                mond::object<luna_extension_proxy>(context(), scr));
         }};
 
-    _lua[api]["scripts"]["unload"] = std::function<int (lua_State*)>{
+    _lua[api]["extensions"]["unload"] = std::function<int (lua_State*)>{
         [=] (lua_State* s) {
             std::string scr = luaL_checkstring(s, 1);
 
@@ -391,10 +383,10 @@ void luna_script::register_script()
                 throw mond::error{"can not unload self"};
             }
 
-            for (auto it  = std::begin(_context->_scripts);
-                      it != std::end(_context->_scripts);
+            for (auto it  = std::begin(context()._exts);
+                      it != std::end(context()._exts);
                     ++it) {
-                if (*it and strcaseequal(scr, (*it)->file())) {
+                if (*it and strcaseequal(scr, (*it)->id())) {
                     it->reset(nullptr);
 
                     return 0;
@@ -404,7 +396,7 @@ void luna_script::register_script()
             throw mond::error{"script `" + scr + "' not loaded"};
         }};
 
-    _lua[api]["script_meta"].export_metatable<luna_script_proxy>();
+    _lua[api]["extension_meta"].export_metatable<luna_extension_proxy>();
 }
 
 
@@ -425,9 +417,9 @@ void luna_script::register_user()
         [=] (lua_State* s) {
             lua_newtable(s);
 
-            for (auto const& u : _context->users()) {
+            for (auto const& u : context().users()) {
                 mond::write(s,
-                    mond::object<luna_user_proxy>(*_context, u.id()));
+                    mond::object<luna_user_proxy>(context(), u.id()));
 
                 lua_setfield(s, -2, u.id().c_str());
             }
@@ -436,12 +428,12 @@ void luna_script::register_user()
         }};
 
     _lua[api]["users"]["save"] = std::function<void ()>{[=] {
-            _context->save_users(_context->_userfile);
+            context().save_users(context()._userfile);
         }};
 
     _lua[api]["users"]["reload"] = std::function<void ()>{[=] {
-            _context->_users.clear();
-            _context->read_users(_context->_userfile);
+            context()._users.clear();
+            context().read_users(context()._userfile);
         }};
 
     _lua[api]["users"]["create"] = std::function<int (lua_State*)>{
@@ -452,19 +444,19 @@ void luna_script::register_user()
             std::string title = luaL_checkstring(s, 4);
 
             auto i = std::find_if(
-                std::begin(_context->users()), std::end(_context->users()),
+                std::begin(context().users()), std::end(context().users()),
                 [&] (luna_user& u2) {
                     return irc::rfc1459_equal(u2.id(), id);
                 });
 
-            if (i != std::end(_context->users())) {
+            if (i != std::end(context().users())) {
                 throw mond::runtime_error{"user `" + id + "' already exists"};
             }
 
-            _context->users().emplace_back(
+            context().users().emplace_back(
                 id, mask, title, flags_from_string(flags));
 
-            return mond::write(s, mond::object<luna_user_proxy>(*_context, id));
+            return mond::write(s, mond::object<luna_user_proxy>(context(), id));
         }};
 
 
@@ -473,17 +465,18 @@ void luna_script::register_user()
             std::string id = luaL_checkstring(s, 1);
 
             auto i = std::find_if(
-                std::begin(_context->users()), std::end(_context->users()),
+                std::begin(context().users()),
+                std::end(context().users()),
                 [&] (luna_user& u2) {
                     return irc::rfc1459_equal(u2.id(), id);
                 });
 
-            if (i == std::end(_context->users())) {
+            if (i == std::end(context().users())) {
                 throw mond::runtime_error{"user `" + id + "' does not exist"};
             }
 
-            _context->users().erase(i);
-            _context->save_users(_context->_userfile);
+            context().users().erase(i);
+            context().save_users(context()._userfile);
 
             return 0;
         }};
@@ -508,8 +501,8 @@ void luna_script::register_channel()
         [=] (lua_State* s) {
             try {
                 return mond::write(s, mond::object<luna_channel_proxy>(
-                    *_context,
-                    _context->environment()
+                    context(),
+                    context().environment()
                         .find_channel(luaL_checkstring(s, 1)).name()));
 
             } catch (irc::protocol_error& pe) {
@@ -521,9 +514,9 @@ void luna_script::register_channel()
         [=] (lua_State* s) {
             lua_newtable(s);
 
-            for (auto const& entry : _context->environment().channels()) {
+            for (auto const& entry : context().environment().channels()) {
                 mond::write(s, mond::object<luna_channel_proxy>(
-                    *_context, entry.second->name()));
+                    context(), entry.second->name()));
 
                 lua_setfield(s, -2, entry.second->name().c_str());
             }
@@ -550,4 +543,235 @@ void luna_script::register_channel_user()
 
     _lua[api]["unknown_user_meta"].export_metatable<luna_unknown_user_proxy>();
     _lua[api]["channel_user_meta"].export_metatable<luna_channel_user_proxy>();
+}
+
+
+void luna_script::init()
+{
+    luna_extension::init();
+
+    _lua["luna"]["init_script"].call();
+}
+
+void luna_script::destroy()
+{
+    if (_lua.valid()) {
+        try {
+            _lua["luna"]["deinit_script"].call();
+        } catch (...) {
+            ;
+        }
+    }
+
+    luna_extension::destroy();
+}
+
+
+void luna_script::on_connect()
+{
+    luna_extension::on_connect();
+
+    emit_signal("connect");
+}
+
+void luna_script::on_disconnect()
+{
+    luna_extension::on_disconnect();
+
+    emit_signal("disconnect");
+}
+
+void luna_script::on_idle()
+{
+    luna_extension::on_idle();
+
+    emit_signal("tick");
+}
+
+void luna_script::on_message(irc::message const& msg)
+{
+    luna_extension::on_message(msg);
+
+    if (msg.command == irc::command::RPL_ENDOFWHO) {
+        emit_signal_helper("user_join", msg.args[0], msg.args[1]);
+    }
+
+    emit_signal("raw", msg.prefix, msg.command, msg.args);
+}
+
+void luna_script::on_invite(
+    std::string const& source,
+    std::string const& channel)
+{
+    luna_extension::on_invite(source, channel);
+
+    emit_signal("invite", get_unknown_user_proxy(source), channel);
+}
+
+void luna_script::on_join(
+    std::string const& source,
+    std::string const& channel)
+{
+    luna_extension::on_join(source, channel);
+
+    if (not context().is_me(source)) {
+        irc::channel const& chan =
+            context().environment().find_channel(channel);
+
+        emit_signal_helper("user_join", source, channel);
+    }
+}
+
+void luna_script::on_part(
+    std::string const& source,
+    std::string const& channel,
+    std::string const& reason)
+{
+    luna_extension::on_part(source, channel, reason);
+
+    emit_signal_helper("user_part", source, channel, reason);
+}
+
+void luna_script::on_quit(
+    std::string const& source,
+    std::string const& reason)
+{
+    luna_extension::on_quit(source, reason);
+
+    emit_signal("user_quit", get_unknown_user_proxy(source), reason);
+}
+
+void luna_script::on_nick(
+    std::string const& source,
+    std::string const& new_nick)
+{
+    luna_extension::on_nick(source, new_nick);
+
+    emit_signal("nick_change", get_unknown_user_proxy(source), new_nick);
+}
+
+void luna_script::on_kick(
+    std::string const& source,
+    std::string const& channel,
+    std::string const& kicked,
+    std::string const& reason)
+{
+    luna_extension::on_kick(source, channel, kicked, reason);
+
+    irc::channel const& chan = context().environment().find_channel(channel);
+
+    // Could be chanserv kicking
+    if (chan.has_user(source)) {
+        emit_signal("channel_user_kick",
+            get_channel_user_proxy(chan.find_user(source), chan),
+            get_channel_proxy(chan),
+            get_channel_user_proxy(chan.find_user(kicked), chan),
+            reason);
+    } else {
+        emit_signal("channel_user_kick",
+            get_unknown_user_proxy(source),
+            get_channel_proxy(chan),
+            get_channel_user_proxy(chan.find_user(kicked), chan),
+            reason);
+    }
+}
+
+void luna_script::on_topic(
+    std::string const& source,
+    std::string const& channel,
+    std::string const& new_topic)
+{
+    luna_extension::on_topic(source, channel, new_topic);
+
+    emit_signal_helper("topic_change", source, channel, new_topic);
+}
+
+void luna_script::on_privmsg(
+    std::string const& source,
+    std::string const& target,
+    std::string const& msg)
+{
+    luna_extension::on_privmsg(source, target, msg);
+
+    std::size_t chanstart =
+        target.find_first_of(context().environment().channel_types());
+
+    if (chanstart != std::string::npos) {
+        // >= 0 = channel
+        std::string real_target = target;
+        std::string message_level = ""; // default: everbody
+
+        if (chanstart != 0) {
+            // +#channel, @#channel, @+&channel, ...
+            message_level = target.substr(0, chanstart);
+            real_target   = target.substr(chanstart);
+        }
+
+        emit_signal_helper("message",
+            source, real_target, msg, message_level);
+    } else {
+        emit_signal_helper("message", source, target, msg);
+    }
+}
+
+void luna_script::on_notice(
+    std::string const& source,
+    std::string const& target,
+    std::string const& msg)
+{
+    luna_extension::on_notice(source, target, msg);
+
+    std::size_t chanstart =
+        target.find_first_of(context().environment().channel_types());
+
+    if (chanstart != std::string::npos) {
+        // >= 0 = channel
+        std::string real_target = target;
+        std::string message_level = ""; // default: everbody
+
+        if (chanstart != 0) {
+            // +#channel, @#channel, @+&channel, ...
+            message_level = target.substr(0, chanstart);
+            real_target   = target.substr(chanstart);
+        }
+
+        emit_signal_helper("notice",
+            source, real_target, msg, message_level);
+    } else {
+        emit_signal_helper("notice", source, target, msg);
+    }
+
+}
+
+void luna_script::on_ctcp_request(
+    std::string const& source,
+    std::string const& target,
+    std::string const& ctcp,
+    std::string const& args)
+{
+    luna_extension::on_ctcp_request(source, target, ctcp, args);
+
+    emit_signal_helper("ctcp_request", source, target, ctcp, args);
+}
+
+void luna_script::on_ctcp_response(
+    std::string const& source,
+    std::string const& target,
+    std::string const& ctcp,
+    std::string const& args)
+{
+    luna_extension::on_ctcp_response(source, target, ctcp, args);
+
+    emit_signal_helper("ctcp_response", source, target, ctcp, args);
+}
+
+void luna_script::on_mode(
+    std::string const& source,
+    std::string const& target,
+    std::string const& mode,
+    std::string const& arg)
+{
+    luna_extension::on_mode(source, target, mode, arg);
+
+    emit_signal_helper("mode", source, target, mode, arg);
 }

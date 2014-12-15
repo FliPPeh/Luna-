@@ -21,7 +21,10 @@
 
 #include "config.hh"
 #include "luna_user.hh"
-#include "luna_script.hh"
+
+#include "luna_extension.hh"
+#include "lua/luna_script.hh"
+
 #include "logging.hh"
 
 #include <irc_core.hh>
@@ -54,8 +57,8 @@ luna::luna(
 
     set_idle_interval(idle_interval);
 
-    luna_script::shared_vars["luna.version"]  = luna_version;
-    luna_script::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
+    luna_extension::shared_vars["luna.version"]  = luna_version;
+    luna_extension::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
 
     std::ostringstream compiler;
 
@@ -71,12 +74,12 @@ luna::luna(
     compiler << "(unknown)";
 #endif
 
-    luna_script::shared_vars["luna.compiler"] = compiler.str();
+    luna_extension::shared_vars["luna.compiler"] = compiler.str();
 
-    if (luna_script::shared_vars.find("luna.trigger")
-            == std::end(luna_script::shared_vars)) {
+    if (luna_extension::shared_vars.find("luna.trigger") ==
+            std::end(luna_extension::shared_vars)) {
 
-        luna_script::shared_vars["luna.trigger"] = "!";
+        luna_extension::shared_vars["luna.trigger"] = "!";
     }
 
     read_config(cfgfile);
@@ -139,8 +142,6 @@ void luna::read_config(std::string const& filename)
     _logger.info() << "  server host: " << _server;
     _logger.info() << "  server port: " << _port;
     _logger.info() << "  use SSL....: " << (use_ssl() ? "yes" : "no");
-
-    dispatch_signal("configuration_loaded");
 }
 
 
@@ -185,7 +186,7 @@ void luna::read_shared_vars(std::string const& filename)
             }
         }
 
-        luna_script::shared_vars[key] = rvalue;
+        luna_extension::shared_vars[key] = rvalue;
     }
 }
 
@@ -236,7 +237,7 @@ void luna::save_shared_vars(std::string const& filename)
 {
     std::ofstream shared{filename};
 
-    for (auto const& i : luna_script::shared_vars) {
+    for (auto const& i : luna_extension::shared_vars) {
         std::string val;
 
         val.reserve(i.second.size());
@@ -269,9 +270,9 @@ void luna::save_users(std::string const& filename)
 }
 
 
-std::vector<std::unique_ptr<luna_script>> const& luna::scripts()
+std::vector<std::unique_ptr<luna_extension>> const& luna::extensions()
 {
-    return _scripts;
+    return _exts;
 }
 
 std::vector<luna_user>& luna::users()
@@ -300,8 +301,8 @@ void luna::load_script(std::string const& script)
             << "  Loaded script `" << s->name() << "': " << s->description()
             << " (version " << s->version() << ")";
 
-        _scripts.push_back(std::move(s));
-        _scripts.back()->init_script();
+        _exts.push_back(std::move(s));
+        _exts.back()->init();
 
     } catch (mond::runtime_error const& e) {
         _logger.error() << "  Could not load script `" << script << "': "
@@ -330,33 +331,25 @@ void luna::on_raw(irc::message const& msg)
     _bytes_recvd += n;
     _bytes_recvd_sess += n;
 
-    if (msg.command == irc::command::RPL_ENDOFWHO) {
-        dispatch_signal_helper("user_join", msg.args[0], msg.args[1]);
-    }
-
-    dispatch_signal("raw", msg.prefix, msg.command, msg.args);
+    dispatch_event(&luna_extension::on_message, msg);
 }
 
 void luna::on_idle()
 {
     client_base::on_idle();
 
-    dispatch_signal("tick");
+    dispatch_event(&luna_extension::on_idle);
 }
 
 
 void luna::on_invite(std::string const& source, std::string const& channel)
 {
-    dispatch_signal("invite", get_unknown_user_proxy(source), channel);
+    dispatch_event(&luna_extension::on_invite, source, channel);
 }
 
 void luna::on_join(std::string const& source, std::string const& channel)
 {
-    if (not is_me(source)) {
-        irc::channel const& chan = environment().find_channel(channel);
-
-        dispatch_signal_helper("user_join", source, channel);
-    }
+    dispatch_event(&luna_extension::on_join, source, channel);
 }
 
 void luna::on_part(
@@ -364,17 +357,17 @@ void luna::on_part(
     std::string const& channel,
     std::string const& reason)
 {
-    dispatch_signal_helper("user_part", source, channel, reason);
+    dispatch_event(&luna_extension::on_part, source, channel, reason);
 }
 
 void luna::on_quit(std::string const& source, std::string const& reason)
 {
-    dispatch_signal("user_quit", get_unknown_user_proxy(source), reason);
+    dispatch_event(&luna_extension::on_quit, source, reason);
 }
 
 void luna::on_nick(std::string const& source, std::string const& new_nick)
 {
-    dispatch_signal("nick_change", get_unknown_user_proxy(source), new_nick);
+    dispatch_event(&luna_extension::on_nick, source, new_nick);
 }
 
 void luna::on_kick(
@@ -383,22 +376,7 @@ void luna::on_kick(
     std::string const& kicked,
     std::string const& reason)
 {
-    irc::channel const& chan = environment().find_channel(channel);
-
-    // Could be chanserv kicking
-    if (chan.has_user(source)) {
-        dispatch_signal("channel_user_kick",
-            get_channel_user_proxy(chan.find_user(source), chan),
-            get_channel_proxy(chan),
-            get_channel_user_proxy(chan.find_user(kicked), chan),
-            reason);
-    } else {
-        dispatch_signal("channel_user_kick",
-            get_unknown_user_proxy(source),
-            get_channel_proxy(chan),
-            get_channel_user_proxy(chan.find_user(kicked), chan),
-            reason);
-    }
+    dispatch_event(&luna_extension::on_kick, source, channel, kicked, reason);
 }
 
 void luna::on_topic(
@@ -406,7 +384,7 @@ void luna::on_topic(
     std::string const& channel,
     std::string const& new_topic)
 {
-    dispatch_signal_helper("topic_change", source, channel, new_topic);
+    dispatch_event(&luna_extension::on_topic, source, channel, new_topic);
 }
 
 void luna::on_privmsg(
@@ -414,25 +392,7 @@ void luna::on_privmsg(
     std::string const& target,
     std::string const& msg)
 {
-    std::size_t chanstart =
-        target.find_first_of(environment().channel_types());
-
-    if (chanstart != std::string::npos) {
-        // >= 0 = channel
-        std::string real_target = target;
-        std::string message_level = ""; // default: everbody
-
-        if (chanstart != 0) {
-            // +#channel, @#channel, @+&channel, ...
-            message_level = target.substr(0, chanstart);
-            real_target   = target.substr(chanstart);
-        }
-
-        dispatch_signal_helper("message",
-            source, real_target, msg, message_level);
-    } else {
-        dispatch_signal_helper("message", source, target, msg);
-    }
+    dispatch_event(&luna_extension::on_privmsg, source, target, msg);
 }
 
 void luna::on_notice(
@@ -440,25 +400,7 @@ void luna::on_notice(
     std::string const& target,
     std::string const& msg)
 {
-    std::size_t chanstart =
-        target.find_first_of(environment().channel_types());
-
-    if (chanstart != std::string::npos) {
-        // >= 0 = channel
-        std::string real_target = target;
-        std::string message_level = ""; // default: everbody
-
-        if (chanstart != 0) {
-            // +#channel, @#channel, @+&channel, ...
-            message_level = target.substr(0, chanstart);
-            real_target   = target.substr(chanstart);
-        }
-
-        dispatch_signal_helper("notice",
-            source, real_target, msg, message_level);
-    } else {
-        dispatch_signal_helper("notice", source, target, msg);
-    }
+    dispatch_event(&luna_extension::on_notice, source, target, msg);
 }
 
 void luna::on_ctcp_request(
@@ -469,7 +411,8 @@ void luna::on_ctcp_request(
 {
     handle_core_ctcp(source, target, ctcp, args);
 
-    dispatch_signal_helper("ctcp_request", source, target, ctcp, args);
+    dispatch_event(&luna_extension::on_ctcp_request,
+        source, target, ctcp, args);
 }
 
 void luna::on_ctcp_response(
@@ -478,7 +421,8 @@ void luna::on_ctcp_response(
     std::string const& ctcp,
     std::string const& args)
 {
-    dispatch_signal_helper("ctcp_response", source, target, ctcp, args);
+    dispatch_event(&luna_extension::on_ctcp_response,
+        source, target, ctcp, args);
 }
 
 void luna::on_mode(
@@ -487,7 +431,7 @@ void luna::on_mode(
     std::string const& mode,
     std::string const& arg)
 {
-    dispatch_signal_helper("mode", source, target, mode, arg);
+    dispatch_event(&luna_extension::on_mode, source, target, mode, arg);
 }
 
 void luna::on_connect()
@@ -503,14 +447,16 @@ void luna::on_connect()
     }
 
     _connected = std::time(nullptr);
-    dispatch_signal("connect");
+
+    dispatch_event(&luna_extension::on_connect);
 }
 
 void luna::on_disconnect()
 {
     _logger.info() << "Disconnected.";
 
-    dispatch_signal("disconnect");
+    dispatch_event(&luna_extension::on_disconnect);
+
     _connected = 0;
 
     _bytes_recvd_sess = 0;
@@ -587,8 +533,6 @@ void cleanup(int sig)
     lref->disconnect("Ctrl-C :(");
     lref->stop();
 }
-
-#include <cassert>
 
 int main(int argc, char** argv)
 {

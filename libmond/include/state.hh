@@ -56,7 +56,7 @@ public:
     void load_library(std::string const& name, std::string const& mod = "");
     bool eval(std::string const& eval);
 
-    operator lua_State*();
+    operator lua_State*() const;
 
     focus operator[](std::string const& idx);
 

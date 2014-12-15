@@ -18,36 +18,36 @@
  */
 
 #pragma once
-#ifndef LUNA_LUNA_USER_PROXY_HH_INCLUDED
-#define LUNA_LUNA_USER_PROXY_HH_INCLUDED
+#ifndef LUNA_LUA_LUNA_EXTENSION_PROXY_HH_INCLUDED
+#define LUNA_LUA_LUNA_EXTENSION_PROXY_HH_INCLUDED
+
+#include <lua.hpp>
 
 #include <string>
 
 class luna;
-class luna_user;
+class luna_extension;
 
-class luna_user_proxy {
+class luna_extension_proxy {
 public:
-    static constexpr char const* metatable = "luna.user";
+    static constexpr char const* metatable = "luna.ext";
 
-    luna_user_proxy(luna& ref, std::string id);
+    luna_extension_proxy(luna& ref, std::string id);
 
     std::string id() const;
-    std::string hostmask() const;
-    std::string title() const;
-    std::string flags() const;
 
-    void set_id(std::string id);
-    void set_hostmask(std::string hostmask);
-    void set_title(std::string title);
-    void set_flags(std::string flags);
+    std::string name() const;
+    std::string description() const;
+    std::string version() const;
+
+    int is_self(lua_State* s) const;
 
 private:
-    luna_user& lookup() const;
+    luna_extension& lookup() const;
 
 private:
     luna* _ref;
     std::string _id;
 };
 
-#endif // defined LUNA_LUNA_USER_PROXY_HH_INCLUDED
+#endif // defined LUNA_LUA_LUNA_EXTENSION_PROXY_HH_INCLUDED

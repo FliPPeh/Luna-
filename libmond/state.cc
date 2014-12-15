@@ -99,7 +99,7 @@ bool state::eval(std::string const& eval)
     return luaL_dostring(_l, eval.c_str());
 }
 
-state::operator lua_State*()
+state::operator lua_State*() const
 {
     return _l;
 }

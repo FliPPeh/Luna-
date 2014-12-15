@@ -25,7 +25,7 @@ function scriptloader.script_load()
             if not args[1] then
                 who:respond('usage: load <script>')
             else
-                local status, res = pcall(luna.scripts.load, args[1])
+                local status, res = pcall(luna.extensions.load, args[1])
 
                 if status then
                     who:respond(string.format('Loaded script: %q.', res:name()))
@@ -45,7 +45,7 @@ function scriptloader.script_load()
             if not args[1] then
                 who:respond('usage: unload <script>')
             else
-                local status, res = pcall(luna.scripts.unload, args[1])
+                local status, res = pcall(luna.extensions.unload, args[1])
 
                 if status then
                     who:respond(string.format('Unloaded script: %q.', args[1]))
@@ -66,8 +66,8 @@ function scriptloader.script_load()
                 who:respond('usage: reload <script>')
             else
                 local status, res = pcall(function()
-                    luna.scripts.unload(args[1])
-                    return luna.scripts.load(args[1])
+                    luna.extensions.unload(args[1])
+                    return luna.extensions.load(args[1])
                 end)
 
                 if status then
