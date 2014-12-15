@@ -18,6 +18,8 @@
  */
 
 #include "luna.hh"
+
+#include "config.hh"
 #include "luna_user.hh"
 #include "luna_script.hh"
 #include "logging.hh"
@@ -50,7 +52,9 @@ luna::luna(
     read_shared_vars(_varfile);
     read_users(_userfile);
 
-    luna_script::shared_vars["luna.version"]  = LUNA_VERSION;
+    set_idle_interval(idle_interval);
+
+    luna_script::shared_vars["luna.version"]  = luna_version;
     luna_script::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
 
     std::ostringstream compiler;
@@ -557,7 +561,7 @@ void luna::handle_core_ctcp(
 
     if (irc::rfc1459_equal(ctcp, "VERSION")) {
         send_message(irc::ctcp_response(rtarget,
-             "VERSION", "Luna++ " LUNA_VERSION));
+             "VERSION", "Luna++ " + std::string{luna_version}));
 
     } else if (irc::rfc1459_equal(ctcp, "PING")) {
         // :)

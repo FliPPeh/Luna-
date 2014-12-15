@@ -19,7 +19,8 @@ set(SRC
     tokenbucket.hh
     tokenbucket.cc
     logging.hh
-    logging.cc)
+    logging.cc
+    config.hh)
 
 include_directories("${LUA_INCLUDE_DIR}")
 include_directories("${luna++_SOURCE_DIR}/src")
