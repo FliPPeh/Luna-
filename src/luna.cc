@@ -578,11 +578,12 @@ void luna::handle_core_ctcp(
 }
 
 
-
 luna* lref = nullptr;
 
 void cleanup(int sig)
 {
+    // Not technically well defined or secure, but as long as this is not
+    // running on a pacemaker...
     lref->disconnect("Ctrl-C :(");
     lref->stop();
 }
