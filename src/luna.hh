@@ -38,7 +38,6 @@ class luna_extension;
 class luna final : public client_base {
 public:
     luna(std::string const& cfgfile);
-
     ~luna();
 
     virtual void send_message(irc::message const& msg) override;

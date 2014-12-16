@@ -19,6 +19,7 @@
 
 #include "luna_user.hh"
 
+#include <utility>
 #include <string>
 #include <regex>
 
@@ -28,10 +29,10 @@ luna_user::luna_user(
     std::string title,
     int flags)
 
-    : _id{id},
-      _hostmask{hostmask},
-      _title{title},
-      _flags{flags}
+    :       _id{std::move(id)},
+      _hostmask{std::move(hostmask)},
+         _title{std::move(title)},
+         _flags{flags}
 {
 }
 
@@ -58,17 +59,17 @@ int luna_user::flags() const
 
 void luna_user::set_id(std::string newid)
 {
-    _id = newid;
+    _id = std::move(newid);
 }
 
 void luna_user::set_hostmask(std::string newhostmask)
 {
-    _hostmask = newhostmask;
+    _hostmask = std::move(newhostmask);
 }
 
 void luna_user::set_title(std::string newtitle)
 {
-    _title = newtitle;
+    _title = std::move(newtitle);
 }
 
 void luna_user::set_flags(int newflags)

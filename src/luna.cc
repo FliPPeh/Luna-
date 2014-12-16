@@ -48,9 +48,8 @@
 #include <tuple>
 
 
-luna::luna(
-    std::string const& cfgfile)
-        : client_base{"", "", ""}
+luna::luna(std::string const& cfgfile)
+    : client_base{"", "", ""}
 {
     read_shared_vars(_varfile);
     read_users(_userfile);
@@ -100,7 +99,6 @@ void luna::send_message(irc::message const& msg)
     client_base::send_message(msg);
 
     std::size_t n = irc::to_string(msg).size();
-
     _bytes_sent += n;
     _bytes_sent_sess += n;
 }
