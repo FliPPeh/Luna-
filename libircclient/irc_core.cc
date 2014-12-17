@@ -41,9 +41,14 @@ std::string to_string(message const& msg)
 
     for (std::string const& param : msg.args) {
         strm << ' ';
+        bool trailing = false;
 
-        if (param.find(' ') != std::string::npos) {
-            strm << ':';
+        if ((param.find(' ') != std::string::npos)
+            or (param.find(':') != std::string::npos)) {
+
+                trailing = true;
+
+                strm << ':';
         }
 
         // Filter out all control characters
@@ -51,6 +56,10 @@ std::string to_string(message const& msg)
             if (not (std::iscntrl(c) and std::isspace(c))) {
                 strm << c;
             }
+        }
+
+        if (trailing) {
+            break;
         }
     }
 
