@@ -615,9 +615,6 @@ void luna_script::on_join(
     luna_extension::on_join(source, channel);
 
     if (not context().is_me(source)) {
-        irc::channel const& chan =
-            context().environment().find_channel(channel);
-
         emit_signal_helper("user_join", source, channel);
     }
 }

@@ -21,9 +21,10 @@
 #ifndef LUNA_LUNA_HH_INCLUDED
 #define LUNA_LUNA_HH_INCLUDED
 
-#include "client_base.hh"
 #include "logging.hh"
+#include "tokenbucket.hh"
 
+#include <client.hh>
 #include <channel.hh>
 #include <channel_user.hh>
 #include <environment.hh>
@@ -35,10 +36,10 @@
 class luna_user;
 class luna_extension;
 
-class luna final : public client_base {
+class luna final : public irc::client {
 public:
     luna(std::string const& cfgfile);
-    ~luna();
+    virtual ~luna();
 
     virtual void send_message(irc::message const& msg) override;
 
@@ -53,80 +54,73 @@ public:
     std::vector<std::unique_ptr<luna_extension>> const& extensions();
     std::vector<luna_user>& users();
 
-    using client_base::run;
+    using irc::client::run;
 
     void run();
 
 protected:
     void load_script(std::string const& script);
 
+    // Core event dispatcher
     virtual void on_message(irc::message const& msg) override;
 
-    virtual void on_raw(irc::message const& msg) override;
-    virtual void on_idle() override;
+    void on_connect() override;
+    void on_disconnect() override;
 
-    virtual void on_connect() override;
-    virtual void on_disconnect() override;
+    void on_idle() override;
 
-    virtual void on_invite(
-        std::string const& source,
-        std::string const& channel) override;
+    // Detail event handlers
+    void on_raw(irc::message const& msg);
 
-    virtual void on_join(
-        std::string const& source,
-        std::string const& channel) override;
+    void on_invite(std::string const& source, std::string const& channel);
+    void on_join(std::string const& source, std::string const& channel);
 
-    virtual void on_part(
+    void on_part(
         std::string const& source,
         std::string const& channel,
-        std::string const& reason) override;
+        std::string const& reason);
 
-    virtual void on_quit(
-        std::string const& source,
-        std::string const& reason) override;
+    void on_quit(std::string const& source, std::string const& reason);
+    void on_nick(std::string const& source, std::string const& new_nick);
 
-    virtual void on_nick(
-        std::string const& source,
-        std::string const& new_nick) override;
-
-    virtual void on_kick(
+    void on_kick(
         std::string const& source,
         std::string const& channel,
         std::string const& kicked,
-        std::string const& reason) override;
+        std::string const& reason);
 
-    virtual void on_topic(
+    void on_topic(
         std::string const& source,
         std::string const& channel,
-        std::string const& new_topic) override;
+        std::string const& new_topic);
 
-    virtual void on_privmsg(
+    void on_privmsg(
         std::string const& source,
         std::string const& target,
-        std::string const& msg) override;
+        std::string const& msg);
 
-    virtual void on_notice(
+    void on_notice(
         std::string const& source,
         std::string const& target,
-        std::string const& msg) override;
+        std::string const& msg);
 
-    virtual void on_ctcp_request(
-        std::string const& source,
-        std::string const& target,
-        std::string const& ctcp,
-        std::string const& args) override;
-
-    virtual void on_ctcp_response(
+    void on_ctcp_request(
         std::string const& source,
         std::string const& target,
         std::string const& ctcp,
-        std::string const& args) override;
+        std::string const& args);
 
-    virtual void on_mode(
+    void on_ctcp_response(
+        std::string const& source,
+        std::string const& target,
+        std::string const& ctcp,
+        std::string const& args);
+
+    void on_mode(
         std::string const& source,
         std::string const& target,
         std::string const& mode,
-        std::string const& arg) override;
+        std::string const& arg);
 
     virtual void pretty_print_exception(
         std::exception_ptr p,
@@ -163,8 +157,28 @@ private:
             std::end(_exts));
     }
 
+    void handle_direct_message(
+        std::string const& prefix,
+        std::string const& target,
+        std::string const& msg,
+        void (luna::*message_handler)(
+            std::string const&,
+            std::string const&,
+            std::string const&),
+        void (luna::*ctcp_handler)(
+            std::string const&,
+            std::string const&,
+            std::string const&,
+            std::string const&));
+
+    void work_through_queue();
+
 private:
     logger _logger{"luna", logging_level::DEBUG, logging_flags::ANSI};
+
+    tokenbucket _bucket{512, 64, 128};
+
+    std::queue<irc::message> _message_queue;
 
     std::string _server = "";
     uint16_t _port      = 6667;

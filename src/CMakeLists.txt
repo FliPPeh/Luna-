@@ -18,8 +18,6 @@ set(SRC
     lua/proxies/luna_user_proxy.hh
     lua/proxies/luna_user_proxy.cc
 
-    client_base.hh
-    client_base.cc
     tokenbucket.hh
     tokenbucket.cc
     logging.hh

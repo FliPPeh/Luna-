@@ -28,6 +28,7 @@
 #include "logging.hh"
 
 #include <irc_core.hh>
+#include <irc_utils.hh>
 #include <irc_except.hh>
 #include <irc_helpers.hh>
 #include <environment.hh>
@@ -47,18 +48,10 @@
 #include <string>
 #include <tuple>
 
+namespace {
 
-luna::luna(std::string const& cfgfile)
-    : client_base{"", "", ""}
+std::string get_compiler_string()
 {
-    read_shared_vars(_varfile);
-    read_users(_userfile);
-
-    set_idle_interval(idle_interval);
-
-    luna_extension::shared_vars["luna.version"]  = luna_version;
-    luna_extension::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
-
     std::ostringstream compiler;
 
 #if defined(__clang__)
@@ -73,7 +66,23 @@ luna::luna(std::string const& cfgfile)
     compiler << "(unknown)";
 #endif
 
-    luna_extension::shared_vars["luna.compiler"] = compiler.str();
+    return compiler.str();
+}
+
+}
+
+luna::luna(std::string const& cfgfile)
+    : irc::client{"", "", ""}
+{
+    read_shared_vars(_varfile);
+    read_users(_userfile);
+
+    // TODO: idle_interval in config
+    set_idle_interval(idle_interval);
+
+    luna_extension::shared_vars["luna.version"]  = luna_version;
+    luna_extension::shared_vars["luna.compiled"] = __DATE__ " " __TIME__;
+    luna_extension::shared_vars["luna.compiler"] = get_compiler_string();
 
     if (luna_extension::shared_vars.find("luna.trigger") ==
             std::end(luna_extension::shared_vars)) {
@@ -94,9 +103,9 @@ luna::~luna()
 
 void luna::send_message(irc::message const& msg)
 {
-    _logger.debug() << ">> " << msg;
+    _message_queue.push(msg);
 
-    client_base::send_message(msg);
+    work_through_queue();
 
     std::size_t n = irc::to_string(msg).size();
     _bytes_sent += n;
@@ -279,7 +288,6 @@ std::vector<luna_user>& luna::users()
 }
 
 
-
 void luna::run()
 {
     if (_server.empty()) {
@@ -316,27 +324,123 @@ void luna::on_message(irc::message const& msg)
 {
     _logger.debug() << "<< " << msg;
 
-    client_base::on_message(msg);
+    if (irc::rfc1459_equal(msg.command, irc::command::INVITE)) {
+        if (msg.args.size() > 0) {
+            on_invite(msg.prefix, msg.args[0]);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::JOIN)) {
+        if (msg.args.size() > 0) {
+            on_join(msg.prefix, msg.args[0]);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::PART)) {
+        if (msg.args.size() > 1) {
+            on_part(msg.prefix, msg.args[0], msg.args[1]);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::QUIT)) {
+        if (msg.args.size() > 0) {
+            on_quit(msg.prefix, msg.args[0]);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::NICK)) {
+        if (msg.args.size() > 0) {
+            on_nick(msg.prefix, msg.args[0]);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::KICK)) {
+        if (msg.args.size() > 2) {
+            on_kick(msg.prefix, msg.args[0], msg.args[1], msg.args[2]);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::TOPIC)) {
+        if (msg.args.size() > 1) {
+            on_topic(msg.prefix, msg.args[0], msg.args[1]);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::PRIVMSG)) {
+        if (msg.args.size() > 1) {
+            handle_direct_message(
+                msg.prefix,
+                msg.args[0],
+                msg.args[1],
+                &luna::on_privmsg,
+                &luna::on_ctcp_request);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::NOTICE)) {
+        if (msg.args.size() > 1) {
+            handle_direct_message(
+                msg.prefix,
+                msg.args[0],
+                msg.args[1],
+                &luna::on_notice,
+                &luna::on_ctcp_response);
+        }
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::MODE)) {
+        if (msg.args.size() > 1 and environment().is_channel(msg.args[0])) {
+            auto changes = environment().partition_mode_changes(
+                msg.args[1],
+                {std::begin(msg.args) + 1, std::end(msg.args)});
+
+            for (auto& mc : changes) {
+                std::ostringstream m;
+                m << (std::get<0>(mc) ? '+' : '-') << std::get<1>(mc);
+
+                on_mode(msg.prefix, msg.args[0], m.str(), std::get<2>(mc));
+            }
+        }
+    }
+
+    on_raw(msg);
 }
 
+
+void luna::on_connect()
+{
+    _logger.info()
+        << "Connected to " << server_host() << ":" << server_port() << " "
+        <<             "(" << server_addr() << ":" << server_port() << ")";
+
+    for (auto& channel : _autojoin) {
+        send_message(irc::join(channel));
+    }
+
+    _connected = std::time(nullptr);
+
+    dispatch_event(&luna_extension::on_connect);
+}
+
+void luna::on_disconnect()
+{
+    _logger.info() << "Disconnected.";
+
+    dispatch_event(&luna_extension::on_disconnect);
+
+    _connected = 0;
+
+    _bytes_recvd_sess = 0;
+    _bytes_sent_sess = 0;
+}
+
+
+void luna::on_idle()
+{
+    work_through_queue();
+
+    dispatch_event(&luna_extension::on_idle);
+}
 
 
 void luna::on_raw(irc::message const& msg)
 {
-    client_base::on_raw(msg);
-
     std::size_t n = irc::to_string(msg).size();
     _bytes_recvd += n;
     _bytes_recvd_sess += n;
 
     dispatch_event(&luna_extension::on_message, msg);
-}
-
-void luna::on_idle()
-{
-    client_base::on_idle();
-
-    dispatch_event(&luna_extension::on_idle);
 }
 
 
@@ -432,37 +536,6 @@ void luna::on_mode(
     dispatch_event(&luna_extension::on_mode, source, target, mode, arg);
 }
 
-void luna::on_connect()
-{
-    client_base::on_connect();
-
-    _logger.info()
-        << "Connected to " << server_host() << ":" << server_port() << " "
-        <<             "(" << server_addr() << ":" << server_port() << ")";
-
-    for (auto& channel : _autojoin) {
-        send_message(irc::join(channel));
-    }
-
-    _connected = std::time(nullptr);
-
-    dispatch_event(&luna_extension::on_connect);
-}
-
-void luna::on_disconnect()
-{
-    _logger.info() << "Disconnected.";
-
-    dispatch_event(&luna_extension::on_disconnect);
-
-    _connected = 0;
-
-    _bytes_recvd_sess = 0;
-    _bytes_sent_sess = 0;
-
-    client_base::on_disconnect();
-}
-
 
 void luna::pretty_print_exception(std::exception_ptr p, int lvl) const
 {
@@ -504,12 +577,19 @@ void luna::handle_core_ctcp(
 
 
     if (irc::rfc1459_equal(ctcp, "VERSION")) {
-        send_message(irc::ctcp_response(rtarget,
-             "VERSION", "Luna++ " + std::string{luna_version}));
+        std::ostringstream version_reply;
+
+        version_reply << "Luna++ " << luna_version << ", "
+                      << "compiled " << __DATE__ << " " << __TIME__ << ' '
+                      << "with " << get_compiler_string();
+
+        send_message(irc::ctcp_response(rtarget, "VERSION",
+            version_reply.str()));
 
     } else if (irc::rfc1459_equal(ctcp, "PING")) {
         // :)
         send_message(irc::ctcp_response(rtarget, "PING", "0"));
+
     } else if (irc::rfc1459_equal(ctcp, "TIME")) {
         std::time_t now = std::time(nullptr);
         char timestamp[128] = {};
@@ -518,6 +598,74 @@ void luna::handle_core_ctcp(
             std::localtime(&now));
 
         send_message(irc::ctcp_response(rtarget, "TIME", timestamp));
+    }
+}
+
+namespace {
+
+bool is_ctcp(std::string const& msg)
+{
+    return msg.front() == '\x01'
+       and msg.back()  == '\x01';
+}
+
+void split_ctcp(
+    std::string const& msg,
+    std::string& ctcp,
+    std::string& ctcp_args)
+{
+    std::size_t sep;
+
+    if ((sep = msg.find(' ')) != std::string::npos) {
+        ctcp = msg.substr(1, sep - 1);
+        ctcp_args = msg.substr(sep + 1, msg.size() - sep);
+    } else {
+        ctcp = msg.substr(1, msg.size() - 2);
+        ctcp_args = "";
+    }
+}
+
+}
+
+void luna::handle_direct_message(
+    std::string const& prefix,
+    std::string const& target,
+    std::string const& msg,
+    void (luna::*message_handler)(
+        std::string const&,
+        std::string const&,
+        std::string const&),
+    void (luna::*ctcp_handler)(
+        std::string const&,
+        std::string const&,
+        std::string const&,
+        std::string const&))
+{
+    if (is_ctcp(msg)) {
+        std::string ctcp, ctcp_args;
+
+        split_ctcp(msg, ctcp, ctcp_args);
+        (this->*ctcp_handler)(prefix, target, ctcp, ctcp_args);
+    } else {
+        (this->*message_handler)(prefix, target, msg);
+    }
+}
+
+void luna::work_through_queue()
+{
+    while (not _message_queue.empty()) {
+        irc::message& msg = _message_queue.front();
+
+        std::string msgstr = irc::to_string(msg);
+
+        if (_bucket.consume(msgstr.size() + 2)) {
+            _logger.debug() << ">> " << msg;
+
+            irc::client::send_message(msg);
+            _message_queue.pop();
+        } else {
+            break;
+        }
     }
 }
 
