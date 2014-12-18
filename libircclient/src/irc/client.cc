@@ -353,6 +353,10 @@ void client::do_disconnect()
         _irccon->disconnect();
         _irccon.reset(nullptr);
     }
+
+    if (_session_state >= session_state::logged_in) {
+        on_disconnect();
+    }
 }
 
 void client::do_idle()
@@ -625,7 +629,6 @@ void client::init_core_handlers()
                     }
                 }
             } else {
-                on_disconnect();
                 do_disconnect();
             }
         }
@@ -633,7 +636,6 @@ void client::init_core_handlers()
 
     _core_handlers[command::ERROR] = handler{ 1, false, false,
         [this](message const& msg) {
-            on_disconnect();
             do_disconnect();
         }
     };

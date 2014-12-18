@@ -125,9 +125,9 @@ private:
 private:
     enum class session_state {
         start,
-        stop,
         login_sent,
-        logged_in
+        logged_in,
+        stop
     };
 
     session_state _session_state = session_state::start;
