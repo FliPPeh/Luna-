@@ -383,7 +383,7 @@ void luna::on_message(irc::message const& msg)
         if (msg.args.size() > 1 and environment().is_channel(msg.args[0])) {
             auto changes = environment().partition_mode_changes(
                 msg.args[1],
-                {std::begin(msg.args) + 1, std::end(msg.args)});
+                {std::begin(msg.args) + 2, std::end(msg.args)});
 
             for (auto& mc : changes) {
                 std::ostringstream m;
