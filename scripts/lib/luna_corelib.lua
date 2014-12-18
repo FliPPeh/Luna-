@@ -194,12 +194,12 @@ function luna.add_signal_handler(signal, id, fn)
     end
 
     if signal == 'channel_message' then
-        local oldfn = fn
+        local wrapped = fn
 
         fn = function(who, where, what, lvl)
             local filter = where:incoming_filter()
 
-            oldfn(who, where, filter and filter(where, what) or what, lvl)
+            wrapper(who, where, filter and filter(where, what) or what, lvl)
         end
     end
 
@@ -301,6 +301,9 @@ function luna.remove_command(command)
 end
 
 
+---
+-- Message and IRC command watchers
+--
 function luna.add_message_watcher(pattern, fn)
     return luna.add_signal_handler('channel_message', function(who, where, what)
         local matches = {what:find(pattern)}
@@ -319,8 +322,11 @@ function luna.add_command_watcher(cmd, fn)
     end)
 end
 
+---
+-- Entry functions from C++
+--
 
--- Entry function from C++
+-- Event handler
 function luna.handle_signal(signal, ...)
     local args = {...}
 
@@ -345,7 +351,7 @@ end
 
 
 
--- Entry function from C++
+-- Script init
 function luna.init_script()
     -- Then initialize script
     ok, res = xpcall(script.script_load, function(err)
@@ -358,7 +364,7 @@ function luna.init_script()
     end)
 end
 
--- Entry function from C++
+-- Script deinit
 function luna.deinit_script()
     if not script.script_unload then
         return true
@@ -373,6 +379,9 @@ function luna.deinit_script()
         return false
     end)
 end
+
+---
+-- Higher leveled wrappers
 
 -- Wrap up __luna.shared.get and __luna.shared.set inside a nice and intuitive
 -- table.
@@ -405,8 +414,32 @@ luna.shared = setmetatable({}, {
 })
 
 
+---
+-- High level command helpers
+--
 function luna.privmsg(tar, msg) luna.send_message('PRIVMSG', tar, msg) end
 function luna.notice(tar, msg)  luna.send_message('NOTICE', tar, msg)  end
+
+function luna.request_ctcp(tar, ctcp, arg)
+    if arg then
+        luna.privmsg(tar, string.format('\x01%s %s\x01', ctcp:upper(), arg))
+    else
+        luna.privmsg(tar, string.format('\x01%s\x01', ctcp:upper()))
+    end
+end
+
+function luna.respond_ctcp(tar, ctcp, arg)
+    if arg then
+        luna.notice(tar, string.format('\x01%s %s\x01', ctcp:upper(), arg))
+    else
+        luna.notice(tar, string.format('\x01%s\x01', ctcp:upper()))
+    end
+end
+
+function luna.action(tar, msg)
+    luna.request_ctcp(tar, 'ACTION', msg)
+end
+
 
 function luna.join(channel, key)
     luna.send_message('JOIN', channel, key)
@@ -415,6 +448,10 @@ end
 function luna.part(channel, reason)
     luna.send_message('PART', channel, reason or '')
 end
+
+---
+-- Info wrappers
+--
 
 -- Wrap up luna.runtime_info()
 function luna.started()   return ({luna.runtime_info()})[1] end
@@ -435,8 +472,9 @@ function luna.bytes_sent()           return ({luna.traffic_info()})[2] end
 function luna.bytes_received_total() return ({luna.traffic_info()})[3] end
 function luna.bytes_received()       return ({luna.traffic_info()})[4] end
 
-
--- Per-Channel filters and triggers
+---
+-- Trigger and filter management
+--
 local function trigger_key(channel)
     return string.format('luna.channel.%s.trigger', channel:lower())
 end
@@ -478,9 +516,13 @@ function luna.channel_outgoing_filter(channel)
        and loadstring(base64.decode(luna.shared[filter_out_key(channel)]))
 end
 
+---
 -- Augment basic types
---
+---
+
+---
 -- Augmented channel class
+--
 local channel_meta_aux = {}
 
 setmetatable(luna.channel_meta.__index, {
@@ -490,16 +532,27 @@ setmetatable(luna.channel_meta.__index, {
 
 function channel_meta_aux:privmsg(msg, lvl)
     local filter = self:outgoing_filter()
-    lvl = lvl or ''
 
-    luna.privmsg(lvl .. self:name(), filter and filter(self, msg) or msg)
+    luna.privmsg((lvl or '') .. self:name(),
+        filter and filter(self, msg) or msg)
 end
 
 function channel_meta_aux:notice(msg, lvl)
-    lvl = lvl or ''
-
-    luna.notice(lvl .. self:name(), msg)
+    luna.notice((lvl or '') .. self:name(), msg)
 end
+
+function channel_meta_aux:action(msg, lvl)
+    luna.action((lvl or '') .. self:name(), msg)
+end
+
+function channel_meta_aux:request_ctcp(ctcp, arg, lvl)
+    luna.request_ctcp((lvl or '') .. self:name(), ctcp, arg)
+end
+
+function channel_meta_aux:respond_ctcp(ctcp, arg, lvl)
+    luna.respond_ctcp((lvl or '') .. self:name(), ctcp, arg)
+end
+
 
 function channel_meta_aux:set_incoming_filter(fun)
     luna.set_channel_incoming_filter(self:name(), fun)
@@ -527,6 +580,9 @@ function channel_meta_aux:trigger()
 end
 
 
+---
+-- Augmented user types (known and unknown
+--
 
 -- Shared functions
 local function nick(self) return ({self:user_info()})[1] end
@@ -542,14 +598,35 @@ local function is_me(self)
     return self:nick():rfc1459lower() == luna.own_nick():rfc1459lower()
 end
 
+local function privmsg(self, msg) return luna.privmsg(self:nick(), msg) end
+local function notice(self, msg)  return luna.notice(self:nick(), msg) end
+local function action(self, msg)  return luna.action(self:nick(), msg) end
+
+local function request_ctcp(self, ctcp, arg)
+    return luna.request_ctcp(self:nick(), ctcp, arg)
+end
+
+local function respond_ctcp(self, ctcp, arg)
+    return luna.respond_ctcp(self:nick(), ctcp, arg)
+end
+
+---
 -- Augmented unknown user class
+--
 local unknown_user_aux = {
         nick  = nick,
         user  = user,
         host  = host,
 
         mask  = mask,
-        is_me = is_me
+        is_me = is_me,
+
+        privmsg = privmsg,
+        notice  = notice,
+        action  = action,
+
+        request_ctcp = request_ctcp,
+        respond_ctcp = respond_ctcp
     }
 
 setmetatable(luna.unknown_user_meta.__index, {
@@ -562,14 +639,23 @@ function unknown_user_aux:respond(msg)
 end
 
 
+---
 -- Augmented channel user class
+--
 local channel_user_aux = {
         nick  = nick,
         user  = user,
         host  = host,
 
         mask  = mask,
-        is_me = is_me
+        is_me = is_me,
+
+        privmsg = privmsg,
+        notice  = notice,
+        action  = action,
+
+        request_ctcp = request_ctcp,
+        respond_ctcp = respond_ctcp
     }
 
 setmetatable(luna.channel_user_meta.__index, {
@@ -707,6 +793,8 @@ function string:irctoansi()
         })[1]
 end
 
+-- Turns the given string into a literal pattern of itself (by escaping all
+-- characters that have a special meaning in pattern matching)
 function string:literalpattern()
     return self:gsub('[^%w%s]', '%%%1')
 end
