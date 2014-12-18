@@ -74,8 +74,8 @@ std::string get_compiler_string()
 luna::luna(std::string const& cfgfile)
     : irc::client{"", "", ""}
 {
-    read_shared_vars(_varfile);
-    read_users(_userfile);
+    read_shared_vars(varfile);
+    read_users(userfile);
 
     // TODO: idle_interval in config
     set_idle_interval(idle_interval);
@@ -96,8 +96,8 @@ luna::luna(std::string const& cfgfile)
 
 luna::~luna()
 {
-    save_users(_userfile);
-    save_shared_vars(_varfile);
+    save_users(userfile);
+    save_shared_vars(varfile);
 }
 
 

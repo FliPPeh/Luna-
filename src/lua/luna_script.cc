@@ -25,6 +25,7 @@
 #include "lua/proxies/luna_extension_proxy.hh"
 #include "lua/proxies/luna_user_proxy.hh"
 
+#include "config.hh"
 #include "luna_user.hh"
 #include "logging.hh"
 #include "luna.hh"
@@ -185,13 +186,13 @@ void luna_script::register_environment()
     _lua[api]["shared"] = mond::table{};
 
     _lua[api]["shared"]["save"] = std::function<void ()>{[=] {
-            context().save_shared_vars(context()._varfile);
+            context().save_shared_vars(varfile);
         }};
 
     _lua[api]["shared"]["reload"] = std::function<void ()>{[=] {
             luna_script::shared_vars.clear();
 
-            context().read_shared_vars(context()._varfile);
+            context().read_shared_vars(varfile);
         }};
 
     _lua[api]["shared"]["get"] = std::function<int (lua_State*)>{
@@ -222,7 +223,7 @@ void luna_script::register_environment()
             std::string key = luaL_checkstring(s, 1);
 
             shared_vars.erase(key);
-            context().save_shared_vars(context()._varfile);
+            context().save_shared_vars(varfile);
 
             return 0;
         }};
@@ -432,12 +433,12 @@ void luna_script::register_user()
         }};
 
     _lua[api]["users"]["save"] = std::function<void ()>{[=] {
-            context().save_users(context()._userfile);
+            context().save_users(userfile);
         }};
 
     _lua[api]["users"]["reload"] = std::function<void ()>{[=] {
             context()._users.clear();
-            context().read_users(context()._userfile);
+            context().read_users(userfile);
         }};
 
     _lua[api]["users"]["create"] = std::function<int (lua_State*)>{
@@ -480,7 +481,7 @@ void luna_script::register_user()
             }
 
             context().users().erase(i);
-            context().save_users(context()._userfile);
+            context().save_users(userfile);
 
             return 0;
         }};

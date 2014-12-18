@@ -26,4 +26,7 @@ static constexpr char luna_version[] = "6.28318";
 
 static constexpr int idle_interval = 125; // milliseconds
 
+static constexpr char const* userfile = "users.txt";
+static constexpr char const* varfile = "shared_vars.txt";
+
 #endif // defined LUNA_CONFIG_HH_INCLUDED

@@ -19,6 +19,7 @@
 
 #include "luna_user_proxy.hh"
 
+#include "config.hh"
 #include "luna.hh"
 #include "luna_user.hh"
 
@@ -64,7 +65,7 @@ void luna_user_proxy::set_id(std::string id)
 
     user.set_id(id);
     _id = id;
-    _ref->save_users(_ref->_userfile);
+    _ref->save_users(userfile);
 }
 
 void luna_user_proxy::set_hostmask(std::string hostmask)
@@ -72,7 +73,7 @@ void luna_user_proxy::set_hostmask(std::string hostmask)
     luna_user& user = lookup();
 
     user.set_hostmask(hostmask);
-    _ref->save_users(_ref->_userfile);
+    _ref->save_users(userfile);
 }
 
 void luna_user_proxy::set_title(std::string title)
@@ -80,7 +81,7 @@ void luna_user_proxy::set_title(std::string title)
     luna_user& user = lookup();
 
     user.set_title(title);
-    _ref->save_users(_ref->_userfile);
+    _ref->save_users(userfile);
 }
 
 void luna_user_proxy::set_flags(std::string flags)
@@ -88,7 +89,7 @@ void luna_user_proxy::set_flags(std::string flags)
     luna_user& user = lookup();
 
     user.set_flags(flags_from_string(flags));
-    _ref->save_users(_ref->_userfile);
+    _ref->save_users(userfile);
 }
 
 

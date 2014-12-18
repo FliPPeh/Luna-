@@ -188,9 +188,6 @@ private:
     std::vector<std::string> _autojoin;
     std::vector<luna_user>   _users;
 
-    std::string _userfile = "users.txt";
-    std::string _varfile  = "shared_vars.txt";
-
 private:
     friend class luna_script;
     friend class luna_user_proxy;
