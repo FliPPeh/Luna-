@@ -46,6 +46,12 @@ luna_unknown_user_proxy::luna_unknown_user_proxy(luna& ref, std::string prefix)
 }
 
 
+std::string luna_unknown_user_proxy::repr() const
+{
+    return std::get<0>(user_info());
+}
+
+
 std::tuple<std::string,
            std::string,
            std::string > luna_unknown_user_proxy::user_info() const
@@ -209,6 +215,12 @@ luna_channel_user_proxy::luna_channel_user_proxy(
       _channel{std::move(channel)},
       _uid{uid}
 {
+}
+
+
+std::string luna_channel_user_proxy::repr() const
+{
+    return std::get<0>(user_info());
 }
 
 

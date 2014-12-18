@@ -74,7 +74,7 @@ public:
         lua_setfield(mt._state, -2, _name.c_str());
     }
 
-private:
+protected:
     template <typename U>
     friend class metatable;
 
@@ -116,35 +116,13 @@ public:
         lua_setfield(mt._state, -2, _name.c_str());
     }
 
-private:
+protected:
     template <typename U>
     friend class metatable;
 
     std::string _name;
     std::function<int (T*, lua_State*)> _memptr;
 };
-
-/*
-template <typename T, typename... Args>
-class metaconstructor : public meta_element<T> {
-public:
-    metaconstructor(std::string name)
-        : _name{name}
-    {
-    }
-
-    virtual void apply(metatable<T>& mt) override
-    {
-        mt._focus[_name].template new_constructor<T, Args...>(mt._name);
-    }
-
-private:
-    template <typename U>
-    friend class metatable;
-
-    std::string _name;
-};
-*/
 
 template <typename T, typename R, typename... Args>
 metamethod<T, R, Args...> method(
@@ -162,13 +140,72 @@ metamethod<T, R, Args...> method(
     return metamethod<T, R, Args...>{name, ptr};
 }
 
-/*
-template <typename T, typename... Args>
-metaconstructor<T, Args...> constructor(std::string const& name)
-{
-    return metaconstructor<T, Args...>{name};
+template <typename T, typename Ret, typename... Args> class metametamethod : public metamethod<T, Ret, Args...> {
+    using metamethod<T, Ret, Args...>::_name;
+    using metamethod<T, Ret, Args...>::_memptr;
+
+public:
+    using metamethod<T, Ret, Args...>::metamethod;
+
+    virtual void apply(metatable<T>& mt) override
+    {
+        auto ptr = _memptr;
+
+        std::function<Ret (T* self, Args...)> fun =
+            [ptr](T* self, Args... args) {
+                return ptr(self, args...);
+            };
+
+        mt._state._functions.emplace_back(
+            std::move(write_function(mt._state, fun, mt._name)));
+
+        lua_setfield(mt._state, mt._meta, _name.c_str());
+    }
 };
-*/
+
+template <typename T>
+class metametamethod<T, int, lua_State*> : public metamethod<T, int, lua_State*> {
+    using metamethod<T, int, lua_State*>::_name;
+    using metamethod<T, int, lua_State*>::_memptr;
+
+public:
+    using metamethod<T, int, lua_State*>::metamethod;
+
+    virtual void apply(metatable<T>& mt) override
+    {
+        auto ptr = _memptr;
+        std::string meta = mt._name;
+
+        std::function<int (lua_State*)> fun =
+            [ptr, meta](lua_State* s) {
+                T* self = static_cast<T*>(luaL_checkudata(s, 1, meta.c_str()));
+
+                return ptr(self, s);
+            };
+
+        mt._state._functions.emplace_back(
+            std::move(write_function(mt._state, fun, mt._name)));
+
+        lua_setfield(mt._state, mt._meta, _name.c_str());
+    }
+};
+
+template <typename T, typename R, typename... Args>
+metametamethod<T, R, Args...> meta_method(
+    std::string const& name,
+    R (T::*ptr)(Args...) const)
+{
+    return metametamethod<T, R, Args...>{name, ptr};
+}
+
+template <typename T, typename R, typename... Args>
+metametamethod<T, R, Args...> meta_method(
+    std::string const& name,
+    R (T::*ptr)(Args...))
+{
+    return metametamethod<T, R, Args...>{name, ptr};
+}
+
 
 class state;
 class focus;
@@ -213,32 +250,29 @@ public:
     }
 
     /*
-    template <typename... Args>
-    metatable& operator<<(metaconstructor<T, Args...> ctor)
+     * TODO: Get polymorphism to do this, since metametamethod is also a
+     *       metamethod.
+     */
+    template <typename Ret, typename... Args>
+    metatable& operator<<(metametamethod<T, Ret, Args...> meth)
     {
-        ctor.apply(*this);
-        //_fields.push_back(ctor._name);
+        meth.apply(*this);
 
         return *this;
     }
-    */
 
 private:
     template <typename U, typename Ret, typename... Args>
     friend class metamethod;
 
-    /*
-    template <typename U, typename... Args>
-    friend class metaconstructor;
-    */
+    template <typename U, typename Ret, typename... Args>
+    friend class metametamethod;
 
     state& _state;
     focus& _focus;
 
     std::string _name;
     int _meta;
-
-    //std::vector<std::string> _fields;
 };
 
 } // namespace mond

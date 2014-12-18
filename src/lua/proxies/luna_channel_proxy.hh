@@ -42,6 +42,8 @@ public:
 
     luna_unknown_user_proxy(luna& ref, std::string prefix);
 
+    std::string repr() const;
+
     std::tuple<std::string, std::string, std::string> user_info() const;
     int match(lua_State* s) const;
 
@@ -84,6 +86,8 @@ public:
     static constexpr char const* metatable = "luna.channel.user";
 
     luna_channel_user_proxy(luna& ref, std::string channel, uint64_t uid);
+
+    std::string repr() const;
 
     std::tuple<std::string, std::string, std::string> user_info() const;
     int match(lua_State* s) const;

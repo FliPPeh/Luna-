@@ -74,6 +74,9 @@ private:
     template <typename T, typename Ret, typename... Args>
     friend class metamethod;
 
+    template <typename T, typename Ret, typename... Args>
+    friend class metametamethod;
+
     std::vector<std::unique_ptr<function_base>> _functions;
 };
 

@@ -324,6 +324,8 @@ bool strcaseequal(std::string const& a, std::string const& b)
 void luna_script::register_script()
 {
     _lua[api].new_metatable<luna_extension_proxy>()
+        << mond::meta_method(mond::meta_tostring, &luna_extension_proxy::id)
+
         << mond::method("id",          &luna_extension_proxy::id)
         << mond::method("name",        &luna_extension_proxy::name)
         << mond::method("description", &luna_extension_proxy::description)
@@ -403,6 +405,8 @@ void luna_script::register_script()
 void luna_script::register_user()
 {
     _lua[api].new_metatable<luna_user_proxy>()
+        << mond::meta_method(mond::meta_tostring, &luna_user_proxy::id)
+
         << mond::method("id",           &luna_user_proxy::id)
         << mond::method("hostmask",     &luna_user_proxy::hostmask)
         << mond::method("flags",        &luna_user_proxy::flags)
@@ -487,7 +491,8 @@ void luna_script::register_user()
 void luna_script::register_channel()
 {
     _lua[api].new_metatable<luna_channel_proxy>()
-        << mond::method(mond::meta_tostring, &luna_channel_proxy::name)
+        << mond::meta_method(mond::meta_tostring, &luna_channel_proxy::name)
+
         << mond::method("name",              &luna_channel_proxy::name)
         << mond::method("created",           &luna_channel_proxy::created)
         << mond::method("topic",             &luna_channel_proxy::topic)
@@ -530,11 +535,17 @@ void luna_script::register_channel()
 void luna_script::register_channel_user()
 {
     _lua[api].new_metatable<luna_unknown_user_proxy>()
+        << mond::meta_method(mond::meta_tostring,
+            &luna_unknown_user_proxy::repr)
+
         << mond::method("user_info",     &luna_unknown_user_proxy::user_info)
         << mond::method("match_reguser", &luna_unknown_user_proxy::match);
 
 
     _lua[api].new_metatable<luna_channel_user_proxy>()
+        << mond::meta_method(mond::meta_tostring,
+            &luna_channel_user_proxy::repr)
+
         << mond::method("user_info",     &luna_channel_user_proxy::user_info)
         << mond::method("match_reguser", &luna_channel_user_proxy::match)
         << mond::method("modes",         &luna_channel_user_proxy::modes)
