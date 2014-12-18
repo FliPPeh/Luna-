@@ -27,9 +27,6 @@
 #include <client.hh>
 #include <channel.hh>
 #include <channel_user.hh>
-#include <environment.hh>
-
-#include <mond.hh>
 
 #include <string>
 #include <ctime>

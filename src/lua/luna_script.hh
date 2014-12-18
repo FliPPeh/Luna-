@@ -32,6 +32,7 @@
 #include <irc_utils.hh>
 #include <channel.hh>
 #include <channel_user.hh>
+#include <environment.hh>
 
 #include <mond.hh>
 
