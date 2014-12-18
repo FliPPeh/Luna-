@@ -44,6 +44,10 @@ class async_connection;
 
 class DLL_PUBLIC client {
 public:
+    // Wait at most `timeout' seconds before reconnecting after receiving the
+    // last message from the server (to repair broken client side connections)
+    static constexpr unsigned timeout = 300; // 5 minutes
+
     client(
         std::string nick,
         std::string user,
@@ -147,6 +151,8 @@ private:
 
     void (client::*_current_handler)(message const& msg) =
         &client::login_handler;
+
+    std::chrono::system_clock::time_point _last_contact;
 };
 
 }

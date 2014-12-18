@@ -81,6 +81,7 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
     for (;;) {
         _session_state = session_state::start;
         _current_handler = &client::login_handler;
+        _last_contact = std::chrono::system_clock::now();
 
         int flags = _use_ssl ? connection_flags::SSL : 0;
 
@@ -327,6 +328,8 @@ void client::send_queue()
 
 void client::handle_message(message const& msg)
 {
+    _last_contact = std::chrono::system_clock::now();
+
     try {
         (this->*_current_handler)(msg);
 
@@ -362,6 +365,15 @@ void client::do_disconnect()
 void client::do_idle()
 {
     on_idle();
+
+    std::chrono::system_clock::time_point now =
+        std::chrono::system_clock::now();
+
+    std::chrono::duration<double> diff = now - _last_contact;
+
+    if (diff.count() > timeout) {
+        do_disconnect();
+    }
 
     _idle_timer.expires_from_now(_idle_interval);
     _idle_timer.async_wait([this] (boost::system::error_code const& err) {
