@@ -193,6 +193,8 @@ private:
         }
     }
 
+    bool split_message_level(std::string& target, std::string& level);
+
 private:
     friend class luna_extension_proxy;
 

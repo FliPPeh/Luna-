@@ -693,6 +693,24 @@ void luna_script::on_topic(
     emit_signal_helper("topic_change", source, channel, new_topic);
 }
 
+bool luna_script::split_message_level(std::string& target, std::string& level)
+{
+    std::size_t chanstart = target.find_first_of(
+        context().environment().channel_types());
+
+    if (chanstart != std::string::npos) {
+        if (chanstart != 0) {
+            // +#channel, @#channel, @+#channel, ...
+            level  = target.substr(0, chanstart);
+            target = target.substr(chanstart);
+        } else {
+            level = "";
+        }
+    }
+
+    return chanstart != std::string::npos;
+}
+
 void luna_script::on_privmsg(
     std::string const& source,
     std::string const& target,
@@ -700,22 +718,10 @@ void luna_script::on_privmsg(
 {
     luna_extension::on_privmsg(source, target, msg);
 
-    std::size_t chanstart =
-        target.find_first_of(context().environment().channel_types());
+    std::string rtarget = target, rlevel;
 
-    if (chanstart != std::string::npos) {
-        // >= 0 = channel
-        std::string real_target = target;
-        std::string message_level = ""; // default: everbody
-
-        if (chanstart != 0) {
-            // +#channel, @#channel, @+&channel, ...
-            message_level = target.substr(0, chanstart);
-            real_target   = target.substr(chanstart);
-        }
-
-        emit_signal_helper("message",
-            source, real_target, msg, message_level);
+    if (split_message_level(rtarget, rlevel)) {
+        emit_signal_helper("message", source, rtarget, msg, rlevel);
     } else {
         emit_signal_helper("message", source, target, msg);
     }
@@ -728,26 +734,13 @@ void luna_script::on_notice(
 {
     luna_extension::on_notice(source, target, msg);
 
-    std::size_t chanstart =
-        target.find_first_of(context().environment().channel_types());
+    std::string rtarget = target, rlevel;
 
-    if (chanstart != std::string::npos) {
-        // >= 0 = channel
-        std::string real_target = target;
-        std::string message_level = ""; // default: everbody
-
-        if (chanstart != 0) {
-            // +#channel, @#channel, @+&channel, ...
-            message_level = target.substr(0, chanstart);
-            real_target   = target.substr(chanstart);
-        }
-
-        emit_signal_helper("notice",
-            source, real_target, msg, message_level);
+    if (split_message_level(rtarget, rlevel)) {
+        emit_signal_helper("notice", source, rtarget, msg, rlevel);
     } else {
         emit_signal_helper("notice", source, target, msg);
     }
-
 }
 
 void luna_script::on_ctcp_request(
@@ -758,7 +751,13 @@ void luna_script::on_ctcp_request(
 {
     luna_extension::on_ctcp_request(source, target, ctcp, args);
 
-    emit_signal_helper("ctcp_request", source, target, ctcp, args);
+    std::string rtarget = target, rlevel;
+
+    if (split_message_level(rtarget, rlevel)) {
+        emit_signal_helper("ctcp_request", source, rtarget, ctcp, args, rlevel);
+    } else {
+        emit_signal_helper("ctcp_request", source, target, ctcp, args);
+    }
 }
 
 void luna_script::on_ctcp_response(
@@ -769,7 +768,14 @@ void luna_script::on_ctcp_response(
 {
     luna_extension::on_ctcp_response(source, target, ctcp, args);
 
-    emit_signal_helper("ctcp_response", source, target, ctcp, args);
+    std::string rtarget = target, rlevel;
+
+    if (split_message_level(rtarget, rlevel)) {
+        emit_signal_helper("ctcp_response",
+             source, rtarget, ctcp, args, rlevel);
+    } else {
+        emit_signal_helper("ctcp_response", source, target, ctcp, args);
+    }
 }
 
 void luna_script::on_mode(
