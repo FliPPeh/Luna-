@@ -39,7 +39,7 @@ class metatable;
 
 template <typename T>
 class meta_element {
-    virtual void apply(metatable<T>&) = 0;
+    virtual void apply(metatable<T>&) const = 0;
 };
 
 
@@ -58,7 +58,7 @@ public:
     {
     }
 
-    virtual void apply(metatable<T>& mt) override
+    virtual void apply(metatable<T>& mt) const override
     {
         auto ptr = _memptr;
 
@@ -97,7 +97,7 @@ public:
     {
     }
 
-    virtual void apply(metatable<T>& mt) override
+    virtual void apply(metatable<T>& mt) const override
     {
         auto ptr = _memptr;
         std::string meta = mt._name;
@@ -140,14 +140,15 @@ metamethod<T, R, Args...> method(
     return metamethod<T, R, Args...>{name, ptr};
 }
 
-template <typename T, typename Ret, typename... Args> class metametamethod : public metamethod<T, Ret, Args...> {
+template <typename T, typename Ret, typename... Args>
+class metametamethod : public metamethod<T, Ret, Args...> {
     using metamethod<T, Ret, Args...>::_name;
     using metamethod<T, Ret, Args...>::_memptr;
 
 public:
     using metamethod<T, Ret, Args...>::metamethod;
 
-    virtual void apply(metatable<T>& mt) override
+    virtual void apply(metatable<T>& mt) const override
     {
         auto ptr = _memptr;
 
@@ -171,7 +172,7 @@ class metametamethod<T, int, lua_State*> : public metamethod<T, int, lua_State*>
 public:
     using metamethod<T, int, lua_State*>::metamethod;
 
-    virtual void apply(metatable<T>& mt) override
+    virtual void apply(metatable<T>& mt) const override
     {
         auto ptr = _memptr;
         std::string meta = mt._name;
@@ -242,19 +243,7 @@ public:
     }
 
     template <typename Ret, typename... Args>
-    metatable& operator<<(metamethod<T, Ret, Args...> meth)
-    {
-        meth.apply(*this);
-
-        return *this;
-    }
-
-    /*
-     * TODO: Get polymorphism to do this, since metametamethod is also a
-     *       metamethod.
-     */
-    template <typename Ret, typename... Args>
-    metatable& operator<<(metametamethod<T, Ret, Args...> meth)
+    metatable& operator<<(metamethod<T, Ret, Args...> const& meth)
     {
         meth.apply(*this);
 
