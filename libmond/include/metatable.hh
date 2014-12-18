@@ -209,17 +209,14 @@ metametamethod<T, R, Args...> meta_method(
 
 
 class state;
-class focus;
 
 template <typename T>
 class metatable {
 public:
     metatable(state& state, focus& focus, std::string const& name)
         : _state{state},
-          _focus{focus},
           _name{name},
           _meta{-1}
-          //_fields{}
     {
         if (luaL_newmetatable(_state, name.c_str()) != 1) {
             throw mond::runtime_error{
@@ -228,7 +225,6 @@ public:
 
         _meta = lua_gettop(_state);
 
-        //lua_pushvalue(_state, _meta);
         lua_newtable(_state);
         lua_setfield(_state, _meta, "__index");
 
@@ -258,7 +254,6 @@ private:
     friend class metametamethod;
 
     state& _state;
-    focus& _focus;
 
     std::string _name;
     int _meta;
