@@ -24,12 +24,12 @@
 #include "luna.hh"
 #include "luna_user.hh"
 
-#include <channel.hh>
-#include <channel_user.hh>
-#include <irc_utils.hh>
-#include <environment.hh>
+#include <irc/channel.hh>
+#include <irc/channel_user.hh>
+#include <irc/irc_utils.hh>
+#include <irc/environment.hh>
 
-#include <mond.hh>
+#include <mond/mond.hh>
 
 #include <lua.hpp>
 

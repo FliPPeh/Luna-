@@ -29,12 +29,12 @@
 #include "lua/proxies/luna_user_proxy.hh"
 #include "lua/proxies/luna_extension_proxy.hh"
 
-#include <irc_utils.hh>
-#include <channel.hh>
-#include <channel_user.hh>
-#include <environment.hh>
+#include <irc/irc_utils.hh>
+#include <irc/channel.hh>
+#include <irc/channel_user.hh>
+#include <irc/environment.hh>
 
-#include <mond.hh>
+#include <mond/mond.hh>
 
 #include <string>
 

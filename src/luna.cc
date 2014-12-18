@@ -27,13 +27,13 @@
 
 #include "logging.hh"
 
-#include <irc_core.hh>
-#include <irc_utils.hh>
-#include <irc_except.hh>
-#include <irc_helpers.hh>
-#include <environment.hh>
+#include <irc/irc_core.hh>
+#include <irc/irc_utils.hh>
+#include <irc/irc_except.hh>
+#include <irc/irc_helpers.hh>
+#include <irc/environment.hh>
 
-#include <mond.hh>
+#include <mond/mond.hh>
 
 #include <lua.hpp>
 

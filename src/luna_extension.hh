@@ -21,7 +21,7 @@
 #ifndef LUNA_LUNA_EXTENSION_HH_INCLUDED
 #define LUNA_LUNA_EXTENSION_HH_INCLUDED
 
-#include <irc_utils.hh>
+#include <irc/irc_utils.hh>
 
 #include <string>
 

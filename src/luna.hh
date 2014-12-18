@@ -24,9 +24,9 @@
 #include "logging.hh"
 #include "tokenbucket.hh"
 
-#include <client.hh>
-#include <channel.hh>
-#include <channel_user.hh>
+#include <irc/client.hh>
+#include <irc/channel.hh>
+#include <irc/channel_user.hh>
 
 #include <string>
 #include <ctime>

@@ -30,10 +30,10 @@
 #include "logging.hh"
 #include "luna.hh"
 
-#include "mond.hh"
+#include <mond/mond.hh>
 
-#include <irc_core.hh>
-#include <irc_except.hh>
+#include <irc/irc_core.hh>
+#include <irc/irc_except.hh>
 
 #include <sstream>
 #include <string>

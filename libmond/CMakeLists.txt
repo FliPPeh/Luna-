@@ -1,22 +1,22 @@
 find_package(Lua 5.2 REQUIRED)
 
 set(EXPORTED_INCLUDES
-    include/lua_read.hh
-    include/lua_write.hh
-    include/lua_types.hh
-    include/state.hh
-    include/focus.hh
-    include/tape.hh
-    include/metatable.hh
-    include/iterator.hh
-    include/function.hh
-    include/macros.h)
+    include/mond/lua_read.hh
+    include/mond/lua_write.hh
+    include/mond/lua_types.hh
+    include/mond/state.hh
+    include/mond/focus.hh
+    include/mond/tape.hh
+    include/mond/metatable.hh
+    include/mond/iterator.hh
+    include/mond/function.hh
+    include/mond/macros.h)
 
 set(SRC
     ${EXPORTED_INCLUDES}
-    state.cc
-    focus.cc
-    tape.cc)
+    src/mond/state.cc
+    src/mond/focus.cc
+    src/mond/tape.cc)
 
 include_directories("${LUA_INCLUDE_DIR}")
 include_directories(include/)

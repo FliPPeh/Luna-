@@ -23,7 +23,7 @@
 #include "luna.hh"
 #include "luna_user.hh"
 
-#include <mond.hh>
+#include <mond/mond.hh>
 
 #include <lua.hpp>
 

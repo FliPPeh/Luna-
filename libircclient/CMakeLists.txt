@@ -5,27 +5,27 @@ find_package(OpenSSL      REQUIRED)
 add_definitions(-DBOOST_ASIO_HAS_MOVE=1)
 
 set(EXPORTED_INCLUDES
-    include/client.hh
-    include/connection.hh
-    include/irc_core.hh
-    include/irc_utils.hh
-    include/irc_helpers.hh
-    include/irc_except.hh
-    include/environment.hh
-    include/channel.hh
-    include/channel_user.hh
-    include/macros.h)
+    include/irc/client.hh
+    include/irc/connection.hh
+    include/irc/irc_core.hh
+    include/irc/irc_utils.hh
+    include/irc/irc_helpers.hh
+    include/irc/irc_except.hh
+    include/irc/environment.hh
+    include/irc/channel.hh
+    include/irc/channel_user.hh
+    include/irc/macros.h)
 
 set(SRC
     ${EXPORTED_INCLUDES}
-    client.cc
-    connection.cc
-    irc_core.cc
-    irc_utils.cc
-    irc_helpers.cc
-    environment.cc
-    channel.cc
-    channel_user.cc)
+    src/irc/client.cc
+    src/irc/connection.cc
+    src/irc/irc_core.cc
+    src/irc/irc_utils.cc
+    src/irc/irc_helpers.cc
+    src/irc/environment.cc
+    src/irc/channel.cc
+    src/irc/channel_user.cc)
 
 include_directories(${Boost_INCLUDE_DIR})
 include_directories(${OpenSSL_INCLUDE_DIR})
