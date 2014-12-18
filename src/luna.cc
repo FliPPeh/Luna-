@@ -618,7 +618,7 @@ void split_ctcp(
 
     if ((sep = msg.find(' ')) != std::string::npos) {
         ctcp = msg.substr(1, sep - 1);
-        ctcp_args = msg.substr(sep + 1, msg.size() - sep);
+        ctcp_args = msg.substr(sep + 1, msg.size() - sep - 2);
     } else {
         ctcp = msg.substr(1, msg.size() - 2);
         ctcp_args = "";
