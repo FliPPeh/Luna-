@@ -530,16 +530,15 @@ void luna_script::register_channel()
 void luna_script::register_channel_user()
 {
     _lua[api].new_metatable<luna_unknown_user_proxy>()
-        << mond::method("user_info", &luna_unknown_user_proxy::user_info)
-        << mond::method("match",     &luna_unknown_user_proxy::match);
+        << mond::method("user_info",     &luna_unknown_user_proxy::user_info)
+        << mond::method("match_reguser", &luna_unknown_user_proxy::match);
 
 
     _lua[api].new_metatable<luna_channel_user_proxy>()
         << mond::method("user_info",     &luna_channel_user_proxy::user_info)
-        << mond::method("match",         &luna_channel_user_proxy::match)
+        << mond::method("match_reguser", &luna_channel_user_proxy::match)
         << mond::method("modes",         &luna_channel_user_proxy::modes)
-        << mond::method("channel",       &luna_channel_user_proxy::channel)
-        << mond::method("match_reguser", &luna_channel_user_proxy::match);
+        << mond::method("channel",       &luna_channel_user_proxy::channel);
 
     _lua[api]["unknown_user_meta"].export_metatable<luna_unknown_user_proxy>();
     _lua[api]["channel_user_meta"].export_metatable<luna_channel_user_proxy>();
