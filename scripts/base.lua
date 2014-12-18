@@ -1,5 +1,7 @@
 local base = {}
 
+local dump = require 'dumplib'
+
 base.info = {
     name         = 'Base',
     description  = 'Do basey things',
@@ -24,14 +26,23 @@ function base.script_load()
         if user and user:flags():find('a') then
             local f = loadstring(args)
 
-            local ok, r = pcall(f)
+            local r = {pcall(f)}
+            local ok = table.remove(r, 1)
 
             if ok then
-                who:respond(tostring(r))
-            else
-                log.err(r)
+                if #r > 1 then
+                    for i, v in ipairs(r) do
+                        r[i] = dump.dump_inline(r[i])
+                    end
 
-                local errs = tostring(r):split('\n')
+                    who:respond(table.concat(r, ', '))
+                else
+                    who:respond(dump.dump_inline(r[1]))
+                end
+            else
+                log.err(r[1])
+
+                local errs = tostring(r[1]):split('\n')
 
                 if #errs > 1 then
                     who:respond(string.format('Error: %s (+%d lines)',
