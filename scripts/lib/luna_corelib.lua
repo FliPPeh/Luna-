@@ -199,7 +199,7 @@ function luna.add_signal_handler(signal, id, fn)
         fn = function(who, where, what, lvl)
             local filter = where:incoming_filter()
 
-            wrapper(who, where, filter and filter(where, what) or what, lvl)
+            wrapped(who, where, filter and filter(where, what) or what, lvl)
         end
     end
 
