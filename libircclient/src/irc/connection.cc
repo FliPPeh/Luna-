@@ -76,10 +76,14 @@ void async_connection::disconnect()
 {
     boost::system::error_code err;
 
-    _socket->shutdown(err);
-    _socket->next_layer().shutdown(
-        asio::ip::tcp::socket::shutdown_type::shutdown_both, err);
-    _socket->next_layer().close(err);
+    if (_socket) {
+        _socket->shutdown(err);
+        _socket->next_layer().shutdown(
+            asio::ip::tcp::socket::shutdown_type::shutdown_both, err);
+        _socket->next_layer().close(err);
+
+        _socket.reset(nullptr);
+    }
 }
 
 
