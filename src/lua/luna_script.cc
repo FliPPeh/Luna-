@@ -753,10 +753,19 @@ void luna_script::on_ctcp_request(
 
     std::string rtarget = target, rlevel;
 
-    if (split_message_level(rtarget, rlevel)) {
-        emit_signal_helper("ctcp_request", source, rtarget, ctcp, args, rlevel);
+    if (irc::rfc1459_equal(ctcp, "ACTION")) {
+        if (split_message_level(rtarget, rlevel)) {
+            emit_signal_helper("action", source, rtarget, args, rlevel);
+        } else {
+            emit_signal_helper("action", source, target, args);
+        }
     } else {
-        emit_signal_helper("ctcp_request", source, target, ctcp, args);
+        if (split_message_level(rtarget, rlevel)) {
+            emit_signal_helper("ctcp_request",
+                source, rtarget, ctcp, args, rlevel);
+        } else {
+            emit_signal_helper("ctcp_request", source, target, ctcp, args);
+        }
     }
 }
 
