@@ -351,6 +351,7 @@ void client::do_disconnect()
 
     if (_irccon) {
         _irccon->disconnect();
+        _irccon.reset(nullptr);
     }
 }
 
