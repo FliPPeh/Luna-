@@ -67,10 +67,10 @@ private:
     // anything a channel can do to us
     friend class channel;
 
-    void rename(std::string new_nick);
+    DLL_LOCAL void rename(std::string new_nick);
 
-    void set_mode(char modefl);
-    void unset_mode(char modefl);
+    DLL_LOCAL void set_mode(char modefl);
+    DLL_LOCAL void unset_mode(char modefl);
 
 private:
     irc::channel* _channel;

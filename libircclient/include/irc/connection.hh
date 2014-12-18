@@ -76,15 +76,15 @@ public:
     uint16_t    server_port() const;
 
 private:
-    void handle_resolve(
+    DLL_LOCAL void handle_resolve(
         boost::system::error_code const& err,
         boost::asio::ip::tcp::resolver::iterator endpoint_iter);
 
-    void handle_connect(
+    DLL_LOCAL void handle_connect(
         boost::system::error_code const& err,
         boost::asio::ip::tcp::resolver::iterator endpoint_iter);
 
-    void handle_handshake(
+    DLL_LOCAL void handle_handshake(
         boost::system::error_code const& err,
         boost::asio::ip::tcp::resolver::iterator endpoint_iter);
 

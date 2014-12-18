@@ -106,8 +106,8 @@ private:
     // anything a client can do to us
     friend class client;
 
-    channel& create_channel(std::string name);
-    void     remove_channel(channel& channel);
+    DLL_LOCAL channel& create_channel(std::string name);
+    DLL_LOCAL void     remove_channel(channel& channel);
 
 private:
     DLL_LOCAL void init_channel_modes(std::string const& chanmodes);

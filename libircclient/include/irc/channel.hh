@@ -91,29 +91,29 @@ private:
     friend class client;
 
     // Meta-Management
-    void set_topic(std::string topic);
-    void set_topic_meta(std::string setter, std::time_t settime);
+    DLL_LOCAL void set_topic(std::string topic);
+    DLL_LOCAL void set_topic_meta(std::string setter, std::time_t settime);
 
-    void set_created(time_t created);
+    DLL_LOCAL void set_created(time_t created);
 
     // Mode management
-    void apply_modes(
+    DLL_LOCAL void apply_modes(
         std::string const& modes,
         std::vector<std::string> const& args,
         environment const& env);
 
     // User management
-    channel_user& create_user(std::string prefix);
-    channel_user& create_user(
+    DLL_LOCAL channel_user& create_user(std::string prefix);
+    DLL_LOCAL channel_user& create_user(
         std::string nick,
         std::string user,
         std::string host);
 
-    void rename_user(
+    DLL_LOCAL void rename_user(
         std::string const& old_nick,
         std::string const& new_nick);
 
-    void remove_user(channel_user& user);
+    DLL_LOCAL void remove_user(channel_user& user);
 
 private:
     DLL_LOCAL void set_mode(
