@@ -32,6 +32,7 @@
 #include <mond.hh>
 
 #include <string>
+#include <ctime>
 
 class luna_user;
 class luna_extension;
@@ -193,7 +194,6 @@ private:
 private:
     friend class luna_script;
     friend class luna_user_proxy;
-    friend class luna_proxy;
 
     std::time_t _started   = std::time(nullptr);
     std::time_t _connected = 0;
