@@ -21,6 +21,10 @@ set(SRC
 include_directories("${LUA_INCLUDE_DIR}")
 include_directories(include/)
 
-add_library(mond SHARED ${SRC})
+add_library(mond_objs OBJECT ${SRC})
+
+add_library(mond SHARED $<TARGET_OBJECTS:mond_objs>)
+add_library(mond_static STATIC $<TARGET_OBJECTS:mond_objs>)
 
 target_link_libraries(mond "${LUA_LIBRARIES}")
+target_link_libraries(mond_static "${LUA_LIBRARIES}")

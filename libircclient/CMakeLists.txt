@@ -31,8 +31,15 @@ include_directories(${Boost_INCLUDE_DIR})
 include_directories(${OpenSSL_INCLUDE_DIR})
 include_directories(include/)
 
-add_library(ircclient SHARED ${SRC})
+add_library(ircclient_objs OBJECT ${SRC})
+
+add_library(ircclient SHARED $<TARGET_OBJECTS:ircclient_objs>)
+add_library(ircclient_static STATIC $<TARGET_OBJECTS:ircclient_objs>)
 
 target_link_libraries(ircclient ${OPENSSL_LIBRARIES}
                                 ${Boost_LIBRARIES}
                                 ${CMAKE_THREAD_LIBS_INIT})
+
+target_link_libraries(ircclient_static ${OPENSSL_LIBRARIES}
+                                       ${Boost_LIBRARIES}
+                                       ${CMAKE_THREAD_LIBS_INIT})

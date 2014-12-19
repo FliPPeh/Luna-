@@ -28,4 +28,10 @@ include_directories("${LUA_INCLUDE_DIR}")
 include_directories("${luna++_SOURCE_DIR}/src")
 
 add_executable(luna++ ${SRC})
-target_link_libraries(luna++ ircclient mond)
+
+if(LUNA_LINK_STATIC)
+    target_link_libraries(luna++ ircclient_static mond_static)
+else(LUNA_LINK_STATIC)
+    target_link_libraries(luna++ ircclient mond)
+endif(LUNA_LINK_STATIC)
+
