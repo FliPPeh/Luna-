@@ -31,6 +31,8 @@ include_directories(${Boost_INCLUDE_DIR})
 include_directories(${OpenSSL_INCLUDE_DIR})
 include_directories(include/)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_library(ircclient_objs OBJECT ${SRC})
 
 add_library(ircclient SHARED $<TARGET_OBJECTS:ircclient_objs>)

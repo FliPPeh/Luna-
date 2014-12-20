@@ -21,6 +21,8 @@ set(SRC
 include_directories("${LUA_INCLUDE_DIR}")
 include_directories(include/)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_library(mond_objs OBJECT ${SRC})
 
 add_library(mond SHARED $<TARGET_OBJECTS:mond_objs>)
