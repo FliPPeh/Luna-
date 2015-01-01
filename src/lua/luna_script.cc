@@ -37,6 +37,7 @@
 
 #include <sstream>
 #include <string>
+#include <chrono>
 #include <stdexcept>
 #include <regex>
 
@@ -119,6 +120,14 @@ bool operator!=(luna_script const& a, luna_script const& b)
 
 void luna_script::setup_api()
 {
+    _lua["os"]["time_ms"] = std::function<double (void)>{[] {
+            return std::chrono::duration_cast<
+                std::chrono::milliseconds>(
+                    std::chrono::system_clock::now()
+                        .time_since_epoch())
+                            .count() / 1000.;
+        }};
+
     _lua["os"]["exit"] = std::function<void (int)>{[] (int c) {
             throw mond::runtime_error{"nope"};
         }};
