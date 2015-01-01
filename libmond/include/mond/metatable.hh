@@ -68,7 +68,7 @@ public:
             };
 
         lua_getfield(mt._state, mt._meta, "__index");
-        mt._state._functions.emplace_back(
+        mt._state.register_function(
             std::move(write_function(mt._state, fun, mt._name)));
 
         lua_setfield(mt._state, -2, _name.c_str());
@@ -110,7 +110,7 @@ public:
             };
 
         lua_getfield(mt._state, mt._meta, "__index");
-        mt._state._functions.emplace_back(
+        mt._state.register_function(
             std::move(write_function(mt._state, fun, mt._name)));
 
         lua_setfield(mt._state, -2, _name.c_str());
@@ -157,7 +157,7 @@ public:
                 return ptr(self, args...);
             };
 
-        mt._state._functions.emplace_back(
+        mt._state.register_function(
             std::move(write_function(mt._state, fun, mt._name)));
 
         lua_setfield(mt._state, mt._meta, _name.c_str());
@@ -184,7 +184,7 @@ public:
                 return ptr(self, s);
             };
 
-        mt._state._functions.emplace_back(
+        mt._state.register_function(
             std::move(write_function(mt._state, fun, mt._name)));
 
         lua_setfield(mt._state, mt._meta, _name.c_str());
@@ -232,7 +232,7 @@ public:
             self->~T();
         };
 
-        _state._functions.emplace_back(
+        _state.register_function(
             std::move(write_function(_state, dtor, _name)));
 
         lua_setfield(_state, _meta, "__gc");

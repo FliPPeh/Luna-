@@ -78,6 +78,11 @@ private:
     friend class metametamethod;
 
     std::vector<std::unique_ptr<function_base>> _functions;
+
+    void register_function(std::unique_ptr<function_base> fn)
+    {
+        _functions.push_back(std::move(fn));
+    }
 };
 
 } // namespace mond
