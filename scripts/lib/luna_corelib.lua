@@ -180,6 +180,7 @@ function log.wtf(...)   log.log('wtf',   merge{...}) end
 -- Signal handling
 --
 local __callbacks = {}
+local __current_handler = nil
 local __nextid = 0
 
 function luna.add_signal_handler(signal, id, fn)
@@ -206,10 +207,19 @@ function luna.add_signal_handler(signal, id, fn)
 
     __callbacks[id] = {
             signal = signal,
-            callback = fn
+            callback = fn,
+            id = id
         }
 
     return id
+end
+
+function luna.current_signal_handler()
+    if __current_handler.id == __command_handler then
+        return __current_command
+    else
+        return __current_handler.id
+    end
 end
 
 function luna.remove_signal_handler(tid)
@@ -228,7 +238,8 @@ end
 -- Higher level signal handling
 -- TODO: private command?
 --
-local __command_handler_registered = false
+local __command_handler = nil
+local __current_command = nil
 local __commands = {}
 
 local function dupkeys(t)
@@ -257,6 +268,8 @@ local function command_handler(who, where, what)
 
         if a then
             for _, cmd in ipairs(dupkeys(__commands)) do
+                __current_command = cmd
+
                 local cmdopts = __commands[cmd]
 
                 if cmdopts and cmd:lower() == rcmd:lower() then
@@ -289,10 +302,9 @@ function luna.add_command(command, argtype, fn)
             func    = fn
         }
 
-    if not __command_handler_registered then
-        __command_handler_registered = true
-
-        luna.add_signal_handler('channel_message', command_handler)
+    if not __command_handler then
+        __command_handler =
+            luna.add_signal_handler('channel_message', command_handler)
     end
 end
 
@@ -322,6 +334,15 @@ function luna.add_command_watcher(cmd, fn)
     end)
 end
 
+
+function luna.remove_current_handler()
+    if __current_handler.id == __command_handler then
+        luna.remove_command(__current_command)
+    else
+        luna.remove_signal_handler(__current_handler.id)
+    end
+end
+
 ---
 -- Entry functions from C++
 --
@@ -336,6 +357,7 @@ function luna.handle_signal(signal, ...)
 
     for _, id in ipairs(__callbacks_keys) do
         local handler = __callbacks[id]
+        __current_handler = handler
 
         if handler and handler.signal == signal then
             status, err = xpcall(handler.callback, function(err)
