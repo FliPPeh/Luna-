@@ -211,7 +211,8 @@ std::unique_ptr<function_base> write_function(
     std::function<Ret (Args...)> f,
     std::string const& meta = "")
 {
-    std::unique_ptr<function_base> tmp{new function<Ret, Args...>{s, f, meta}};
+    std::unique_ptr<function_base> tmp{
+        new function<Ret, Args...>{s, std::move(f), meta}};
 
     lua_pushlightuserdata(s, static_cast<void*>(tmp.get()));
     lua_pushcclosure(s, &impl::func_dispatcher, 1);
@@ -260,7 +261,7 @@ std::unique_ptr<function_base> write_constructor(
         return 1;
     };
 
-    return write_function(s, ctor_wrapper, meta);
+    return write_function(s, std::move(ctor_wrapper), meta);
 }
 
 } // namespace mond
