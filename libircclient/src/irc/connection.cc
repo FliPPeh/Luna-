@@ -22,15 +22,15 @@
 #include "irc/irc_core.hh"
 #include "irc/irc_except.hh"
 
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
+
 #include <cstddef>
 #include <cstring>
 
 #include <string>
 #include <functional>
 #include <iostream>
-
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 
 namespace irc {
 
