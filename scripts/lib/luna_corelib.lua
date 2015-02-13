@@ -198,6 +198,13 @@ function luna.add_signal_handler(signal, id, fn)
         local wrapped = fn
 
         fn = function(who, where, what, lvl)
+            local ru = who:match_reguser()
+            local ai = luna.shared['luna.auto_ignore'] or false
+
+            if ru and ru:flags():find('i') and ai then
+                return
+            end
+
             local filter = where:incoming_filter()
 
             wrapped(who, where, filter and filter(where, what) or what, lvl)
