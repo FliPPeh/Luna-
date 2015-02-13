@@ -31,17 +31,21 @@ include_directories(${Boost_INCLUDE_DIR})
 include_directories(${OpenSSL_INCLUDE_DIR})
 include_directories(include/)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+if(LUNA_LINK_STATIC)
+    add_library(ircclient_static STATIC ${SRC})
 
-add_library(ircclient_objs OBJECT ${SRC})
+    target_link_libraries(ircclient_static ${OPENSSL_LIBRARIES}
+                                           ${Boost_LIBRARIES}
+                                           ${CMAKE_THREAD_LIBS_INIT})
+else(LUNA_LINK_STATIC)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_library(ircclient SHARED $<TARGET_OBJECTS:ircclient_objs>)
-add_library(ircclient_static STATIC $<TARGET_OBJECTS:ircclient_objs>)
+    add_library(ircclient SHARED ${SRC})
 
-target_link_libraries(ircclient ${OPENSSL_LIBRARIES}
-                                ${Boost_LIBRARIES}
-                                ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(ircclient ${OPENSSL_LIBRARIES}
+                                    ${Boost_LIBRARIES}
+                                    ${CMAKE_THREAD_LIBS_INIT})
+endif(LUNA_LINK_STATIC)
 
-target_link_libraries(ircclient_static ${OPENSSL_LIBRARIES}
-                                       ${Boost_LIBRARIES}
-                                       ${CMAKE_THREAD_LIBS_INIT})
+
+

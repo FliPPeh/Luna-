@@ -21,12 +21,14 @@ set(SRC
 include_directories("${LUA_INCLUDE_DIR}")
 include_directories(include/)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+if(LUNA_LINK_STATIC)
+    add_library(mond_static STATIC ${SRC})
 
-add_library(mond_objs OBJECT ${SRC})
+    target_link_libraries(mond_static ${LUA_LIBRARIES})
+else(LUNA_LINK_STATIC)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_library(mond SHARED $<TARGET_OBJECTS:mond_objs>)
-add_library(mond_static STATIC $<TARGET_OBJECTS:mond_objs>)
+    add_library(mond SHARED ${SRC})
 
-target_link_libraries(mond "${LUA_LIBRARIES}")
-target_link_libraries(mond_static "${LUA_LIBRARIES}")
+    target_link_libraries(mond ${LUA_LIBRARIES})
+endif(LUNA_LINK_STATIC)
