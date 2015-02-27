@@ -828,5 +828,46 @@ function string:literalpattern()
     return self:gsub('[^%w%s]', '%%%1')
 end
 
+-- Given a map of keys to values, format a string using interpolations, e.g.
+--
+--   str = "Hello ${SUBJECT}"
+--   print(str:template{SUBJECT = "World"}) # Hello World
+--
+-- Keys can refer to keys inside the given table "fmt", or to environment
+-- variables ("env:HOME") or shared Luna variables ("var:luna.version").
+--
+-- Replacements can be escaped with "$${VAR}".
+--
+-- If a variable can not be located, it is replaced with the value of "rep"
+-- unless a special replacement is specified ("${VAR/<VAR not found>")
+function string:template(fmt, rep)
+    rep = rep or '(?)'
+
+    return self:gsub("(.?)($%b{})", function(p, m)
+        local k = m:sub(3, #m - 1)
+
+        p = p or ''
+
+        if p == '$' then
+            return m
+        end
+
+        local i = k:find('/')
+        if i then
+            rep = k:sub(i + 1)
+            k = k:sub(1, i)
+        end
+
+        if k:find('^env:') then
+            return p .. (os.getenv(k:sub(5)) or rep)
+        elseif k:find('^var:') then
+            return p .. (luna.shared[k:sub(5)] or rep)
+        elseif fmt[k] then
+            return p .. fmt[k]
+        else
+            return p .. rep
+        end
+    end)
+end
 
 return luna
