@@ -1,6 +1,7 @@
 local base = {}
 
 local dump = require 'dumplib'
+local exec = require 'exec'
 
 base.info = {
     name         = 'Base',
@@ -20,6 +21,19 @@ function base.script_load()
         end)
     end
 
+    luna.add_command('sh', '*l', function(who, where, what, args)
+        local user = who:match_reguser()
+        if user and user:flags():find('a') then
+            local e = exec.exec{'/bin/bash', '-c', args}
+            local t = {}
+
+            for l in e:lines() do
+                table.insert(t, l)
+            end
+
+            who:respond(table.concat(t, '; '))
+        end
+    end)
 
     luna.add_command('eval', '*l', function(who, where, what, args)
         local user = who:match_reguser()
