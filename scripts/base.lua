@@ -24,7 +24,13 @@ function base.script_load()
     luna.add_command('eval', '*l', function(who, where, what, args)
         local user = who:match_reguser()
         if user and user:flags():find('a') then
-            local f = loadstring(args)
+            local f = load(args, "(eval)", 'bt', setmetatable({
+                who = who,
+                where = where,
+                what = what,
+                args = args,
+                user = user
+            }, { __index = _ENV }))
 
             local r = {pcall(f)}
             local ok = table.remove(r, 1)
