@@ -870,4 +870,19 @@ function string:template(fmt, rep)
     end)
 end
 
+---
+-- Helpers
+--
+
+function luna.with_reguser(user, fn)
+    local reguser = user:match_reguser(user)
+
+    if reguser then
+        return fn(true, reguser)
+    else
+        return fn(false)
+    end
+end
+
+
 return luna
