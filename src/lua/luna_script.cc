@@ -120,7 +120,7 @@ bool operator!=(luna_script const& a, luna_script const& b)
 
 void luna_script::setup_api()
 {
-    _lua["os"]["time_ms"] = std::function<int64_t (void)>{[] {
+    _lua["os"]["time_ms"] = std::function<double (void)>{[] {
             return std::chrono::duration_cast<
                 std::chrono::milliseconds>(
                     std::chrono::system_clock::now()
