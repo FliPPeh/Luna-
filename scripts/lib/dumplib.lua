@@ -123,6 +123,8 @@ function dump.make_dumper(args)
                 depth = depth + 1
                 return dump .. indent .. '}'
             end
+        elseif type(v) == 'userdata' then
+            return tostring(v)
         else
             return '<unknown: ' .. type(v) .. '>'
         end
