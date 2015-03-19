@@ -63,16 +63,14 @@ public:
     std::string modes() const;
     bool has_mode(char modefl) const;
 
-private:
-    // anything a channel can do to us
-    friend class channel;
+    void rename(std::string new_nick);
 
-    DLL_LOCAL void rename(std::string new_nick);
-
-    DLL_LOCAL void set_mode(char modefl);
-    DLL_LOCAL void unset_mode(char modefl);
+    void set_mode(char modefl);
+    void unset_mode(char modefl);
 
 private:
+    friend class channel; // allow access to _channel
+
     irc::channel* _channel;
     uint64_t _uid;
 

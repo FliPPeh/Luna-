@@ -30,6 +30,7 @@
 
 #include <string>
 #include <ctime>
+#include <csignal>
 
 class luna_user;
 class luna_extension;

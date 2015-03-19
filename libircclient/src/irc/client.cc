@@ -47,20 +47,34 @@
 
 namespace irc {
 
+struct client::details {
+    boost::asio::io_service         io_service;
+    boost::asio::deadline_timer     idle_timer;
+    boost::posix_time::milliseconds idle_interval{125};
+
+    std::unique_ptr<irc::async_connection> irccon;
+    std::unique_ptr<irc::environment> ircenv;
+
+    details()
+        : idle_timer{io_service},
+          irccon{nullptr},
+          ircenv{nullptr}
+    {
+    }
+};
+
+
 client::client(
     std::string nick,
     std::string user,
     std::string realname,
     std::string pass)
 
-    : _pass{std::move(pass)},
+    : _impl{new details{}},
+      _pass{std::move(pass)},
       _nick{std::move(nick)},
       _user{std::move(user)},
-      _real{std::move(realname)},
-
-      _idle_timer{_io_service},
-      _irccon{nullptr},
-      _ircenv{nullptr}
+      _real{std::move(realname)}
 {
     init_core_handlers();
 }
@@ -85,12 +99,12 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
 
         int flags = _use_ssl ? connection_flags::SSL : 0;
 
-        _irccon.reset(new irc::async_connection{_io_service, flags});
-        _ircenv.reset(new irc::environment{});
+        _impl->irccon.reset(new irc::async_connection{_impl->io_service, flags});
+        _impl->ircenv.reset(new irc::environment{});
 
-        _irccon->connect(host, port, [this] (auto ep) {
-            _idle_timer.expires_from_now(_idle_interval);
-            _idle_timer.async_wait(
+        _impl->irccon->connect(host, port, [this] (auto ep) {
+            _impl->idle_timer.expires_from_now(_impl->idle_interval);
+            _impl->idle_timer.async_wait(
                 [this] (boost::system::error_code const& err) {
                     if (not err) {
                         // GCC wants `this'
@@ -98,7 +112,7 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
                     }
                 });
 
-            _irccon->read_message([this] (message const& msg) {
+            _impl->irccon->read_message([this] (message const& msg) {
                 // GCC wants `this'
                 this->handle_message(msg);
             });
@@ -117,14 +131,14 @@ void client::run(std::string const& host, uint16_t port, bool ssl)
 
 
         try {
-            _io_service.run();
+            _impl->io_service.run();
 
         } catch (std::exception const& e)  {
-            _idle_timer.cancel();
+            _impl->idle_timer.cancel();
             report_error(std::current_exception());
         }
 
-        _io_service.reset();
+        _impl->io_service.reset();
 
         if (_session_state == session_state::stop) {
             return;
@@ -147,6 +161,7 @@ void client::disconnect(std::string reason)
     }
 }
 
+
 void client::change_nick(std::string const& nick)
 {
     // If we're connected, we can't change the nick nilly-willy.
@@ -163,65 +178,40 @@ void client::change_nick(std::string const& nick)
     }
 }
 
-void client::send_message(message const& msg)
+void client::change_user(const std::string& user)
 {
-    if (not connected()) {
+    if (connected()) {
         throw connection_error{connection_error_type::not_connected,
-            "send_message"};
+            "change_user"};
     }
 
-    _write_queue.push(msg);
-
-    // If there is now only one element in the queue, start the sending process
-    if (_write_queue.size() == 1) {
-        _irccon->send_message(msg, [this] (std::size_t s) {
-            _write_queue.pop();
-
-            send_queue();
-        });
-    }
+    _user = user;
 }
 
-bool client::connected() const
+void client::change_realname(const std::string& realname)
 {
-    return _irccon and _irccon->connected();
-}
-
-
-std::string client::server_host() const
-{
-    if (not connected()) {
+    if (connected()) {
         throw connection_error{connection_error_type::not_connected,
-            "server_host"};
+            "change_realname"};
     }
 
-    return _irccon->server_host();
+    _real = realname;
 }
 
-std::string client::server_addr() const
+void client::change_password(const std::string& password)
 {
-    if (not connected()) {
+    if (connected()) {
         throw connection_error{connection_error_type::not_connected,
-            "server_addr"};
+            "change_password"};
     }
 
-    return _irccon->server_addr();
-}
-
-uint16_t client::server_port() const
-{
-    if (not connected()) {
-        throw connection_error{connection_error_type::not_connected,
-            "server_port"};
-    }
-
-    return _irccon->server_port();
+    _pass = password;
 }
 
 
-environment const& client::environment() const
+void client::set_idle_interval(int ms)
 {
-    return *_ircenv;
+    _impl->idle_interval = boost::posix_time::milliseconds(ms);
 }
 
 
@@ -246,6 +236,37 @@ std::string client::password() const
 }
 
 
+std::string client::server_host() const
+{
+    if (not connected()) {
+        throw connection_error{connection_error_type::not_connected,
+            "server_host"};
+    }
+
+    return _impl->irccon->server_host();
+}
+
+std::string client::server_addr() const
+{
+    if (not connected()) {
+        throw connection_error{connection_error_type::not_connected,
+            "server_addr"};
+    }
+
+    return _impl->irccon->server_addr();
+}
+
+uint16_t client::server_port() const
+{
+    if (not connected()) {
+        throw connection_error{connection_error_type::not_connected,
+            "server_port"};
+    }
+
+    return _impl->irccon->server_port();
+}
+
+
 void client::use_ssl(bool setting)
 {
     _use_ssl = setting;
@@ -255,6 +276,39 @@ bool client::use_ssl() const
 {
     return _use_ssl;
 }
+
+
+void client::send_message(message const& msg)
+{
+    if (not connected()) {
+        throw connection_error{connection_error_type::not_connected,
+            "send_message"};
+    }
+
+    _write_queue.push(msg);
+
+    // If there is now only one element in the queue, start the sending process
+    if (_write_queue.size() == 1) {
+        _impl->irccon->send_message(msg, [this] (std::size_t s) {
+            _write_queue.pop();
+
+            send_queue();
+        });
+    }
+}
+
+
+bool client::connected() const
+{
+    return _impl->irccon and _impl->irccon->connected();
+}
+
+
+environment const& client::environment() const
+{
+    return *_impl->ircenv;
+}
+
 
 
 bool client::is_me(std::string user) const
@@ -306,11 +360,6 @@ void client::report_error(std::exception_ptr p, int lvl) const
 }
 
 
-void client::set_idle_interval(int ms)
-{
-    _idle_interval = boost::posix_time::milliseconds(ms);
-}
-
 
 void client::send_queue()
 {
@@ -318,7 +367,7 @@ void client::send_queue()
         return;
     }
 
-    _irccon->send_message(_write_queue.front(), [this] (std::size_t siz) {
+    _impl->irccon->send_message(_write_queue.front(), [this] (std::size_t siz) {
             _write_queue.pop();
 
             send_queue();
@@ -333,8 +382,8 @@ void client::handle_message(message const& msg)
     try {
         (this->*_current_handler)(msg);
 
-        if (_irccon) {
-            _irccon->read_message([this] (message const& msg) {
+        if (_impl->irccon) {
+            _impl->irccon->read_message([this] (message const& msg) {
                 handle_message(msg);
             });
         }
@@ -350,11 +399,11 @@ void client::handle_message(message const& msg)
 
 void client::do_disconnect()
 {
-    _idle_timer.cancel();
+    _impl->idle_timer.cancel();
 
-    if (_irccon) {
-        _irccon->disconnect();
-        _irccon.reset(nullptr);
+    if (_impl->irccon) {
+        _impl->irccon->disconnect();
+        _impl->irccon.reset(nullptr);
     }
 
     if (_session_state >= session_state::logged_in) {
@@ -375,8 +424,8 @@ void client::do_idle()
         do_disconnect();
     }
 
-    _idle_timer.expires_from_now(_idle_interval);
-    _idle_timer.async_wait([this] (boost::system::error_code const& err) {
+    _impl->idle_timer.expires_from_now(_impl->idle_interval);
+    _impl->idle_timer.async_wait([this] (boost::system::error_code const& err) {
         if (not err) {
             do_idle();
         }
@@ -406,27 +455,16 @@ void client::login_handler(message const& msg)
 void client::main_handler(message const& msg)
 {
     auto const& res = _core_handlers.find(msg.command);
-    if (res != std::end(_core_handlers) and not std::get<2>(res->second)) {
-        run_core_handler(res->second, msg);
-    }
-
-    try {
-        on_message(msg);
-    } catch (protocol_error& pe) {
-        report_error(std::current_exception());
-
-    } catch (connection_error& ce) {
-        std::throw_with_nested(
-            connection_error{ce.code(),
-                "error in user handler `" + msg.command + "'"});
-
-    } catch (...) {
-        report_error(std::current_exception());
-    }
-
-
-    if (res != std::end(_core_handlers) and std::get<2>(res->second)) {
-        run_core_handler(res->second, msg);
+    if (res != std::end(_core_handlers)) {
+        if (std::get<2>(res->second)) {
+            run_user_handler(msg);
+            run_core_handler(res->second, msg);
+        } else {
+            run_core_handler(res->second, msg);
+            run_user_handler(msg);
+        }
+    } else {
+        run_user_handler(msg);
     }
 }
 
@@ -436,43 +474,63 @@ void client::run_core_handler(
     message const& msg)
 {
     if (auto& fun = std::get<3>(handler)) {
-        bool requires_user = std::get<1>(handler);
+        std::string err = "error in core handler for `" + msg.command + "'";
 
-        if (not (requires_user and not is_user_prefix(msg.prefix))) {
-            std::string err =
-                "error in core handler for `" + msg.command + "'";
+        try {
+            bool requires_user = std::get<1>(handler);
 
-            try {
-                auto args_req = std::get<0>(handler);
-
-                if (msg.args.size() < args_req) {
-                    std::ostringstream errs;
-
-                    errs << "expected " << args_req << " arguments "
-                            << "for `" << msg.command << "' handler, "
-                            << "got " << msg.args.size();
-
-                    // Just throw it here so we can print a pretty message
-                    // down there.
-                    throw protocol_error{
-                        protocol_error_type::not_enough_arguments,
-                        errs.str()};
-                }
-
-                fun(msg);
-            } catch (protocol_error& p) {
-                // protocol errors are not fatal, report and move on
-                report_error(std::current_exception());
-
-            } catch (connection_error& c) {
-                // but connection errors and unknown errors are fatal!
-                std::throw_with_nested(connection_error{c.code(), err});
-
-            } catch (...) {
-                std::throw_with_nested(std::runtime_error{err});
-
+            if (requires_user and !is_user_prefix(msg.prefix)) {
+                throw protocol_error{
+                    protocol_error_type::invalid_prefix,
+                    "user prefix expected"};
             }
+
+            auto args_req = std::get<0>(handler);
+
+            if (msg.args.size() < args_req) {
+                std::ostringstream errs;
+
+                errs << "expected " << args_req << " arguments "
+                        << "for `" << msg.command << "' handler, "
+                        << "got " << msg.args.size();
+
+                // Just throw it here so we can print a pretty message
+                // down there.
+                throw protocol_error{
+                    protocol_error_type::not_enough_arguments,
+                    errs.str()};
+            }
+
+            fun(msg);
+        } catch (protocol_error const& p) {
+            // protocol errors are not fatal, report and move on
+            report_error(std::current_exception());
+
+        } catch (connection_error const& c) {
+            // but connection errors and unknown errors are fatal!
+            std::throw_with_nested(connection_error{c.code(), err});
+
+        } catch (...) {
+            std::throw_with_nested(std::runtime_error{err});
+
         }
+    }
+}
+
+void client::run_user_handler(message const& msg)
+{
+    try {
+        on_message(msg);
+    } catch (protocol_error const& pe) {
+        report_error(std::current_exception());
+
+    } catch (connection_error const& ce) {
+        std::throw_with_nested(
+            connection_error{ce.code(),
+                "error in user handler `" + msg.command + "'"});
+
+    } catch (...) {
+        report_error(std::current_exception());
     }
 }
 
@@ -494,9 +552,9 @@ void client::init_core_handlers()
                       iter != std::end(msg.args)   - 1;
                     ++iter) {
                 if (iter->find('=') == std::string::npos) {
-                    _ircenv->set_capability(*iter, "");
+                    _impl->ircenv->set_capability(*iter, "");
                 } else {
-                    _ircenv->set_capability(
+                    _impl->ircenv->set_capability(
                         iter->substr(0, iter->find('=')),
                         iter->substr(iter->find('=') + 1));
                 }
@@ -507,7 +565,7 @@ void client::init_core_handlers()
     _core_handlers[command::RPL_TOPIC] = handler{ 3, false, false,
         // me, channel, topic
         [this](message const& msg) {
-            auto& channel = _ircenv->find_channel(msg.args[1]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[1]);
             channel.set_topic(msg.args[2]);
         }
     };
@@ -515,7 +573,7 @@ void client::init_core_handlers()
     _core_handlers[command::RPL_TOPICWHOTIME] = handler{ 4, false, false,
         // me, channel, creator, time
         [this](message const& msg) {
-            auto& channel = _ircenv->find_channel(msg.args[1]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[1]);
             channel.set_topic_meta(
                 normalize_nick(msg.args[2]),
                 std::stoll(msg.args[3]));
@@ -525,19 +583,19 @@ void client::init_core_handlers()
     _core_handlers[command::RPL_CHANNELMODEIS] = handler{ 3, false, false,
         // me, channel, mode, _core_handlers[mode_args]
         [this](message const& msg) {
-            auto& channel = _ircenv->find_channel(msg.args[1]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[1]);
 
             channel.apply_modes(
                 msg.args[2],
                 {std::begin(msg.args) + 3, std::end(msg.args)},
-                *_ircenv);
+                *_impl->ircenv);
         }
     };
 
     _core_handlers[command::RPL_CREATIONTIME] = handler{ 3, false, false,
         // me, channel, ctime
         [this](message const& msg) {
-            auto& channel = _ircenv->find_channel(msg.args[1]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[1]);
             channel.set_created(std::stoll(msg.args[2]));
         }
     };
@@ -545,20 +603,20 @@ void client::init_core_handlers()
     _core_handlers[command::RPL_WHOREPLY] = handler{ 7, false, false,
         // me, channel, user, host, server, nick, mode, <...>
         [this](message const& msg) {
-            auto& channel = _ircenv->find_channel(msg.args[1]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[1]);
 
             auto& user = channel.create_user(
                 msg.args[5],
                 msg.args[2],
                 msg.args[3]);
 
-            auto prefixes = _ircenv->prefixes();
+            auto prefixes = _impl->ircenv->prefixes();
 
             for (char c : msg.args[6]) {
                 if (prefixes.find(c) != std::end(prefixes)) {
                     channel.apply_modes(
                         "+" + std::string{prefixes.at(c)},
-                        {user.nick()}, *_ircenv);
+                        {user.nick()}, *_impl->ircenv);
                 }
             }
         }
@@ -567,9 +625,9 @@ void client::init_core_handlers()
     _core_handlers[command::RPL_BANLIST] = handler{ 3, false, false,
         // me, channel, entry
         [this](message const& msg) {
-            auto& channel = _ircenv->find_channel(msg.args[1]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[1]);
 
-            channel.apply_modes("+b", {msg.args[2]}, *_ircenv);
+            channel.apply_modes("+b", {msg.args[2]}, *_impl->ircenv);
         }
     };
 
@@ -586,7 +644,7 @@ void client::init_core_handlers()
         [this](message const& msg) {
             // me? add channel. not me? add user to channel.
             if (is_me(msg.prefix)) {
-                auto& channel = _ircenv->create_channel(msg.args[0]);
+                auto& channel = _impl->ircenv->create_channel(msg.args[0]);
 
                 channel.create_user(msg.prefix);
 
@@ -594,7 +652,7 @@ void client::init_core_handlers()
                 send_message(message{"", command::MODE, {msg.args[0]}});
                 send_message(message{"", command::MODE, {msg.args[0], "+b"}});
             } else {
-                _ircenv->find_channel(msg.args[0]).create_user(msg.prefix);
+                _impl->ircenv->find_channel(msg.args[0]).create_user(msg.prefix);
             }
         }
     };
@@ -603,10 +661,10 @@ void client::init_core_handlers()
         // channel, [reason]
         [this](message const& msg) {
             // me? drop channel. not me? remove user from channel.
-            auto& channel = _ircenv->find_channel(msg.args[0]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[0]);
 
             if (is_me(msg.prefix)) {
-                _ircenv->remove_channel(channel);
+                _impl->ircenv->remove_channel(channel);
             } else {
                 channel.remove_user(channel.find_user(msg.prefix));
             }
@@ -617,10 +675,10 @@ void client::init_core_handlers()
         // channel, kicked, reason
         [this](message const& msg) {
             // me? drop channel. not me? remove user from channel.
-            auto& channel = _ircenv->find_channel(msg.args[0]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[0]);
 
             if (is_me(msg.args[1])) {
-                _ircenv->remove_channel(channel);
+                _impl->ircenv->remove_channel(channel);
             } else {
                 channel.remove_user(channel.find_user(msg.args[1]));
             }
@@ -632,7 +690,7 @@ void client::init_core_handlers()
         [this](message const& msg) {
             // me? unlikely. not me? remove user from all channels.
             if (not is_me(msg.prefix)) {
-                auto& channels = _ircenv->channels();
+                auto& channels = _impl->ircenv->channels();
 
                 for (auto& i : channels) {
                     if (i.second->has_user(msg.prefix)) {
@@ -660,7 +718,7 @@ void client::init_core_handlers()
                 _nick = msg.args[0];
             }
 
-            auto& channels = _ircenv->channels();
+            auto& channels = _impl->ircenv->channels();
 
             for (auto& i : channels) {
                 if (i.second->has_user(msg.prefix)) {
@@ -675,7 +733,7 @@ void client::init_core_handlers()
         // channel, new topic
         [this](message const& msg) {
             // set topic info in channel
-            auto& channel = _ircenv->find_channel(msg.args[0]);
+            auto& channel = _impl->ircenv->find_channel(msg.args[0]);
 
             channel.set_topic(msg.args[1]);
             channel.set_topic_meta(
@@ -687,7 +745,7 @@ void client::init_core_handlers()
     _core_handlers[command::MODE] = handler{ 2, false, false,
         // channel, modestring, [args]
         [this](message const& msg) {
-            if (not _ircenv->is_channel(msg.args[0])) {
+            if (not _impl->ircenv->is_channel(msg.args[0])) {
                 return;
             }
 
@@ -695,10 +753,10 @@ void client::init_core_handlers()
             // msg.args is guaranteed to be at least of size 2, so
             // adding 2 to begin() would put us at end() if args were empty,
             // which is legal as long as we don't deref it.
-            _ircenv->find_channel(msg.args[0]).apply_modes(
+            _impl->ircenv->find_channel(msg.args[0]).apply_modes(
                 msg.args[1],
                 {std::begin(msg.args) + 2, std::end(  msg.args)},
-                *_ircenv);
+                *_impl->ircenv);
         }
     };
 }

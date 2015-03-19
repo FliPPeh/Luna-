@@ -25,8 +25,6 @@
 #include "irc/irc_core.hh"
 #include "irc/irc_utils.hh"
 
-#include <boost/asio.hpp>
-
 #include <cstddef>
 
 #include <string>
@@ -34,13 +32,12 @@
 #include <array>
 #include <chrono>
 #include <queue>
+#include <memory>
 
 namespace irc {
 
 struct message;
-
 class environment;
-class async_connection;
 
 class DLL_PUBLIC client {
 public:
@@ -62,26 +59,34 @@ public:
     void stop();
     void disconnect(std::string reason);
 
+    // Always allowed
     void change_nick(std::string const& nick);
 
-    // May be overridden to implement flood throttling
-    virtual void send_message(message const& msg);
+    // Only allowed before connecting.
+    void change_user(std::string const& user);
+    void change_realname(std::string const& realname);
+    void change_password(std::string const& password);
 
-    bool connected() const;
-
-    std::string   server_host() const;
-    std::string   server_addr() const;
-    uint16_t      server_port() const;
-
-    irc::environment const& environment() const;
+    void set_idle_interval(int ms);
 
     std::string nick() const;
     std::string user() const;
     std::string realname() const;
     std::string password() const;
 
+    std::string   server_host() const;
+    std::string   server_addr() const;
+    uint16_t      server_port() const;
+
     void use_ssl(bool setting);
     bool use_ssl() const;
+
+    // May be overridden to implement flood throttling
+    virtual void send_message(message const& msg);
+
+    bool connected() const;
+
+    irc::environment const& environment() const;
 
 protected:
     bool is_me(std::string user) const;
@@ -95,14 +100,6 @@ protected:
     virtual void pretty_print_exception(std::exception_ptr p, int lvl) const;
     virtual void report_error(std::exception_ptr p, int lvl = 0) const;
 
-    void set_idle_interval(int ms);
-
-    std::string _pass;
-
-    // Identity
-    std::string _nick;
-    std::string _user;
-    std::string _real;
 
 private:
     using handler = std::tuple<
@@ -123,10 +120,20 @@ private:
     DLL_LOCAL void main_handler(message const& msg);
 
     DLL_LOCAL void run_core_handler(handler const& handler, message const& msg);
+    DLL_LOCAL void run_user_handler(message const& msg);
 
     DLL_LOCAL void init_core_handlers();
 
 private:
+    // Things the outside neither cares about, nor SHOULD be able to care about.
+    //
+    // A case could be made for hiding most of this class behind an
+    // opaque pointer, but that gets messy real fast, so I only hide the bigger
+    // dependencies.
+    struct details;
+    std::unique_ptr<details> _impl;
+
+    // State of this client
     enum class session_state {
         start,
         login_sent,
@@ -136,15 +143,12 @@ private:
 
     session_state _session_state = session_state::start;
 
-    boost::asio::io_service         _io_service;
-    boost::asio::deadline_timer     _idle_timer;
-    boost::posix_time::milliseconds _idle_interval{125};
-
-    std::unique_ptr<irc::async_connection> _irccon;
-    std::unique_ptr<irc::environment>      _ircenv;
-
     std::queue<irc::message> _write_queue;
 
+    std::string _pass;
+    std::string _nick;
+    std::string _user;
+    std::string _real;
     bool _use_ssl = false;
 
     unordered_rfc1459_map<std::string, handler> _core_handlers;

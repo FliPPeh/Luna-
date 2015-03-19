@@ -122,13 +122,13 @@ void luna::read_config(std::string const& filename)
 
     s.load_file(filename);
 
-    if (auto v = s["nick"])            { _nick   = v.get<std::string>(); }
-    if (auto v = s["user"])            { _user   = v.get<std::string>(); }
-    if (auto v = s["realname"])        { _real   = v.get<std::string>(); }
-    if (auto v = s["server_addr"])     { _server = v.get<std::string>(); }
-    if (auto v = s["server_password"]) { _pass   = v.get<std::string>(); }
-    if (auto v = s["server_port"])     { _port   = v.get<   uint16_t>(); }
+    if (auto v = s["nick"])            { change_nick(v.get<std::string>()); }
+    if (auto v = s["user"])            { change_user(v.get<std::string>()); }
+    if (auto v = s["realname"])        { change_realname(v.get<std::string>());}
+    if (auto v = s["server_password"]) { change_password(v.get<std::string>());}
     if (auto v = s["ssl"])             { use_ssl(  v.get<      bool>()); }
+    if (auto v = s["server_addr"])     { _server = v.get<std::string>(); }
+    if (auto v = s["server_port"])     { _port   = v.get<   uint16_t>(); }
 
     if (auto autojoin = s["autojoin"]) {
         _autojoin = autojoin.get<std::vector<std::string>>();
@@ -143,9 +143,9 @@ void luna::read_config(std::string const& filename)
     }
 
     _logger.info() << "Configuration: ";
-    _logger.info() << "  nickname...: " << _nick;
-    _logger.info() << "  username...: " << _user;
-    _logger.info() << "  realname...: " << _real;
+    _logger.info() << "  nickname...: " << nick();
+    _logger.info() << "  username...: " << user();
+    _logger.info() << "  realname...: " << realname();
     _logger.info() << "  server host: " << _server;
     _logger.info() << "  server port: " << _port;
     _logger.info() << "  use SSL....: " << (use_ssl() ? "yes" : "no");
