@@ -75,7 +75,7 @@ luna_script::luna_script(luna& context, std::string file)
         logging_flags::ANSI};
 
     setup_api();
-    _lua.load_library("luna_corelib", "luna");
+    _lua.load_library("luna", "luna");
 }
 
 
