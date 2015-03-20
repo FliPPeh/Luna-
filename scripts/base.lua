@@ -2,6 +2,7 @@ local base = {}
 
 local dump = require 'dumplib'
 local exec = require 'exec'
+local hrnums = require 'hrnums'
 
 base.info = {
     name         = 'Base',
@@ -9,6 +10,47 @@ base.info = {
     version      = '0.1'
 }
 
+local function seconds_to_wdhms(s)
+    local weeks = math.floor(s / (60 * 60 * 24 * 7))
+    s = s % (60 * 60 * 24 * 7)
+
+    local days = math.floor(s / (60 * 60 * 24))
+    s = s % (60 * 60 * 24)
+
+    local hours = math.floor(s / (60 * 60))
+    s = s % (60 * 60)
+
+    local minutes = math.floor(s / 60)
+    s = s % 60
+
+    return {weeks, days, hours, minutes, s}
+end
+
+local function wdhms_repr(wdhms, units, sep)
+    local units = units or {
+        {"wk", "wks"},
+        {"d",  "ds"},
+        {"h",  "hrs"},
+        {"m",  "mns"},
+        {"s",  "s"}}
+
+    local i = 1
+
+    -- Display at least the seconds part, even if 0
+    while i < #wdhms and wdhms[i] == 0 do
+        i = i + 1
+    end
+
+    local reprs = {}
+
+    for j = i, #wdhms do
+        table.insert(reprs, string.format("%d%s",
+            wdhms[j],
+            (wdhms[j] == 1) and units[j][1] or units[j][2]))
+    end
+
+    return table.concat(reprs, sep or " ")
+end
 
 function base.script_load()
     local nsusr = luna.shared['base.nickserv.user']
@@ -20,6 +62,43 @@ function base.script_load()
                 string.format('identify %s %s', nsusr, nspwd))
         end)
     end
+
+    luna.add_command('sitrep', function(who, where, what, args)
+        local user = who:match_reguser()
+        if not user or not user:flags():find('o') then
+            return
+        end
+
+        local start = luna.started()
+        local connect = luna.connected()
+        local now = os.time()
+
+        local fmt = "%Y-%m-%d %H:%M:%S"
+
+        local ds, dc = now - start, now - connect
+        local ts, tr = luna.bytes_sent(), luna.bytes_received()
+
+        local tin, ui  = hrnums.humanize_binary(tr, "B")
+        local tout, uo = hrnums.humanize_binary(ts, "B")
+
+        local msgs = {
+            ("Started on %s (%s ago), connected on %s (%s ago); "):format(
+                os.date(fmt, start),
+                wdhms_repr(seconds_to_wdhms(now - start)),
+                os.date(fmt, connect),
+                wdhms_repr(seconds_to_wdhms(now - connect))),
+
+            ("Traffic: %.2f %s/s in (%.2f %s total), "):format(
+                tin / dc, ui,
+                tin, ui),
+
+            ("%.2f %s/s out (%.2f %s total)"):format(
+                tout / dc, uo,
+                tout, uo)
+        }
+
+        who:respond(table.concat(msgs))
+    end)
 
     luna.add_command('sh', '*l', function(who, where, what, args)
         local user = who:match_reguser()
