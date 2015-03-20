@@ -1,3 +1,5 @@
+local base64 = require 'base64'
+
 --[[
 -- Trigger helpers
 --]]

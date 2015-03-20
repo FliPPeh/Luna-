@@ -7,8 +7,6 @@
 --
 luna = {}
 
-local base64 = require 'base64'
-
 --[[
 -- Merge __luna native library into corelib
 --]]
