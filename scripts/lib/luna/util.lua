@@ -275,12 +275,25 @@ end
 -- Keys can refer to keys inside the given table "fmt", or to environment
 -- variables ("env:HOME") or shared Luna variables ("var:luna.version").
 --
+-- Replacements can also take the form of "${lua:expr}", where "expr" is any
+-- valid Lua expression that will be evaluated, e.g. "${lua: return 1 + 4}"
+-- will yield "5".
+--
 -- Replacements can be escaped with "$${VAR}".
 --
 -- If a variable can not be located, it is replaced with the value of "rep"
 -- unless a special replacement is specified ("${VAR/<VAR not found>")
-function string:template(fmt, rep)
+--
+-- The "enable" parameter controls which kinds of replacements are enabled,
+-- where 'e' = environment, 'v' = shared variables, 'l' = Lua expressions.
+-- By default it allows all replacements.
+--
+-- Due to the information that can be queried with this function, and the
+-- support for evaluating arbitrary expressions, it should naturally not be
+-- run on untrusted input unless the "enable" field is restricted.
+function string:template(fmt, rep, enable)
     rep = rep or '(?)'
+    enable = enable or "evl" -- env, shared vars, lua expr
 
     return self:gsub("(.?)($%b{})", function(p, m)
         local k = m:sub(3, #m - 1)
@@ -292,21 +305,37 @@ function string:template(fmt, rep)
         end
 
         local i = k:find('/')
-        if i then
+        if i and not k:find('^lua:') then
             rep = k:sub(i + 1)
             k = k:sub(1, i)
         end
 
-        if k:find('^env:') then
-            return p .. (os.getenv(k:sub(5)) or rep)
-        elseif k:find('^var:') then
-            return p .. (luna.shared[k:sub(5)] or rep)
+        if k:find('^env:') and enable:find('e') then
+            return p .. (os.getenv(k:sub(5):trim()) or rep)
+
+        elseif k:find('^var:') and enable:find('v') then
+            return p .. (luna.shared[k:sub(5):trim()] or rep)
+
+        elseif k:find('^lua:') and enable:find('l') then
+            return p .. tostring(load(k:sub(5))() or nil)
         elseif fmt[k] then
             return p .. fmt[k]
         else
             return p .. rep
         end
     end)
+end
+
+function string:capitalize()
+    return self:sub(1, 1):upper() .. self:sub(2)
+end
+
+function string:titlecase()
+    return ({self:gsub("(%w+)", function(w) return w:capitalize() end)})[1]
+end
+
+function string:trim()
+    return select(3, self:find("^%s*(.-)%s*$"))
 end
 
 return luna.util
