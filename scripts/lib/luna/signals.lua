@@ -113,7 +113,15 @@ local function command_handler(who, where, what)
         luna.own_nick():literalpattern() .. '[:,]?%s*' -- mynick: command
     }
 
+    local disabled = where:disabled_contexts()
+
     for _, ctx in ipairs(luna.command_contexts()) do
+        for i, dis in ipairs(disabled) do
+            if dis:lower() == ctx.name:lower() then
+                goto continue
+            end
+        end
+
         local trigger = ctx.trigger:template{
             trigger = where:trigger(),
             own_nick = luna.own_nick():literalpattern()

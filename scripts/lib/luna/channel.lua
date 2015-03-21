@@ -16,6 +16,50 @@ function luna.channel_trigger(channel)
     return luna.shared[trigger_key(channel)] or luna.shared['luna.trigger']
 end
 
+--[[
+-- Context helpers
+--]]
+local function disabled_contexts_key(channel)
+    return string.format('luna.channel.%s.disabled_ctx', channel:lower())
+end
+
+function luna.channel_disabled_contexts(channel)
+    local r = luna.shared[disabled_contexts_key(channel)]
+
+    return r and r:split(';') or {}
+end
+
+function luna.channel_enable_context(channel, ctx)
+    local cur = luna.channel_disabled_contexts(channel)
+
+    for i, v in ipairs(cur) do
+        if v:lower() == ctx:lower() then
+            table.remove(cur, i)
+
+            local r
+            if #cur ~= 0 then
+                r = table.concat(cur, ";")
+            end
+
+            luna.shared[disabled_contexts_key(channel)] = r
+            return
+        end
+    end
+end
+
+function luna.channel_disable_context(channel, ctx)
+    local cur = luna.channel_disabled_contexts(channel)
+
+    for i, v in ipairs(cur) do
+        if v:lower() == ctx:lower() then
+            return
+        end
+    end
+
+    table.insert(cur, ctx:lower())
+    luna.shared[disabled_contexts_key(channel)] = table.concat(cur, ";")
+    return
+end
 
 --[[
 -- Filter helpers
@@ -90,6 +134,19 @@ end
 
 function channel_meta_aux:trigger()
     return luna.channel_trigger(self:name())
+end
+
+
+function channel_meta_aux:disabled_contexts()
+    return luna.channel_disabled_contexts(self:name())
+end
+
+function channel_meta_aux:disable_context(ctx)
+    return luna.channel_disable_context(self:name(), ctx)
+end
+
+function channel_meta_aux:enable_context(ctx)
+    return luna.channel_enable_context(self:name(), ctx)
 end
 
 
