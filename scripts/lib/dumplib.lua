@@ -172,7 +172,7 @@ end
 
 function dump.unserialize(str)
     local err, res = pcall(function()
-        return loadstring('b=require\'base64\';return ' .. str)()
+        return load('b=require\'base64\';return ' .. str, "t")()
     end)
 
     if err then

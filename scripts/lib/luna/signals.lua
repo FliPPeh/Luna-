@@ -1,6 +1,8 @@
 --[[
 -- Signal handling
 --]]
+local d = require("dumplib")
+
 local __callbacks = {}
 local __current_handler = nil
 local __nextid = 0
@@ -111,7 +113,15 @@ local function command_handler(who, where, what)
         luna.own_nick():literalpattern() .. '[:,]?%s*' -- mynick: command
     }
 
-    for _, trigger in ipairs(triggers) do
+    for _, ctx in ipairs(luna.command_contexts()) do
+        local trigger = ctx.trigger:template{
+            trigger = where:trigger(),
+            own_nick = luna.own_nick():literalpattern()
+        }
+
+        -- TODO: not this
+        luna.__response_template = ctx.response
+
         -- To allow per-channel or global disabling of non-highlight trigger
         if not (#trigger > 0) then
             goto continue
@@ -142,6 +152,55 @@ local function command_handler(who, where, what)
     end
 end
 
+function luna.add_command_context(name, trigger, response)
+    local cur = luna.command_contexts()
+
+    for i, v in ipairs(cur) do
+        if v.name:lower() == name:lower() then
+            error("context with the same name already registered", 2)
+        end
+    end
+
+    table.insert(cur, {
+        name = name,
+        trigger = trigger,
+        response = response
+    })
+
+    luna.shared["luna.cmdcontexts"] = d.serialize(cur)
+end
+
+function luna.remove_command_context(name)
+    local cur = luna.command_contexts()
+
+    for i, v in ipairs(cur) do
+        if v.name:lower() == name:lower() then
+            table.remove(cur, i)
+            break
+        end
+    end
+
+    luna.shared["luna.cmdcontexts"] = d.serialize(cur)
+end
+
+function luna.command_contexts()
+    if not luna.shared["luna.cmdcontexts"] then
+        luna.shared["luna.cmdcontexts"] = d.serialize{
+            {
+                name     = "simple",
+                trigger  = "${trigger}", -- default channel trigger
+                response = "${response}" -- default response
+            },
+            {
+                name     = "hilight_simple",
+                trigger  = "${own_nick}[:,]?%s*",
+                response = "${nick}: ${response}"
+            }
+        }
+    end
+
+    return d.unserialize(luna.shared["luna.cmdcontexts"])
+end
 
 function luna.add_command(command, argtype, fn)
     if type(argtype) == 'function' then

@@ -51,7 +51,16 @@ setmetatable(luna.unknown_user_meta.__index, {
 
 
 function unknown_user_aux:respond(msg)
-    return self:privmsg(msg)
+    if luna.__response_template then
+        return self:privmsg(luna.__response_template:template{
+            nick = self:nick(),
+            user = self:user(),
+            host = self:host(),
+            response = msg
+        })
+    else
+        return self:privmsg(msg)
+    end
 end
 
 
@@ -80,7 +89,16 @@ setmetatable(luna.channel_user_meta.__index, {
 
 
 function channel_user_aux:respond(msg, lvl)
-    return self:channel():privmsg(self:nick() .. ': ' .. msg, lvl)
+    if luna.__response_template then
+        return self:channel():privmsg(luna.__response_template:template{
+            nick = self:nick(),
+            user = self:user(),
+            host = self:host(),
+            response = msg
+        }, lvl)
+    else
+        return self:channel():privmsg(self:nick() .. ': ' .. msg, lvl)
+    end
 end
 
 --[[
