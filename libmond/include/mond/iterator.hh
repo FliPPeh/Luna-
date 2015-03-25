@@ -40,8 +40,7 @@ struct iterator<std::size_t, V>
     : public std::iterator<std::bidirectional_iterator_tag, V const> {
 
     iterator()
-        : _state{nullptr},
-          _i{static_cast<std::size_t>(-1)},
+        : _i{static_cast<std::size_t>(-1)},
           _max{static_cast<std::size_t>(-1)}
     {
     }

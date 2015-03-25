@@ -40,8 +40,6 @@ async_connection::async_connection(asio::io_service& io_svc, int flags)
     : _io_service{&io_svc},
       _ssl{asio::ssl::context::sslv23_client},
       _resolver{*_io_service},
-      _socket{nullptr},
-      _connect_handler{nullptr},
       _use_ssl{(flags & connection_flags::SSL) > 0}
 {
     _ssl.set_default_verify_paths();
@@ -82,7 +80,7 @@ void async_connection::disconnect()
             asio::ip::tcp::socket::shutdown_type::shutdown_both, err);
         _socket->next_layer().close(err);
 
-        _socket.reset(nullptr);
+        _socket.reset();
     }
 }
 

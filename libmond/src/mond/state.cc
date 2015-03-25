@@ -62,7 +62,7 @@ state& state::operator=(state&& other)
 
 bool state::valid() const
 {
-    return _l != nullptr;
+    return _l;
 }
 
 

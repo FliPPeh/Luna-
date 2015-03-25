@@ -56,9 +56,7 @@ struct client::details {
     std::unique_ptr<irc::environment> ircenv;
 
     details()
-        : idle_timer{io_service},
-          irccon{nullptr},
-          ircenv{nullptr}
+        : idle_timer{io_service}
     {
     }
 };
@@ -403,7 +401,7 @@ void client::do_disconnect()
 
     if (_impl->irccon) {
         _impl->irccon->disconnect();
-        _impl->irccon.reset(nullptr);
+        _impl->irccon.reset();
     }
 
     if (_session_state >= session_state::logged_in) {

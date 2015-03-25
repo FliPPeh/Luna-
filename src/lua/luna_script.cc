@@ -399,7 +399,7 @@ void luna_script::register_script()
                       it != std::end(context()._exts);
                     ++it) {
                 if (*it and strcaseequal(scr, (*it)->id())) {
-                    it->reset(nullptr);
+                    it->reset();
 
                     return 0;
                 }
