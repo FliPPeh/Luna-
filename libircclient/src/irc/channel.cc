@@ -195,13 +195,17 @@ void channel::rename_user(
     std::string const& old_nick,
     std::string const& new_nick)
 {
-    // Have it throw an exception if user not found
-    find_user(old_nick);
+    user_list::iterator usr;
 
-    _users[new_nick] = std::move(_users[old_nick]);
-    _users[new_nick]->rename(new_nick);
+    if ((usr = _users.find(old_nick)) == std::end(_users)) {
+        throw protocol_error{protocol_error_type::no_such_user, old_nick};
+    }
+
+    std::unique_ptr<channel_user> u = std::move(usr->second);
+    u->rename(new_nick);
 
     _users.erase(old_nick);
+    _users[new_nick] = std::move(u);
 }
 
 
