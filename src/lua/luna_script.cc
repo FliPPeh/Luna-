@@ -41,6 +41,8 @@
 #include <stdexcept>
 #include <regex>
 
+#include <cstdlib>
+
 luna_script::luna_script(luna& context, std::string file)
     : luna_extension{context},
       _file{std::move(file)}
@@ -131,6 +133,18 @@ void luna_script::setup_api()
     _lua["os"]["exit"] = std::function<void (int)>{[] (int c) {
             throw mond::runtime_error{"nope"};
         }};
+
+#if defined(_BSD_SOURCE) || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+    _lua["os"]["setenv"] = std::function<void (std::string, std::string)>{
+        [] (std::string env, std::string val) {
+            setenv(env.c_str(), val.c_str(), 1);
+        }};
+
+    _lua["os"]["unsetenv"] = std::function<void (std::string)>{
+        [] (std::string env) {
+            unsetenv(env.c_str());
+        }};
+#endif
 
     _lua["string"]["rfc1459lower"] = std::function<std::string (std::string)>{
             [] (std::string str) {
