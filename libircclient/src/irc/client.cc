@@ -176,7 +176,7 @@ void client::change_nick(std::string const& nick)
     }
 }
 
-void client::change_user(const std::string& user)
+void client::change_user(std::string const& user)
 {
     if (connected()) {
         throw connection_error{connection_error_type::not_connected,
@@ -186,7 +186,7 @@ void client::change_user(const std::string& user)
     _user = user;
 }
 
-void client::change_realname(const std::string& realname)
+void client::change_realname(std::string const& realname)
 {
     if (connected()) {
         throw connection_error{connection_error_type::not_connected,
@@ -196,7 +196,7 @@ void client::change_realname(const std::string& realname)
     _real = realname;
 }
 
-void client::change_password(const std::string& password)
+void client::change_password(std::string const& password)
 {
     if (connected()) {
         throw connection_error{connection_error_type::not_connected,
