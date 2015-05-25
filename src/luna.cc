@@ -594,7 +594,7 @@ void luna::handle_core_ctcp(
         std::time_t now = std::time(nullptr);
         char timestamp[128] = {};
 
-        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S",
+        std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S %Z",
             std::localtime(&now));
 
         send_message(irc::ctcp_response(rtarget, "TIME", timestamp));
