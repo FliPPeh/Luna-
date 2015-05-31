@@ -35,7 +35,7 @@ function luna.util.mask(prefix, style, mtype)
 
     styles = {
         irc  = {  '*',     '*' },
-        emca = {'(.+?)', '(.?)'},
+        ecma = {'(.+?)', '(.?)'},
         lua  = {'(.-)',  '(.?)'},
     }
 
@@ -133,8 +133,8 @@ function luna.util.collect_modechanges(modes)
         rv = rv .. '-' .. table.concat(unset)
     end
 
-    return rv .. ' ' .. table.concat(seta,   ' ')
-              .. ' ' .. table.concat(unseta, ' ')
+    return (rv .. ' ' .. table.concat(seta,   ' ')
+               .. ' ' .. table.concat(unseta, ' ')):split(" ")
 end
 
 -- Augment core types for fun and profit

@@ -247,7 +247,7 @@ function luna.add_message_watcher(pattern, fn)
 end
 
 function luna.add_command_watcher(cmd, fn)
-    return luna.add_signal_watcher('raw', function(prefix, command, args)
+    return luna.add_signal_handler('raw', function(prefix, command, args)
         if command:lower() == cmd:lower() then
             fn(prefix, command, args)
         end
