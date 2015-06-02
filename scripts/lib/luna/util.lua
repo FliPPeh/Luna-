@@ -34,9 +34,9 @@ function luna.util.mask(prefix, style, mtype)
     local nick, user, host, domain = splitmask(prefix)
 
     styles = {
-        irc  = {  '*',     '*' },
-        ecma = {'(.+?)', '(.?)'},
-        lua  = {'(.-)',  '(.?)'},
+        irc  = {'*',   '*' },
+        ecma = {'.+?', '.?'},
+        lua  = {'.-',  '.?'},
     }
 
     if not styles[style:lower()] then
