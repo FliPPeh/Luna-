@@ -657,8 +657,9 @@ void luna::work_through_queue()
         irc::message& msg = _message_queue.front();
 
         std::string msgstr = irc::to_string(msg);
+        tokenbucket::num_type toks = std::min(_bucket.max(), msgstr.size() + 2);
 
-        if (_bucket.consume(msgstr.size() + 2)) {
+        if (_bucket.consume(toks)) {
             _logger.debug() << ">> " << msg;
 
             irc::client::send_message(msg);

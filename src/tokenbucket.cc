@@ -59,6 +59,11 @@ tokenbucket::num_type tokenbucket::available()
     return _tokens;
 }
 
+tokenbucket::num_type tokenbucket::max() const
+{
+    return _capacity;
+}
+
 void tokenbucket::generate()
 {
     auto now = std::chrono::system_clock::now();

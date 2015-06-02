@@ -59,6 +59,9 @@ public:
      */
     num_type available();
 
+    //! \return the maximum capacity.
+    num_type max() const;
+
 private:
     //! \brief Generates new tokens based upon the last update time.
     void generate();
