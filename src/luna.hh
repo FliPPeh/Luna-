@@ -173,7 +173,7 @@ private:
     void work_through_queue();
 
 private:
-    logger _logger{"luna", logging_level::DEBUG, logging_flags::ANSI};
+    logger _logger{"luna", logging_level::INFO, logging_flags::ANSI};
 
     tokenbucket _bucket{512, 64, 128};
 

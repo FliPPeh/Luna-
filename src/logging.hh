@@ -68,6 +68,9 @@ public:
     logger(logger const&) = default;
     logger(logger&&) = default;
 
+    void change_level(logging_level l);
+    logging_level level() const;
+
     logger& operator=(logger const&) = default;
     logger& operator=(logger&&) = default;
 

@@ -73,6 +73,15 @@ logger::logger(std::string name, logging_level minlevel, int flags)
     }
 }
 
+void logger::change_level(logging_level l)
+{
+    _minlevel = l;
+}
+
+logging_level logger::level() const
+{
+    return _minlevel;
+}
 
 logger::logger_helper logger::debug() const
 {

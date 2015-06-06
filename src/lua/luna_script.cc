@@ -73,7 +73,7 @@ luna_script::luna_script(luna& context, std::string file)
     }
 
     _logger = logger{name() + " (script)",
-        logging_level::DEBUG,
+        context._logger.level(),
         logging_flags::ANSI};
 
     setup_api();

@@ -130,6 +130,24 @@ void luna::read_config(std::string const& filename)
     if (auto v = s["server_addr"])     { _server = v.get<std::string>(); }
     if (auto v = s["server_port"])     { _port   = v.get<   uint16_t>(); }
 
+    if (auto v = s["loglevel"]) {
+        std::string level = v.get<std::string>();
+
+        if (irc::rfc1459_equal(level, "debug")) {
+            _logger.change_level(logging_level::DEBUG);
+        } else if (irc::rfc1459_equal(level, "info")) {
+            _logger.change_level(logging_level::INFO);
+        } else if (irc::rfc1459_equal(level, "warn")) {
+            _logger.change_level(logging_level::WARN);
+        } else if (irc::rfc1459_equal(level, "error")) {
+            _logger.change_level(logging_level::ERROR);
+        } else if (irc::rfc1459_equal(level, "wtf")) {
+            _logger.change_level(logging_level::WTF);
+        } else {
+            throw std::runtime_error{"invalid log level: " + level};
+        }
+    }
+
     if (auto autojoin = s["autojoin"]) {
         _autojoin = autojoin.get<std::vector<std::string>>();
     }
