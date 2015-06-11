@@ -78,9 +78,19 @@ void logger::change_level(logging_level l)
     _minlevel = l;
 }
 
+void logger::change_name(std::string n)
+{
+    _name = std::move(n);
+}
+
 logging_level logger::level() const
 {
     return _minlevel;
+}
+
+std::string logger::name() const
+{
+    return _name;
 }
 
 logger::logger_helper logger::debug() const

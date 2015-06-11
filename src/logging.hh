@@ -69,7 +69,10 @@ public:
     logger(logger&&) = default;
 
     void change_level(logging_level l);
+    void change_name(std::string n);
+
     logging_level level() const;
+    std::string name() const;
 
     logger& operator=(logger const&) = default;
     logger& operator=(logger&&) = default;

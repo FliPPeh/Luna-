@@ -157,8 +157,18 @@ void luna_script::setup_api()
             }};
 
     _lua["log"] = mond::table{};
+    _lua["log"]["set_name"] = std::function<void (std::string)>{
+        [this] (std::string new_name) {
+            _logger.change_name(std::move(new_name));
+        }};
+
+    _lua["log"]["name"] = std::function<std::string ()>{
+        [this] () {
+            return _logger.name();
+        }};
+
     _lua["log"]["log"] = std::function<int (lua_State*)>{
-        [=, _logger = this->_logger] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string level = luaL_checkstring(s, 1);
             std::string msg = luaL_checkstring(s, 2);
 
