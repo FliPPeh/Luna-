@@ -319,7 +319,7 @@ void luna::run()
 void luna::load_script(std::string const& script)
 {
     try {
-        std::unique_ptr<luna_script> s{new luna_script{*this, script}};
+        auto s = std::make_unique<luna_script>(*this, script);
 
         _logger.info()
             << "  Loaded script `" << s->name() << "': " << s->description()

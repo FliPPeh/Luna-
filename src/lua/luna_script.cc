@@ -391,8 +391,7 @@ void luna_script::register_script()
                 }
             }
 
-            std::unique_ptr<luna_extension> script{new luna_script{
-                context(), scr}};
+            auto script = std::make_unique<luna_script>(context(), scr);
 
             context()._exts.push_back(std::move(script));
             context()._exts.back()->init();

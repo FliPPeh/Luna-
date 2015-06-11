@@ -211,8 +211,7 @@ std::unique_ptr<function_base> write_function(
     std::function<Ret (Args...)> f,
     std::string const& meta = "")
 {
-    std::unique_ptr<function_base> tmp{
-        new function<Ret, Args...>{s, std::move(f), meta}};
+    auto tmp = std::make_unique<function<Ret, Args...>>(s, std::move(f), meta);
 
     lua_pushlightuserdata(s, static_cast<void*>(tmp.get()));
     lua_pushcclosure(s, &impl::func_dispatcher, 1);
