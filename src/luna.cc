@@ -344,7 +344,7 @@ void luna::on_message(irc::message const& msg)
 
     if (irc::rfc1459_equal(msg.command, irc::command::INVITE)) {
         if (msg.args.size() > 0) {
-            on_invite(msg.prefix, msg.args[0]);
+            on_invite(msg.prefix, msg.args[1]);
         }
 
     } else if (irc::rfc1459_equal(msg.command, irc::command::JOIN)) {
