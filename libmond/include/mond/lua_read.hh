@@ -111,7 +111,7 @@ T read(lua_State* l, int i)
 #endif
 
 template <typename... Ts, std::size_t... Ns>
-auto read(lua_State* l, int offset, impl::seq<Ns...>)
+auto read(lua_State* l, int offset, std::index_sequence<Ns...>)
 {
     return std::make_tuple(read<Ts>(l, offset + Ns + 1)...);
 }
@@ -121,7 +121,7 @@ auto read(lua_State* l, int offset, impl::seq<Ns...>)
 #endif
 
 template <typename T, std::size_t N>
-auto read(lua_State* l, int offset, impl::seq<N>)
+auto read(lua_State* l, int offset, std::index_sequence<N>)
 {
     return read<T>(l, offset + N + 1);
 }
@@ -134,7 +134,7 @@ auto read(lua_State* l)
 
     // TODO argc count check (throw exception)
 
-    return read<Ts...>(l, top - n, impl::seq_gen<n>{});
+    return read<Ts...>(l, top - n, std::make_index_sequence<n>{});
 }
 
 namespace impl {
@@ -196,7 +196,7 @@ T check(lua_State* l, int i)
 #endif
 
 template <typename... Ts, std::size_t... Ns>
-auto check(lua_State* l, int offset, impl::seq<Ns...>)
+auto check(lua_State* l, int offset, std::index_sequence<Ns...>)
 {
     return std::make_tuple(check<Ts>(l, offset + Ns + 1)...);
 }
@@ -206,7 +206,7 @@ auto check(lua_State* l, int offset, impl::seq<Ns...>)
 #endif
 
 template <typename T, std::size_t N>
-auto check(lua_State* l, int offset, impl::seq<N>)
+auto check(lua_State* l, int offset, std::index_sequence<N>)
 {
     return check<T>(l, offset + N + 1);
 }
@@ -217,7 +217,7 @@ auto check(lua_State* l)
     std::size_t constexpr n = sizeof...(Ts);
 
     // No need to check argument count, luaL_check* does the job for us.
-    return check<Ts...>(l, 0, impl::seq_gen<n>{});
+    return check<Ts...>(l, 0, std::make_index_sequence<n>{});
 }
 
 } // namespace mond

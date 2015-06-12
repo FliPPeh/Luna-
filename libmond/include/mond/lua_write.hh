@@ -72,7 +72,7 @@ int _write_ctor(
     lua_State* l,
     std::string const& meta,
     std::tuple<Args...> const& args,
-    seq<Is...>)
+    std::index_sequence<Is...>)
 {
     T* ud = static_cast<T*>(lua_newuserdata(l, sizeof(*ud)));
     new (ud) T{std::get<Is>(args)...};
@@ -84,7 +84,8 @@ int _write_ctor(
 template <typename T, typename... Args>
 int _write(lua_State* l, _object<T, Args...> const& obj)
 {
-    return _write_ctor<T>(l, obj.meta, obj.args, seq_gen<sizeof...(Args)>{});
+    return _write_ctor<T>(
+        l, obj.meta, obj.args, std::make_index_sequence<sizeof...(Args)>{});
 }
 
 inline int _write(lua_State* l, nil)
@@ -143,7 +144,10 @@ int write(lua_State* l, T const& head, Ts const&... tail)
 namespace impl {
 
 template <typename... Args, std::size_t... Ns>
-int _write_tuple(lua_State* l, std::tuple<Args...> const& args, seq<Ns...>)
+int _write_tuple(
+    lua_State* l,
+    std::tuple<Args...> const& args,
+    std::index_sequence<Ns...>)
 {
     return write<Args...>(l, std::get<Ns>(args)...);
 }
@@ -153,7 +157,8 @@ int _write_tuple(lua_State* l, std::tuple<Args...> const& args, seq<Ns...>)
 template <typename... Args>
 int write(lua_State* l, std::tuple<Args...> const& args)
 {
-    return impl::_write_tuple(l, args, impl::seq_gen<sizeof...(Args)>{});
+    return impl::_write_tuple(
+        l, args, std::make_index_sequence<sizeof...(Args)>{});
 }
 
 } // namespace mond
