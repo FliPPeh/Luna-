@@ -4,7 +4,7 @@ local function mkcmdline(args)
     local program = table.remove(args, 1):gsub(' ', '\\ ')
 
     for i, arg in ipairs(args) do
-        args[i] = "'" .. arg:gsub("'", "\\'") .. "'"
+        args[i] = "\"" .. arg:gsub("\"", "\\\"") .. "\""
     end
 
     return table.concat({program, table.concat(args, ' ')}, ' ')
