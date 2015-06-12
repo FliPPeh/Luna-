@@ -219,6 +219,15 @@ std::unique_ptr<function_base> write_function(
     return std::move(tmp);
 }
 
+template <typename Ret, typename... Args>
+std::unique_ptr<function_base> write_function(
+    lua_State* s,
+    Ret (*f)(Args...),
+    std::string const& meta = "")
+{
+    return write_function(s, std::function<Ret (Args...)>{f}, meta);
+}
+
 template <typename T, typename... Args>
 int write_object(lua_State* s, std::string const& meta, Args&&... args)
 {

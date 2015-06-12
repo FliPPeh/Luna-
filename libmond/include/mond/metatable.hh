@@ -62,7 +62,7 @@ public:
     {
         auto ptr = _memptr;
 
-        std::function<Ret (T* self, Args...)> fun =
+        std::function<Ret (T*, Args...)> fun =
             [ptr](T* self, Args... args) {
                 return ptr(self, args...);
             };
@@ -210,6 +210,16 @@ metametamethod<T, R, Args...> meta_method(
 
 class state;
 
+namespace impl {
+
+template <typename T>
+void run_dtor(T* self)
+{
+    self->~T();
+}
+
+}; // namespace impl
+
 template <typename T>
 class metatable {
 public:
@@ -228,12 +238,8 @@ public:
         lua_newtable(_state);
         lua_setfield(_state, _meta, "__index");
 
-        std::function<void (T*)> dtor = [](T* self) {
-            self->~T();
-        };
-
         _state.register_function(
-            std::move(write_function(_state, dtor, _name)));
+            std::move(write_function(_state, &impl::run_dtor<T>, _name)));
 
         lua_setfield(_state, _meta, "__gc");
     }

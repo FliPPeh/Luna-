@@ -169,6 +169,17 @@ public:
         return *this;
     }
 
+    template <typename Ret, typename... Args>
+    focus& operator=(Ret (*fun)(Args...))
+    {
+        auto t = seek_init();
+
+        _state.register_function(
+            std::move(write_function(_state, fun, "")));
+        _set(_state, -1);
+
+        return *this;
+    }
 
     tape seek();
     tape seek_init();
