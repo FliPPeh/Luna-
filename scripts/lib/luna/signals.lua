@@ -138,6 +138,8 @@ local function command_handler(who, where, what)
         local a, b, rcmd, args = what:find('^' .. trigger .. '([^%s]+)%s*(.*)')
 
         if a then
+            luna.dispatch_signal('channel_command', who, where, rcmd, args)
+
             for _, cmd in ipairs(dupkeys(__commands)) do
                 __current_command = cmd
 
@@ -159,6 +161,8 @@ local function command_handler(who, where, what)
         ::continue::
     end
 end
+
+__command_handler = luna.add_signal_handler("channel_message", command_handler)
 
 function luna.add_command_context(name, trigger, response)
     local cur = luna.command_contexts()
