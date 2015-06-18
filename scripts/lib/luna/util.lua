@@ -307,7 +307,7 @@ function string:template(fmt, rep, enable)
         local i = k:find('/')
         if i and not k:find('^lua:') then
             rep = k:sub(i + 1)
-            k = k:sub(1, i)
+            k = k:sub(1, i - 1)
         end
 
         if k:find('^env:') and enable:find('e') then
