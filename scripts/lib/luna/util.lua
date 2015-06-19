@@ -311,17 +311,19 @@ function string:template(fmt, rep, enable)
         end
 
         if k:find('^env:') and enable:find('e') then
-            return p .. (os.getenv(k:sub(5):trim()) or rep)
+            return p .. (os.getenv(k:sub(5):trim()) or
+                rep:template(fmt, rep, enable))
 
         elseif k:find('^var:') and enable:find('v') then
-            return p .. (luna.shared[k:sub(5):trim()] or rep)
+            return p .. (luna.shared[k:sub(5):trim()] or
+                rep:template(fmt, rep, enable))
 
         elseif k:find('^lua:') and enable:find('l') then
             return p .. tostring(load(k:sub(5))() or nil)
         elseif fmt[k] then
             return p .. fmt[k]
         else
-            return p .. rep
+            return p .. rep:template(fmt, rep, enable)
         end
     end)
 end
