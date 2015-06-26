@@ -122,7 +122,8 @@ bool operator!=(luna_script const& a, luna_script const& b)
 
 void luna_script::setup_api()
 {
-    _lua["os"]["time_ms"] = std::function<double (void)>{[] {
+    _lua["os"]["time_ms"] = std::function<double (void)>{
+        [] {
             return std::chrono::duration_cast<
                 std::chrono::milliseconds>(
                     std::chrono::system_clock::now()
@@ -130,7 +131,8 @@ void luna_script::setup_api()
                             .count();
         }};
 
-    _lua["os"]["exit"] = std::function<void (int)>{[] (int c) {
+    _lua["os"]["exit"] = std::function<void (int)>{
+        [] (int c) {
             throw mond::runtime_error{"nope"};
         }};
 
@@ -147,14 +149,14 @@ void luna_script::setup_api()
 #endif
 
     _lua["string"]["rfc1459lower"] = std::function<std::string (std::string)>{
-            [] (std::string str) {
-                return irc::rfc1459_lower(std::move(str));
-            }};
+        [] (std::string str) {
+            return irc::rfc1459_lower(std::move(str));
+        }};
 
     _lua["string"]["rfc1459upper"] = std::function<std::string (std::string)>{
-            [] (std::string str) {
-                return irc::rfc1459_upper(std::move(str));
-            }};
+        [] (std::string str) {
+            return irc::rfc1459_upper(std::move(str));
+        }};
 
     _lua["log"] = mond::table{};
     _lua["log"]["set_name"] = std::function<void (std::string)>{
@@ -205,7 +207,7 @@ void luna_script::register_environment()
     _lua[api]["environment"] = mond::table{};
     _lua[api]["environment"]["server_supports"] =
         std::function<int (lua_State*)>{
-            [=] (lua_State* s) {
+            [this] (lua_State* s) {
                 lua_newtable(s);
 
                 for (auto& v : context().environment().capabilities()) {
@@ -218,18 +220,20 @@ void luna_script::register_environment()
 
     _lua[api]["shared"] = mond::table{};
 
-    _lua[api]["shared"]["save"] = std::function<void ()>{[=] {
+    _lua[api]["shared"]["save"] = std::function<void ()>{
+        [this] {
             context().save_shared_vars(varfile);
         }};
 
-    _lua[api]["shared"]["reload"] = std::function<void ()>{[=] {
+    _lua[api]["shared"]["reload"] = std::function<void ()>{
+        [this] {
             luna_script::shared_vars.clear();
 
             context().read_shared_vars(varfile);
         }};
 
     _lua[api]["shared"]["get"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string key = luaL_checkstring(s, 1);
 
             if (shared_vars.find(key) != std::end(shared_vars)) {
@@ -240,7 +244,7 @@ void luna_script::register_environment()
         }};
 
     _lua[api]["shared"]["set"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string key = luaL_checkstring(s, 1);
 
             std::size_t n;
@@ -252,7 +256,7 @@ void luna_script::register_environment()
         }};
 
     _lua[api]["shared"]["clear"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string key = luaL_checkstring(s, 1);
 
             shared_vars.erase(key);
@@ -261,8 +265,8 @@ void luna_script::register_environment()
             return 0;
         }};
 
-    _lua[api]["shared"]["list"] =
-        std::function<int (lua_State*)>{[=] (lua_State* s) {
+    _lua[api]["shared"]["list"] = std::function<int (lua_State*)>{
+        [this] (lua_State* s) {
             lua_newtable(s);
 
             for (auto const& kv : shared_vars) {
@@ -277,7 +281,7 @@ void luna_script::register_environment()
 void luna_script::register_self()
 {
     _lua[api]["send_message"] = std::function<int (lua_State* s)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             irc::message msg;
 
             std::string cmd = luaL_checkstring(s, 1);
@@ -303,22 +307,23 @@ void luna_script::register_self()
         }};
 
     _lua[api]["runtime_info"] =
-        std::function<std::tuple<std::time_t, std::time_t> ()>{[=] {
+        std::function<std::tuple<std::time_t, std::time_t> ()>{[this] {
             return std::make_tuple(context()._started, context()._connected);
         }};
 
     _lua[api]["user_info"] =
-        std::function<std::tuple<std::string, std::string> ()>{[=] {
+        std::function<std::tuple<std::string, std::string> ()>{[this] {
             return std::make_tuple(context().nick(), context().user());
         }};
 
     _lua[api]["server_info"] =
-        std::function<std::tuple<std::string, std::string, uint16_t> ()>{[=] {
-            return std::make_tuple(
-                context().server_host(),
-                context().server_addr(),
-                context().server_port());
-        }};
+        std::function<std::tuple<std::string, std::string, uint16_t> ()>{
+            [this] {
+                return std::make_tuple(
+                    context().server_host(),
+                    context().server_addr(),
+                    context().server_port());
+            }};
 
     _lua[api]["traffic_info"] =
         std::function<
@@ -326,14 +331,14 @@ void luna_script::register_self()
                 std::size_t,
                 std::size_t,
                 std::size_t,
-                std::size_t> ()>{[=] {
-
-            return std::make_tuple(
-                context()._bytes_sent,
-                context()._bytes_sent_sess,
-                context()._bytes_recvd,
-                context()._bytes_recvd_sess);
-        }};
+                std::size_t> ()>{
+            [this] {
+                return std::make_tuple(
+                    context()._bytes_sent,
+                    context()._bytes_sent_sess,
+                    context()._bytes_recvd,
+                    context()._bytes_recvd_sess);
+            }};
 }
 
 namespace {
@@ -371,7 +376,7 @@ void luna_script::register_script()
         context(), _file);
 
     _lua[api]["extensions"]["list"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             lua_newtable(s);
 
             for (std::unique_ptr<luna_extension> const& scr :
@@ -390,7 +395,7 @@ void luna_script::register_script()
         }};
 
     _lua[api]["extensions"]["load"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string scr = luaL_checkstring(s, 1);
 
             for (std::unique_ptr<luna_extension> const& sc :
@@ -411,7 +416,7 @@ void luna_script::register_script()
         }};
 
     _lua[api]["extensions"]["unload"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string scr = luaL_checkstring(s, 1);
 
             if (strcaseequal(scr, this->_file)) {
@@ -451,7 +456,7 @@ void luna_script::register_user()
 
     _lua[api]["users"] = mond::table{};
     _lua[api]["users"]["list"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             lua_newtable(s);
 
             for (auto const& u : context().users()) {
@@ -464,17 +469,19 @@ void luna_script::register_user()
             return 1;
         }};
 
-    _lua[api]["users"]["save"] = std::function<void ()>{[=] {
+    _lua[api]["users"]["save"] = std::function<void ()>{
+        [this] {
             context().save_users(userfile);
         }};
 
-    _lua[api]["users"]["reload"] = std::function<void ()>{[=] {
+    _lua[api]["users"]["reload"] = std::function<void ()>{
+        [this] {
             context()._users.clear();
             context().read_users(userfile);
         }};
 
     _lua[api]["users"]["create"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string id    = luaL_checkstring(s, 1);
             std::string mask  = luaL_checkstring(s, 2);
             std::string flags = luaL_checkstring(s, 3);
@@ -498,7 +505,7 @@ void luna_script::register_user()
 
 
     _lua[api]["users"]["remove"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             std::string id = luaL_checkstring(s, 1);
 
             auto i = std::find_if(
@@ -536,7 +543,7 @@ void luna_script::register_channel()
 
     _lua[api]["channels"] = mond::table{};
     _lua[api]["channels"]["find"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             try {
                 return mond::write(s, mond::object<luna_channel_proxy>(
                     context(),
@@ -549,7 +556,7 @@ void luna_script::register_channel()
         }};
 
     _lua[api]["channels"]["list"] = std::function<int (lua_State*)>{
-        [=] (lua_State* s) {
+        [this] (lua_State* s) {
             lua_newtable(s);
 
             for (auto const& entry : context().environment().channels()) {
