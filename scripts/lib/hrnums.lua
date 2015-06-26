@@ -94,7 +94,9 @@ end
 hrnums.default_opts = {
     number_separator  = ',',
     decimal_separator = '.',
-    decimal_precision = 2
+    decimal_precision = 2,
+    group_size = 3,
+    force_sign = false
 }
 
 --[[
@@ -103,30 +105,26 @@ hrnums.default_opts = {
 --]]
 function hrnums.humanize_number(num, opts)
     local parts = {}
-    local numstr = tostring(num)
-
-    local dec = ''
-    local frac = ''
 
     local opts = opts or hrnums.default_opts
 
     local numsep = opts.number_separator  or ','
     local decsep = opts.decimal_separator or '.'
     local decpre = opts.decimal_precision or 2
+    local groupsiz = opts.group_size or 3
+    local forces = opts.force_sign or false
 
-    local sign = num < 0 and '-' or ''
+    assert(decpre >= 0, "decimal precision must be >= 0")
+    assert(groupsiz >= 1, "group size must be >= 1")
 
-    if numstr:find('%.') then
-        dec  = numstr:sub(1, numstr:find('%.') - 1)
+    local n, nd = math.modf(num)
+    local dec = tostring(n)
+    local frac = string.format("%." .. tostring(decpre) .. "f", nd):sub(3)
 
-        fracnum = tonumber('0.' .. numstr:sub(numstr:find('%.') + 1, #numstr))
-        frac = string.format('%.' .. tostring(decpre) .. 'f', fracnum):sub(3)
-    else
-        dec = numstr
-        frac = string.rep('0', decpre)
-    end
+    local sign = num < 0 and '-' or (forces and '+' or '')
 
-    for part in dec:reverse():gmatch('%d%d?%d?') do
+    local group = "%d" .. string.rep("%d?", groupsiz - 1)
+    for part in dec:reverse():gmatch(group) do
         table.insert(parts, 1, part:reverse())
     end
 
