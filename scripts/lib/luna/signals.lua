@@ -124,7 +124,7 @@ local function command_handler(who, where, what)
 
         local trigger = ctx.trigger:template{
             trigger = where:trigger(),
-            own_nick = luna.own_nick():literalpattern()
+            own_nick = luna.own_nick():literalpattern():icasepattern()
         }
 
         -- TODO: not this

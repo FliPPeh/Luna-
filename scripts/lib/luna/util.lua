@@ -267,6 +267,13 @@ function string:literalpattern()
     return self:gsub('[^%w%s]', '%%%1')
 end
 
+-- Turns a pattern into a case insensitive pattern
+function string:icasepattern()
+    return self:gsub('%w', function(c)
+        return string.format("[%s%s]", c:lower(), c:upper())
+    end)
+end
+
 -- Given a map of keys to values, format a string using interpolations, e.g.
 --
 --   str = "Hello ${SUBJECT}"
