@@ -121,6 +121,46 @@ bool operator!=(luna_script const& a, luna_script const& b)
 
 namespace {
 
+double os_time_ms()
+{
+    return std::chrono::duration_cast<
+        std::chrono::milliseconds>(
+            std::chrono::system_clock::now()
+                .time_since_epoch())
+                    .count();
+}
+
+void os_exit(int status)
+{
+    throw mond::runtime_error{"nope"};
+}
+
+#if defined(_BSD_SOURCE) || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+
+void os_setenv(std::string key, std::string val)
+{
+    setenv(key.c_str(), val.c_str(), 1);
+}
+
+void os_unsetenv(std::string key)
+{
+    unsetenv(key.c_str());
+}
+
+#endif
+
+
+std::string string_rfc1459lower(std::string const s)
+{
+    return irc::rfc1459_lower(s);
+}
+
+std::string string_rfc1459upper(std::string const s)
+{
+    return irc::rfc1459_upper(s);
+}
+
+
 auto get_dialect(char const* dia) {
     if (!dia) {
         return std::regex_constants::extended;
@@ -149,122 +189,103 @@ auto get_dialect(char const* dia) {
     return std::regex_constants::extended;
 }
 
+int string_regex_find(lua_State* L)
+{
+    char const* self = luaL_checkstring(L, 1);
+    char const* pat = luaL_checkstring(L, 2);
+    char const* dia = lua_tostring(L, 3);
+
+    std::cmatch matches;
+
+    if (std::regex_search(self, matches,
+            std::regex{pat, get_dialect(dia)})) {
+        lua_pushinteger(L, matches.position() + 1);
+        lua_pushinteger(L, matches.position() + matches.length());
+
+        for (std::size_t i = 1; i < matches.size(); ++i) {
+            lua_pushstring(L, matches[i].str().c_str());
+        }
+
+        return 2 + static_cast<int>(matches.size() - 1);
+    }
+
+    return 0;
+}
+
+int string_regex_match(lua_State* L)
+{
+    char const* self = luaL_checkstring(L, 1);
+    char const* pat = luaL_checkstring(L, 2);
+    char const* dia = lua_tostring(L, 3);
+
+    std::cmatch matches;
+
+    if (std::regex_match(self, matches,
+            std::regex{pat, get_dialect(dia)})) {
+        lua_pushinteger(L, matches.position() + 1);
+        lua_pushinteger(L, matches.position() + matches.length());
+
+        for (std::size_t i = 1; i < matches.size(); ++i) {
+            lua_pushstring(L, matches[i].str().c_str());
+        }
+
+        return 2 + static_cast<int>(matches.size() - 1);
+    }
+
+    return 0;
+}
+
+int string_regex_replace(lua_State* L)
+{
+    char const* self = luaL_checkstring(L, 1);
+    char const* pat = luaL_checkstring(L, 2);
+    char const* rep = luaL_checkstring(L, 3);
+    char const* dia = lua_tostring(L, 4);
+
+    std::string res = std::regex_replace(self,
+        std::regex{pat, get_dialect(dia)}, rep,
+        std::regex_constants::format_sed);
+
+    lua_pushstring(L, res.c_str());
+    return 1;
+}
+
+int string_regex_replace_all(lua_State* L)
+{
+    char const* self = luaL_checkstring(L, 1);
+    char const* pat = luaL_checkstring(L, 2);
+    char const* rep = luaL_checkstring(L, 3);
+    char const* dia = lua_tostring(L, 4);
+
+    std::string res = std::regex_replace(self,
+        std::regex{pat, get_dialect(dia)}, rep,
+          std::regex_constants::format_sed
+        | std::regex_constants::format_first_only);
+
+    lua_pushstring(L, res.c_str());
+    return 1;
+}
+
 }
 
 void luna_script::setup_api()
 {
-    _lua["os"]["time_ms"] = std::function<double (void)>{
-        [] {
-            return std::chrono::duration_cast<
-                std::chrono::milliseconds>(
-                    std::chrono::system_clock::now()
-                        .time_since_epoch())
-                            .count();
-        }};
+    _lua["os"]["time_ms"] = &os_time_ms;
 
-    _lua["os"]["exit"] = std::function<void (int)>{
-        [] (int c) {
-            throw mond::runtime_error{"nope"};
-        }};
+    _lua["os"]["exit"] = &os_exit;
 
 #if defined(_BSD_SOURCE) || _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
-    _lua["os"]["setenv"] = std::function<void (std::string, std::string)>{
-        [] (std::string env, std::string val) {
-            setenv(env.c_str(), val.c_str(), 1);
-        }};
-
-    _lua["os"]["unsetenv"] = std::function<void (std::string)>{
-        [] (std::string env) {
-            unsetenv(env.c_str());
-        }};
+    _lua["os"]["setenv"] = &os_setenv;
+    _lua["os"]["unsetenv"] = &os_unsetenv;
 #endif
 
-    _lua["string"]["rfc1459lower"] = std::function<std::string (std::string)>{
-        [] (std::string str) {
-            return irc::rfc1459_lower(std::move(str));
-        }};
+    _lua["string"]["rfc1459lower"] = &string_rfc1459lower;
+    _lua["string"]["rfc1459upper"] = &string_rfc1459upper;
 
-    _lua["string"]["rfc1459upper"] = std::function<std::string (std::string)>{
-        [] (std::string str) {
-            return irc::rfc1459_upper(std::move(str));
-        }};
-
-    _lua["string"]["regex_match"] = std::function<int (lua_State*)>{
-        [] (lua_State* L) {
-            char const* self = luaL_checkstring(L, 1);
-            char const* pat = luaL_checkstring(L, 2);
-            char const* dia = lua_tostring(L, 3);
-
-            std::cmatch matches;
-
-            if (std::regex_match(self, matches,
-                    std::regex{pat, get_dialect(dia)})) {
-                lua_pushinteger(L, matches.position() + 1);
-                lua_pushinteger(L, matches.position() + matches.length());
-
-                for (std::size_t i = 1; i < matches.size(); ++i) {
-                    lua_pushstring(L, matches[i].str().c_str());
-                }
-
-                return 2 + static_cast<int>(matches.size() - 1);
-            }
-
-            return 0;
-        }};
-
-    _lua["string"]["regex_find"] = std::function<int (lua_State*)>{
-        [] (lua_State* L) {
-            char const* self = luaL_checkstring(L, 1);
-            char const* pat = luaL_checkstring(L, 2);
-            char const* dia = lua_tostring(L, 3);
-
-            std::cmatch matches;
-
-            if (std::regex_search(self, matches,
-                    std::regex{pat, get_dialect(dia)})) {
-                lua_pushinteger(L, matches.position() + 1);
-                lua_pushinteger(L, matches.position() + matches.length());
-
-                for (std::size_t i = 1; i < matches.size(); ++i) {
-                    lua_pushstring(L, matches[i].str().c_str());
-                }
-
-                return 2 + static_cast<int>(matches.size() - 1);
-            }
-
-            return 0;
-        }};
-
-    _lua["string"]["regex_replace"] = std::function<int (lua_State*)>{
-        [] (lua_State* L) {
-            char const* self = luaL_checkstring(L, 1);
-            char const* pat = luaL_checkstring(L, 2);
-            char const* rep = luaL_checkstring(L, 3);
-            char const* dia = lua_tostring(L, 4);
-
-            std::string res = std::regex_replace(self,
-                std::regex{pat, get_dialect(dia)}, rep,
-                  std::regex_constants::format_sed
-                | std::regex_constants::format_first_only);
-
-            lua_pushstring(L, res.c_str());
-            return 1;
-        }};
-
-    _lua["string"]["regex_replace_all"] = std::function<int (lua_State*)>{
-        [] (lua_State* L) {
-            char const* self = luaL_checkstring(L, 1);
-            char const* pat = luaL_checkstring(L, 2);
-            char const* rep = luaL_checkstring(L, 3);
-            char const* dia = lua_tostring(L, 4);
-
-            std::string res = std::regex_replace(self,
-                std::regex{pat, get_dialect(dia)}, rep,
-                std::regex_constants::format_sed);
-
-            lua_pushstring(L, res.c_str());
-            return 1;
-        }};
+    _lua["string"]["regex_match"] = &string_regex_match;
+    _lua["string"]["regex_find"] = &string_regex_find;
+    _lua["string"]["regex_replace"] = &string_regex_replace_all;
+    _lua["string"]["regex_replace_all"] = &string_regex_replace;
 
     _lua["log"] = mond::table{};
     _lua["log"]["set_name"] = std::function<void (std::string)>{
