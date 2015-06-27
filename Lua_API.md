@@ -45,6 +45,72 @@ Lua standard library modifications
 
         string.rfc1459upper("Hello, | {World}") == "HELLO \\ [WORLD]"
 
+### Regular expressions
+
+While Lua patterns are as powerful as they are simple, there are some cases
+where proper regular expressions may be desired. The following functions export
+a subset of C++11's `std::thread` namespace for matching, finding, and replacing
+with regular expressions in various dialects.
+
+The dialect can be one of the following:
+* `"ecma"`     *(EMCAScript standard regular expressions, default)*
+* `"basic"`    *(Basic POSIX regular expressions)*
+* `"extended"` *(Extended POSIX regular expressions)*
+* `"awk"`      *(awk regular expressions)*
+* `"grep"`     *(grep regular expressions)*
+* `"egrep"`    *(egrep regular expressions)*
+
+
+The functions available are:
+
+* `string.regex_match(self: string, pat: string, dialect: string?)`
+
+    Attempts to match the given pattern `pat` against all of `self`.
+
+    If the pattern matches, returns the start of the match, the end of the match
+    and all captured groups.
+
+* `string.regex_find(self: string, pat: string, dialect: string?)`
+
+    Attempts to match the given pattern `pat` against part of `self`.
+
+    If the pattern matches, returns the start of the match, the end of the match
+    and all captured groups.
+
+* `string.regex_replace(self: string,
+                        pat: string,
+                        rep: string,
+                        dialect: string?)`
+
+    Replaces the **first** occurrence matching `pat` in `self` with `rep`.
+
+    `rep` can refer to captured groups by means of the "`\1`", `"\2"`¸ ...
+    escape sequences, which will be replaced by the respective capture.
+
+    Returns the replaced string.
+
+    Example:
+
+        string.regex_replace("banana", "((\\w+)ana)", "\\1rama")
+        > "bananarama"
+
+* `string.regex_replace_all(self: string,
+                            pat: string,
+                            rep: string,
+                            dialect: string?)`
+
+    Replaces **all** occurrences matching `pat` in `self` with `rep`.
+
+    `rep` can refer to captured groups by means of the "`\1`", `"\2"`¸ ...
+    escape sequences, which will be replaced by the respective capture.
+
+    Returns the replaced string.
+
+    Example:
+
+        string.regex_replace_all("123456789", "(\\d)(\\d)(\\d)", "\\3\\2\\1")
+        > "321654987"
+
 Luna++ additions
 -----------------
 

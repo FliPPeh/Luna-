@@ -163,7 +163,7 @@ std::string string_rfc1459upper(std::string const s)
 
 auto get_dialect(char const* dia) {
     if (!dia) {
-        return std::regex_constants::extended;
+        return std::regex_constants::ECMAScript;
     }
 
     if (irc::rfc1459_equal(dia, "ecma")) {
@@ -186,7 +186,7 @@ auto get_dialect(char const* dia) {
 
     }
 
-    return std::regex_constants::extended;
+    return std::regex_constants::ECMAScript;
 }
 
 int string_regex_find(lua_State* L)
