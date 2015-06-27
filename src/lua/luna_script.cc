@@ -119,6 +119,37 @@ bool operator!=(luna_script const& a, luna_script const& b)
     return !(a == b);
 }
 
+namespace {
+
+auto get_dialect(char const* dia) {
+    if (!dia) {
+        return std::regex_constants::extended;
+    }
+
+    if (irc::rfc1459_equal(dia, "ecma")) {
+        return std::regex_constants::ECMAScript;
+
+    } else if (irc::rfc1459_equal(dia, "basic")) {
+        return std::regex_constants::basic;
+
+    } else if (irc::rfc1459_equal(dia, "extended")) {
+        return std::regex_constants::extended;
+
+    } else if (irc::rfc1459_equal(dia, "awk")) {
+        return std::regex_constants::awk;
+
+    } else if (irc::rfc1459_equal(dia, "grep")) {
+        return std::regex_constants::grep;
+
+    } else if (irc::rfc1459_equal(dia, "egrep")) {
+        return std::regex_constants::egrep;
+
+    }
+
+    return std::regex_constants::extended;
+}
+
+}
 
 void luna_script::setup_api()
 {
@@ -156,6 +187,83 @@ void luna_script::setup_api()
     _lua["string"]["rfc1459upper"] = std::function<std::string (std::string)>{
         [] (std::string str) {
             return irc::rfc1459_upper(std::move(str));
+        }};
+
+    _lua["string"]["regex_match"] = std::function<int (lua_State*)>{
+        [] (lua_State* L) {
+            char const* self = luaL_checkstring(L, 1);
+            char const* pat = luaL_checkstring(L, 2);
+            char const* dia = lua_tostring(L, 3);
+
+            std::cmatch matches;
+
+            if (std::regex_match(self, matches,
+                    std::regex{pat, get_dialect(dia)})) {
+                lua_pushinteger(L, matches.position() + 1);
+                lua_pushinteger(L, matches.position() + matches.length());
+
+                for (std::size_t i = 1; i < matches.size(); ++i) {
+                    lua_pushstring(L, matches[i].str().c_str());
+                }
+
+                return 2 + static_cast<int>(matches.size() - 1);
+            }
+
+            return 0;
+        }};
+
+    _lua["string"]["regex_find"] = std::function<int (lua_State*)>{
+        [] (lua_State* L) {
+            char const* self = luaL_checkstring(L, 1);
+            char const* pat = luaL_checkstring(L, 2);
+            char const* dia = lua_tostring(L, 3);
+
+            std::cmatch matches;
+
+            if (std::regex_search(self, matches,
+                    std::regex{pat, get_dialect(dia)})) {
+                lua_pushinteger(L, matches.position() + 1);
+                lua_pushinteger(L, matches.position() + matches.length());
+
+                for (std::size_t i = 1; i < matches.size(); ++i) {
+                    lua_pushstring(L, matches[i].str().c_str());
+                }
+
+                return 2 + static_cast<int>(matches.size() - 1);
+            }
+
+            return 0;
+        }};
+
+    _lua["string"]["regex_replace"] = std::function<int (lua_State*)>{
+        [] (lua_State* L) {
+            char const* self = luaL_checkstring(L, 1);
+            char const* pat = luaL_checkstring(L, 2);
+            char const* rep = luaL_checkstring(L, 3);
+            char const* dia = lua_tostring(L, 4);
+
+            std::string res = std::regex_replace(self,
+                std::regex{pat, get_dialect(dia)}, rep,
+                  std::regex_constants::format_sed
+                | std::regex_constants::format_first_only);
+
+            lua_pushstring(L, res.c_str());
+            return 1;
+        }};
+
+    _lua["string"]["regex_replace_all"] = std::function<int (lua_State*)>{
+        [] (lua_State* L) {
+            char const* self = luaL_checkstring(L, 1);
+            char const* pat = luaL_checkstring(L, 2);
+            char const* rep = luaL_checkstring(L, 3);
+            char const* dia = lua_tostring(L, 4);
+
+            std::string res = std::regex_replace(self,
+                std::regex{pat, get_dialect(dia)}, rep,
+                std::regex_constants::format_sed);
+
+            lua_pushstring(L, res.c_str());
+            return 1;
         }};
 
     _lua["log"] = mond::table{};
