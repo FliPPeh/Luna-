@@ -22,7 +22,7 @@
 #define LUNA_CONFIG_HH_INCLUDED
 
 //                                      6.2831853071796
-static constexpr char luna_version[] = "6.283185";
+static constexpr char luna_version[] = "6.2831853";
 
 static constexpr int idle_interval = 125; // milliseconds
 
