@@ -69,7 +69,7 @@ public:
 
         lua_getfield(mt._state, mt._meta, "__index");
         mt._state.register_function(
-            std::move(write_function(mt._state, fun, mt._name)));
+            std::move(write_function(mt._state, std::move(fun), mt._name)));
 
         lua_setfield(mt._state, -2, _name.c_str());
     }
@@ -127,7 +127,7 @@ protected:
 template <typename T, typename R, typename... Args>
 metamethod<T, R, Args...> method(
     std::string const& name,
-    R (T::*ptr)(Args...) const)
+    R (T::*ptr)(Args...))
 {
     return metamethod<T, R, Args...>{name, ptr};
 }
@@ -135,10 +135,11 @@ metamethod<T, R, Args...> method(
 template <typename T, typename R, typename... Args>
 metamethod<T, R, Args...> method(
     std::string const& name,
-    R (T::*ptr)(Args...))
+    R (T::*ptr)(Args...) const)
 {
     return metamethod<T, R, Args...>{name, ptr};
 }
+
 
 template <typename T, typename Ret, typename... Args>
 class metametamethod : public metamethod<T, Ret, Args...> {
@@ -158,7 +159,7 @@ public:
             };
 
         mt._state.register_function(
-            std::move(write_function(mt._state, fun, mt._name)));
+            std::move(write_function(mt._state, std::move(fun), mt._name)));
 
         lua_setfield(mt._state, mt._meta, _name.c_str());
     }
@@ -194,7 +195,7 @@ public:
 template <typename T, typename R, typename... Args>
 metametamethod<T, R, Args...> meta_method(
     std::string const& name,
-    R (T::*ptr)(Args...) const)
+    R (T::*ptr)(Args...))
 {
     return metametamethod<T, R, Args...>{name, ptr};
 }
@@ -202,7 +203,7 @@ metametamethod<T, R, Args...> meta_method(
 template <typename T, typename R, typename... Args>
 metametamethod<T, R, Args...> meta_method(
     std::string const& name,
-    R (T::*ptr)(Args...))
+    R (T::*ptr)(Args...) const)
 {
     return metametamethod<T, R, Args...>{name, ptr};
 }

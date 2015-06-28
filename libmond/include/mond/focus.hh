@@ -175,7 +175,7 @@ public:
         auto t = seek_init();
 
         _state.register_function(
-            std::move(write_function(_state, fun, "")));
+            std::move(write_function(_state, fun)));
         _set(_state, -1);
 
         return *this;

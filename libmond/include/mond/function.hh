@@ -36,13 +36,23 @@
 #include <memory>
 #include <utility>
 
+
 namespace mond {
+
+namespace impl {
+
+// defined in state.cc
+DLL_PUBLIC
+extern int func_dispatcher(lua_State*);
+
+} // namespace impl
+
 
 class function_base {
 public:
-    function_base(lua_State* state, std::string metatable)
+    function_base(lua_State* state, std::string const& meta)
         : _state{state},
-          _metatable{metatable}
+          _meta{meta}
     {
     }
 
@@ -50,58 +60,36 @@ public:
     {
     }
 
-    virtual int call() = 0;
-
-protected:
-    void validate_metatable(int index)
+    virtual int call()
     {
-        if (not _metatable.empty()) {
-            luaL_checkudata(_state, index, _metatable.c_str());
+        if (not _meta.empty()) {
+            luaL_checkudata(_state, 1, _meta.c_str());
         }
-    }
 
-    void validate_argc(std::size_t expect)
-    {
-        if (static_cast<std::size_t>(lua_gettop(_state)) < expect) {
-            luaL_error(_state,
-                "insufficent number of arguments, expected %d, got %d",
-                    expect,
-                    lua_gettop(_state));
-        }
+        return 0;
     }
 
 protected:
     lua_State* _state;
-    std::string _metatable;
+    std::string _meta;
 };
 
-
-template <typename Ret, typename... Args>
+template <typename Fun, typename Ret, typename... Args>
 class function : public function_base {
 public:
     function(
         lua_State* state,
-        std::function<Ret (Args...)> fun,
-        std::string meta = "")
+        Fun fun,
+        std::string const& meta)
 
-        : function_base{state, meta},
-          _fun{fun}
-    {
-    }
-
-    function(
-        lua_State* state,
-        Ret (*funptr)(Args...),
-        std::string const& meta = "")
-
-        : function(state, std::function<Ret (Args...)>{funptr}, meta)
+            : function_base{state, meta},
+              _fun{fun}
     {
     }
 
     virtual int call() override
     {
-        validate_metatable(1);
-        //validate_argc(sizeof...(Args));
+        function_base::call();
 
         auto args = lift_result([this] {
             return check<Args...>(_state);
@@ -111,38 +99,28 @@ public:
     }
 
 private:
-    std::function<Ret (Args...)> _fun;
+    Fun _fun;
 };
 
 /*
  * Specialization for functions that return nothing.
  */
-template <typename... Args>
-class function<void, Args...> : public function_base {
+template <typename Fun, typename... Args>
+class function<Fun, void, Args...> : public function_base {
 public:
     function(
         lua_State* state,
-        std::function<void (Args...)> fun,
-        std::string meta = "")
+        Fun fun,
+        std::string const& meta)
 
-        : function_base{state, meta},
-          _fun{fun}
-    {
-    }
-
-    function(
-        lua_State* state,
-        void (*funptr)(Args...),
-        std::string const& meta = "")
-
-        : function(state, std::function<void (Args...)>{funptr})
+            : function_base{state, meta},
+              _fun{fun}
     {
     }
 
     virtual int call() override
     {
-        validate_metatable(1);
-        //validate_argc(sizeof...(Args));
+        function_base::call();
 
         auto args = lift_result([this] {
             return check<Args...>(_state);
@@ -153,7 +131,7 @@ public:
     }
 
 private:
-    std::function<void (Args...)> _fun;
+    Fun _fun;
 };
 
 
@@ -161,25 +139,16 @@ private:
  * Specialization for functions that want to manage their own stacks.
  * No argument and return value translation is done.
  */
-template <>
-class function<int, lua_State*> : public function_base {
+template <typename Fun>
+class function<Fun, int, lua_State*> : public function_base {
 public:
     function(
         lua_State* state,
-        std::function<int (lua_State*)> fun,
-        std::string const& meta = "")
+        Fun fun,
+        std::string const& meta)
 
-        : function_base{state, meta},
-          _fun{fun}
-    {
-    }
-
-    function(
-        lua_State* state,
-        int (*funptr)(lua_State*),
-        std::string const& meta = "")
-
-        : function(state, std::function<int (lua_State*)>{funptr}, meta)
+            : function_base{state, meta},
+              _fun{fun}
     {
     }
 
@@ -189,16 +158,8 @@ public:
     }
 
 private:
-    std::function<int (lua_State*)> _fun;
+    Fun _fun;
 };
-
-
-namespace impl {
-
-DLL_PUBLIC
-extern int func_dispatcher(lua_State*);
-
-} // namespace impl
 
 
 /*
@@ -211,7 +172,9 @@ std::unique_ptr<function_base> write_function(
     std::function<Ret (Args...)> f,
     std::string const& meta = "")
 {
-    auto tmp = std::make_unique<function<Ret, Args...>>(s, std::move(f), meta);
+    auto tmp = std::make_unique<
+        function<std::function<Ret (Args...)>, Ret, Args...>>(
+            s, std::move(f), meta);
 
     lua_pushlightuserdata(s, static_cast<void*>(tmp.get()));
     lua_pushcclosure(s, &impl::func_dispatcher, 1);
@@ -225,8 +188,16 @@ std::unique_ptr<function_base> write_function(
     Ret (*f)(Args...),
     std::string const& meta = "")
 {
-    return write_function(s, std::function<Ret (Args...)>{f}, meta);
+    auto tmp = std::make_unique<
+        function<Ret (*)(Args...), Ret, Args...>>(
+            s, f, meta);
+
+    lua_pushlightuserdata(s, static_cast<void*>(tmp.get()));
+    lua_pushcclosure(s, &impl::func_dispatcher, 1);
+
+    return std::move(tmp);
 }
+
 
 template <typename T, typename... Args>
 int write_object(lua_State* s, std::string const& meta, Args&&... args)
