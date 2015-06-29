@@ -3,7 +3,6 @@ set(EXPORTED_INCLUDES
     include/mond/lua_write.hh
     include/mond/lua_types.hh
     include/mond/state.hh
-    include/mond/focus.hh
     include/mond/tape.hh
     include/mond/metatable.hh
     include/mond/iterator.hh
