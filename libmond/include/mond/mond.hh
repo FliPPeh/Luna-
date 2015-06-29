@@ -22,8 +22,6 @@
 //#define LIBMOND_MOND_HH_INCLUDED
 
 #include "mond/state.hh"
-#include "mond/focus.hh"
-#include "mond/tape.hh"
 #include "mond/iterator.hh"
 #include "mond/metatable.hh"
 #include "mond/lua_types.hh"

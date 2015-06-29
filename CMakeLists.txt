@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
+find_package(Lua 5.2 REQUIRED)
+include_directories("${LUA_INCLUDE_DIR}")
+
 project(luna++)
 
 set(CMAKE_CXX_FLAGS

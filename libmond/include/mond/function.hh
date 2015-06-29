@@ -162,6 +162,27 @@ private:
 };
 
 
+namespace impl {
+
+inline int func_dispatcher(lua_State* state)
+{
+    function_base* fun = static_cast<function_base*>(
+        lua_touserdata(state, lua_upvalueindex(1)));
+
+    try {
+        return fun->call();
+    } catch (mond::error const& ex) {
+        return luaL_error(state, ex.what());
+    } catch (std::exception const& ex) {
+        return luaL_error(state, ex.what());
+    } catch (...) {
+        return luaL_error(state, "unknown error");
+    }
+}
+
+} // namespace impl
+
+
 /*
  * Pushes the functions to Lua's stack, wrapped within a wrapper for Lua's
  * comfort, and returns an owning pointer.

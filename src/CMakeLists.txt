@@ -30,8 +30,8 @@ include_directories("${luna++_SOURCE_DIR}/src")
 add_executable(luna++ ${SRC})
 
 if(LUNA_LINK_STATIC)
-    target_link_libraries(luna++ ircclient_static mond_static)
+    target_link_libraries(luna++ ircclient_static mond_static ${LUA_LIBRARIES})
 else(LUNA_LINK_STATIC)
-    target_link_libraries(luna++ ircclient mond)
+    target_link_libraries(luna++ ircclient mond ${LUA_LIBRARIES})
 endif(LUNA_LINK_STATIC)
 

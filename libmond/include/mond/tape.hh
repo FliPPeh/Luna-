@@ -25,12 +25,35 @@
 
 #include <lua.hpp>
 
+#include <algorithm>
+
 class DLL_PUBLIC tape {
 public:
-    tape(int bottom, lua_State* state, bool* s);
-    tape(tape&& other);
+    tape(int bottom, lua_State* state, bool* s)
+        : _bottom{bottom},
+          _state{state},
+          _seeking{s}
+    {
+        *_seeking = true;
+    }
 
-    ~tape();
+    tape(tape&& other)
+        : _bottom{other._bottom},
+          _state{other._state},
+          _seeking{other._seeking}
+    {
+        other._state   = nullptr;
+        other._seeking = nullptr;
+    }
+
+    ~tape()
+    {
+        if (_state) {
+            lua_pop(_state, std::max(0, lua_gettop(_state) - _bottom));
+
+            *_seeking = false;
+        }
+    }
 
 private:
     int _bottom;
