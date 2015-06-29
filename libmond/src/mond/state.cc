@@ -126,7 +126,7 @@ lua_Debug state::debug(int level)
 
 namespace impl {
 
-extern int func_dispatcher(lua_State* state)
+int func_dispatcher(lua_State* state)
 {
     function_base* fun = static_cast<function_base*>(
         lua_touserdata(state, lua_upvalueindex(1)));
