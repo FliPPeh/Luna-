@@ -39,15 +39,6 @@
 
 namespace mond {
 
-namespace impl {
-
-// defined in state.cc
-DLL_PUBLIC
-extern int func_dispatcher(lua_State*);
-
-} // namespace impl
-
-
 class function_base {
 public:
     function_base(lua_State* state, std::string const& meta)
@@ -164,7 +155,7 @@ private:
 
 namespace impl {
 
-inline int func_dispatcher(lua_State* state)
+inline DLL_LOCAL int func_dispatcher(lua_State* state)
 {
     function_base* fun = static_cast<function_base*>(
         lua_touserdata(state, lua_upvalueindex(1)));

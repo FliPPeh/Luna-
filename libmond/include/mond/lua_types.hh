@@ -159,19 +159,19 @@ using mapped_type_t = typename mapped_type<remove_qualifiers<T>, Ts...>::type;
 } // namespace impl
 
 
-class error : public std::runtime_error {
+class DLL_PUBLIC error : public std::runtime_error {
 public:
     error(std::string const& what) : std::runtime_error{what} {}
     error(std::string&& what)      : std::runtime_error{std::move(what)} {}
 };
 
-class runtime_error : public error {
+class DLL_PUBLIC runtime_error : public error {
 public:
     runtime_error(std::string const& what) : error{what} {}
     runtime_error(std::string&& what)      : error{std::move(what)} {}
 };
 
-class type_mismatch_error : public error {
+class DLL_PUBLIC type_mismatch_error : public error {
 public:
     type_mismatch_error(std::string const& what) : error{what} {}
     type_mismatch_error(std::string&& what)      : error{std::move(what)} {}
