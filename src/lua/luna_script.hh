@@ -69,6 +69,10 @@ public:
         std::string const& source,
         std::string const& channel) override;
 
+    virtual void on_channel_sync(
+           std::string const& channel,
+           sync_type type) override;
+
     virtual void on_join(
         std::string const& source,
         std::string const& channel) override;

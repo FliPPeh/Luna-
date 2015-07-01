@@ -31,6 +31,11 @@ class luna_extension {
 public:
     static irc::unordered_rfc1459_map<std::string, std::string> shared_vars;
 
+    enum class sync_type {
+        users,
+        bans
+    };
+
     luna_extension(luna& context);
     virtual ~luna_extension() = 0;
 
@@ -59,6 +64,10 @@ public:
     virtual void on_invite(
         std::string const& source,
         std::string const& channel);
+
+    virtual void on_channel_sync(
+        std::string const& channel,
+        sync_type type);
 
     virtual void on_join(
         std::string const& source,

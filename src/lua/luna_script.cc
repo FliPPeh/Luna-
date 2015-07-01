@@ -787,6 +787,19 @@ void luna_script::on_invite(
     emit_signal("invite", get_unknown_user_proxy(source), channel);
 }
 
+void luna_script::on_channel_sync(
+    std::string const& channel,
+    sync_type type)
+{
+    luna_extension::on_channel_sync(channel, type);
+
+    if (type == sync_type::users) {
+        emit_signal("channel_user_sync", get_channel_proxy(channel));
+    } else if (type == sync_type::bans) {
+        emit_signal("channel_ban_sync", get_channel_proxy(channel));
+    }
+}
+
 void luna_script::on_join(
     std::string const& source,
     std::string const& channel)

@@ -69,7 +69,8 @@ public:
     void unset_mode(char modefl);
 
 private:
-    friend class channel; // allow access to _channel
+    friend class channel;
+    friend class client;
 
     irc::channel* _channel;
     uint64_t _uid;

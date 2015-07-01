@@ -410,6 +410,14 @@ void luna::on_message(irc::message const& msg)
                 on_mode(msg.prefix, msg.args[0], m.str(), std::get<2>(mc));
             }
         }
+    } else if (irc::rfc1459_equal(msg.command, irc::command::RPL_ENDOFWHO)) {
+        dispatch_event(&luna_extension::on_channel_sync,
+            msg.args[1], luna_extension::sync_type::users);
+
+    } else if (irc::rfc1459_equal(msg.command, irc::command::RPL_ENDOFBANLIST)) {
+        dispatch_event(&luna_extension::on_channel_sync,
+            msg.args[1], luna_extension::sync_type::bans);
+
     }
 
     on_raw(msg);

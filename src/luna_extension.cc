@@ -43,6 +43,10 @@ void luna_extension::on_invite(
     std::string const& source,
     std::string const& channel) { }
 
+void luna_extension::on_channel_sync(
+    std::string const& channel,
+    sync_type type) { }
+
 void luna_extension::on_join(
     std::string const& source,
     std::string const& channel) { }

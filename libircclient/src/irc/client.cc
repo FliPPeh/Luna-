@@ -603,10 +603,20 @@ void client::init_core_handlers()
         [this](message const& msg) {
             auto& channel = _impl->ircenv->find_channel(msg.args[1]);
 
-            auto& user = channel.create_user(
-                msg.args[5],
-                msg.args[2],
-                msg.args[3]);
+            channel_user* user = nullptr;
+
+            if (!channel.has_user(msg.args[5])) {
+                user = &channel.create_user(
+                    msg.args[5],
+                    msg.args[2],
+                    msg.args[3]);
+
+            } else {
+                user = &channel.find_user(msg.args[5]);
+
+                user->_user = msg.args[2];
+                user->_host = msg.args[3];
+            }
 
             auto prefixes = _impl->ircenv->prefixes();
 
@@ -614,7 +624,20 @@ void client::init_core_handlers()
                 if (prefixes.find(c) != std::end(prefixes)) {
                     channel.apply_modes(
                         "+" + std::string{prefixes.at(c)},
-                        {user.nick()}, *_impl->ircenv);
+                        {user->nick()}, *_impl->ircenv);
+                }
+            }
+        }
+    };
+
+    _core_handlers[command::RPL_NAMREPLY] = handler{ 4, false, false,
+        // me, "=", channel, users...
+        [this](message const& msg) {
+            auto& channel = _impl->ircenv->find_channel(msg.args[2]);
+
+            for (auto user : split_noempty(msg.args[3], " ")) {
+                if (!channel.has_user(user)) {
+                    channel.create_user(user, "", "");
                 }
             }
         }
