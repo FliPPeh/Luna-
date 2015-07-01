@@ -635,9 +635,31 @@ void client::init_core_handlers()
         [this](message const& msg) {
             auto& channel = _impl->ircenv->find_channel(msg.args[2]);
 
+            auto const& pref = _impl->ircenv->prefixes();
+
             for (auto user : split_noempty(msg.args[3], " ")) {
+                std::string modes;
+
+                for (std::size_t start = 0; start < user.length(); ++start) {
+                    auto c = pref.find(user[start]);
+
+                    if (c != std::end(pref)) {
+                        modes.push_back(c->second);
+                    } else {
+                        user = user.substr(start);
+
+                        break;
+                    }
+                }
+
                 if (!channel.has_user(user)) {
                     channel.create_user(user, "", "");
+
+                    for (char m : modes) {
+                        channel.apply_modes(
+                            "+" + std::string{m}, {user},
+                            *_impl->ircenv);
+                    }
                 }
             }
         }
