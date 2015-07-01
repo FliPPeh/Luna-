@@ -41,9 +41,8 @@ namespace mond {
 
 class function_base {
 public:
-    function_base(lua_State* state, std::string const& meta)
-        : _state{state},
-          _meta{meta}
+    function_base(std::string const& meta)
+        : _meta{meta}
     {
     }
 
@@ -51,42 +50,37 @@ public:
     {
     }
 
-    virtual int call()
+    virtual int call(lua_State* state)
     {
         if (not _meta.empty()) {
-            luaL_checkudata(_state, 1, _meta.c_str());
+            luaL_checkudata(state, 1, _meta.c_str());
         }
 
         return 0;
     }
 
 protected:
-    lua_State* _state;
     std::string _meta;
 };
 
 template <typename Fun, typename Ret, typename... Args>
 class function : public function_base {
 public:
-    function(
-        lua_State* state,
-        Fun fun,
-        std::string const& meta)
-
-            : function_base{state, meta},
-              _fun{fun}
+    function(Fun fun, std::string const& meta)
+        : function_base{meta},
+          _fun{fun}
     {
     }
 
-    virtual int call() override
+    virtual int call(lua_State* state) override
     {
-        function_base::call();
+        function_base::call(state);
 
-        auto args = lift_result([this] {
-            return check<Args...>(_state);
+        auto args = lift_result([state] {
+            return check<Args...>(state);
         });
 
-        return write(_state, lift<Ret>(_fun, args));
+        return write(state, lift<Ret>(_fun, args));
     }
 
 private:
@@ -99,22 +93,18 @@ private:
 template <typename Fun, typename... Args>
 class function<Fun, void, Args...> : public function_base {
 public:
-    function(
-        lua_State* state,
-        Fun fun,
-        std::string const& meta)
-
-            : function_base{state, meta},
-              _fun{fun}
+    function(Fun fun, std::string const& meta)
+        : function_base{meta},
+          _fun{fun}
     {
     }
 
-    virtual int call() override
+    virtual int call(lua_State* state) override
     {
-        function_base::call();
+        function_base::call(state);
 
-        auto args = lift_result([this] {
-            return check<Args...>(_state);
+        auto args = lift_result([state] {
+            return check<Args...>(state);
         });
 
         lift<void>(_fun, args);
@@ -133,19 +123,15 @@ private:
 template <typename Fun>
 class function<Fun, int, lua_State*> : public function_base {
 public:
-    function(
-        lua_State* state,
-        Fun fun,
-        std::string const& meta)
-
-            : function_base{state, meta},
-              _fun{fun}
+    function(Fun fun, std::string const& meta)
+        : function_base{meta},
+          _fun{fun}
     {
     }
 
-    virtual int call() override
+    virtual int call(lua_State* state) override
     {
-        return _fun(_state);
+        return _fun(state);
     }
 
 private:
@@ -161,7 +147,7 @@ inline DLL_LOCAL int func_dispatcher(lua_State* state)
         lua_touserdata(state, lua_upvalueindex(1)));
 
     try {
-        return fun->call();
+        return fun->call(state);
     } catch (mond::error const& ex) {
         return luaL_error(state, ex.what());
     } catch (std::exception const& ex) {
@@ -186,7 +172,7 @@ std::unique_ptr<function_base> write_function(
 {
     auto tmp = std::make_unique<
         function<std::function<Ret (Args...)>, Ret, Args...>>(
-            s, std::move(f), meta);
+            std::move(f), meta);
 
     lua_pushlightuserdata(s, static_cast<void*>(tmp.get()));
     lua_pushcclosure(s, &impl::func_dispatcher, 1);
@@ -202,7 +188,7 @@ std::unique_ptr<function_base> write_function(
 {
     auto tmp = std::make_unique<
         function<Ret (*)(Args...), Ret, Args...>>(
-            s, f, meta);
+            f, meta);
 
     lua_pushlightuserdata(s, static_cast<void*>(tmp.get()));
     lua_pushcclosure(s, &impl::func_dispatcher, 1);
