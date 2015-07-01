@@ -946,6 +946,20 @@ Arguments:
 1. `inviter`: `luna.unkown_user`
 2. `channel`: `string`
 
+### channel\_user\_sync
+Emitted when the client has completely synchronized the channel's userlist.
+(i.e. every user's nickname, username, hostname and channel modes are now known)
+
+Arguments:
+
+1. `channel`: `luna.channel`
+
+### channel\_ban\_sync
+Emitted when the client has completely synchronized the channel's banlist.
+
+Arguments:
+
+1. `channel`: `luna.channel`
 
 ### channel\_user\_join
 Emitted when a user joins a channel.
