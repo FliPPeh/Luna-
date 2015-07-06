@@ -148,6 +148,8 @@ local function command_handler(who, where, what)
                 if cmdopts and cmd:lower() == rcmd:lower() then
                     if cmdopts.argtype == '*w' then
                         args = args:split(' ')
+                    elseif cmdopts.argtype == '*s' then
+                        args = args:shlex()
                     end
 
                     cmdopts.func(who, where, cmd, args)
@@ -218,7 +220,7 @@ function luna.add_command(command, argtype, fn)
     if type(argtype) == 'function' then
         -- only 2 args, use default
         fn = argtype
-        argtype = '*w'
+        argtype = '*s'
     end
 
     __commands[command] = {

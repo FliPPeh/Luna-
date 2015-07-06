@@ -347,4 +347,55 @@ function string:trim()
     return select(3, self:find("^%s*(.-)%s*$"))
 end
 
+function string:shlex()
+    local res = {}
+    local in_string = false
+    local buf = ""
+
+    local i = 1
+
+    while i <= #self do
+        local c = self:sub(i, i)
+
+        if c == "\"" and not in_string then
+            in_string = true
+        elseif c == "\"" and in_string then
+            -- "hello"" world" -> "hello world"
+            if self:sub(i+1, i+1):find("^%s") then
+                in_string = false
+
+                table.insert(res, buf)
+                buf = ""
+            else
+                i = i + 1
+            end
+        elseif c == "\\" then
+            local n = self:sub(i+1, i+1)
+
+            if n:find("^%s") then
+                buf = buf .. n
+            elseif n == "\"" then
+                buf = buf .. "\""
+            end
+
+            i = i + 1
+        elseif c:find("^%s") and not in_string then
+            if #buf > 0 then
+                table.insert(res, buf)
+                buf = ""
+            end
+        else
+            buf = buf .. c
+        end
+
+        i = i + 1
+    end
+
+    if #buf > 0 then
+        table.insert(res, buf)
+    end
+
+    return res
+end
+
 return luna.util

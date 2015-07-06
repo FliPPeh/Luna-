@@ -576,16 +576,27 @@ Lua standard library modifications
 
 * `string.capitalize(self: string) -> string`
 
-  Capitalize the given string (i.e. `"hello world" -> "Hello world"`)
+    Capitalize the given string (i.e. `"hello world" -> "Hello world"`)
 
 * `string.titlecase(self: string) -> string`
 
-  Title-case the given string (i.e. `"hello world" -> "Hello World"`)
+    Title-case the given string (i.e. `"hello world" -> "Hello World"`)
 
 * `string.trim(self: string) -> string`
 
-  Strip leading and trailing whitespace.
+    Strip leading and trailing whitespace.
 
+* `string.shlex(self: string) -> list of string`
+
+    Split a string similarly to how a command line shell would.
+
+    Example:
+
+        string.shlex("Hello World")
+        > {"Hello", "World"}
+
+        string.shlex("One\\ Two\\ Three Four \"Five Six\")
+        > {"One Two Three", "Four", "Five Six"}
 
 Luna++ additions
 -----------------
