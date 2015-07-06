@@ -3,6 +3,7 @@ local base = {}
 local dump = require 'dumplib'
 local exec = require 'exec'
 local hrnums = require 'hrnums'
+local time = require 'time'
 
 base.info = {
     name         = 'Base',
@@ -10,47 +11,6 @@ base.info = {
     version      = '0.1'
 }
 
-local function seconds_to_wdhms(s)
-    local weeks = math.floor(s / (60 * 60 * 24 * 7))
-    s = s % (60 * 60 * 24 * 7)
-
-    local days = math.floor(s / (60 * 60 * 24))
-    s = s % (60 * 60 * 24)
-
-    local hours = math.floor(s / (60 * 60))
-    s = s % (60 * 60)
-
-    local minutes = math.floor(s / 60)
-    s = s % 60
-
-    return {weeks, days, hours, minutes, s}
-end
-
-local function wdhms_repr(wdhms, units, sep)
-    local units = units or {
-        {"wk", "wks"},
-        {"d",  "ds"},
-        {"h",  "hrs"},
-        {"m",  "mns"},
-        {"s",  "s"}}
-
-    local i = 1
-
-    -- Display at least the seconds part, even if 0
-    while i < #wdhms and wdhms[i] == 0 do
-        i = i + 1
-    end
-
-    local reprs = {}
-
-    for j = i, #wdhms do
-        table.insert(reprs, string.format("%d%s",
-            wdhms[j],
-            (wdhms[j] == 1) and units[j][1] or units[j][2]))
-    end
-
-    return table.concat(reprs, sep or " ")
-end
 
 function base.script_load()
     local nsusr = luna.shared['base.nickserv.user']
@@ -84,9 +44,9 @@ function base.script_load()
         local msgs = {
             ("Started on %s (%s ago), connected on %s (%s ago); "):format(
                 os.date(fmt, start),
-                wdhms_repr(seconds_to_wdhms(now - start)),
+                time.pretty_delta(start, now),
                 os.date(fmt, connect),
-                wdhms_repr(seconds_to_wdhms(now - connect))),
+                time.pretty_delta(connect, now)),
 
             ("Traffic: %.2f %s/s in (%.2f %s total), "):format(
                 tin / dc, ui,
