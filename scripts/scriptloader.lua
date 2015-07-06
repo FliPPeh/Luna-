@@ -81,6 +81,25 @@ function scriptloader.script_load()
             end
         end
     end)
+
+    luna.add_command('reload_all', function(who, where, what, args)
+        local user = who:match_reguser()
+
+        if user and user:flags():find('a') then
+            local succ = {}
+
+            for k, ext in pairs(luna.extensions.list()) do
+                if not ext:is_self() then
+                    status, _ = pcall(function()
+                        luna.extensions.unload(k)
+                        table.insert(succ, luna.extensions.load(k))
+                    end)
+                end
+            end
+
+            who:respond(string.format('Reloaded %d scripts', #succ))
+        end
+    end)
 end
 
 return scriptloader
