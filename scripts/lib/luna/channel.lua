@@ -107,8 +107,10 @@ setmetatable(luna.channel_meta.__index, {
 function channel_meta_aux:privmsg(msg, lvl)
     local filter = self:outgoing_filter()
 
-    return luna.privmsg((lvl or '') .. self:name(),
-        filter and filter(self, msg) or msg)
+    msg = filter and filter(self, msg) or msg
+    msg = self:modes().c and msg:stripformat() or msg
+
+    return luna.privmsg((lvl or '') .. self:name(), msg)
 end
 
 function channel_meta_aux:notice(msg, lvl)
