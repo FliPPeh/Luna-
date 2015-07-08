@@ -1,13 +1,13 @@
 local M = {}
 
 local function mkcmdline(args)
-    local program = table.remove(args, 1):gsub(' ', '\\ ')
+    local program = table.remove(args, 1):gsub(" ", "\\ ")
 
     for i, arg in ipairs(args) do
         args[i] = "\"" .. arg:gsub("\"", "\\\"") .. "\""
     end
 
-    return table.concat({program, table.concat(args, ' ')}, ' ')
+    return table.concat({program, table.concat(args, " ")}, " ")
 end
 
 local exec_meta = {
@@ -17,11 +17,11 @@ local exec_meta = {
         lines = function(self) return self.fp:lines() end,
         exit_code = function(self)
             local done = tonumber(
-                io.popen(string.format('%s; echo $?',
-                    mkcmdline{'test', '-f', self.tmpfile})):read('*l')) == 0
+                io.popen(string.format("%s; echo $?",
+                    mkcmdline{"test", "-f", self.tmpfile})):read("*l")) == 0
 
             if done then
-                return tonumber(io.open(self.tmpfile):read('*l'))
+                return tonumber(io.open(self.tmpfile):read("*l"))
             else
                 return nil
             end
@@ -37,9 +37,9 @@ local exec_meta = {
 
 function M.exec(args, mode)
     local tmpfile = os.tmpname()
-    local cmdline = string.format('%s; echo $? >%s', mkcmdline(args), tmpfile)
+    local cmdline = string.format("%s; echo $? >%s", mkcmdline(args), tmpfile)
 
-    mode = mode or 'r'
+    mode = mode or "r"
 
     return setmetatable({
         fp      = io.popen(cmdline, mode),

@@ -6,7 +6,7 @@ local function user(self) return ({self:user_info()})[2] end
 local function host(self) return ({self:user_info()})[3] end
 
 local function mask(self, style, mtype)
-    return luna.util.mask(string.format('%s!%s@%s',
+    return luna.util.mask(string.format("%s!%s@%s",
         self:nick(), self:user(), self:host()), style, mtype)
 end
 
@@ -97,7 +97,7 @@ function channel_user_aux:respond(msg, lvl)
             response = msg
         }, lvl)
     else
-        return self:channel():privmsg(self:nick() .. ': ' .. msg, lvl)
+        return self:channel():privmsg(self:nick() .. ": " .. msg, lvl)
     end
 end
 

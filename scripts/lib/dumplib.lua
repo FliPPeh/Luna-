@@ -2,7 +2,7 @@
 -- Dumper library for easy dumping of Lua values
 -- and basic serialization to and from files.
 --
-local base64 = require 'base64'
+local base64 = require "base64"
 
 local dump = {}
 
@@ -25,13 +25,13 @@ function dump.make_dumper(args)
     local args = args or {}
 
     local indent_width = args.indent_width or 3
-    local indent_char  = args.indent_char  or ' '
+    local indent_char  = args.indent_char  or " "
     local indent_level = 0
     local depth        = args.depth     or math.huge
     local inline       = args.inline    or false
     local serialize    = args.serialize or false
 
-    local indent = ''
+    local indent = ""
 
     local d = depth
 
@@ -39,27 +39,27 @@ function dump.make_dumper(args)
 
 
     local function dumper(v)
-        if     type(v) == 'number'
-            or type(v) == 'boolean'
-            or type(v) == 'nil' then
+        if     type(v) == "number"
+            or type(v) == "boolean"
+            or type(v) == "nil" then
 
                 return tostring(v)
 
-        elseif type(v) == 'function' then
+        elseif type(v) == "function" then
             if serialize then
-                return string.format('loadstring(b.decode(%q))',
+                return string.format("loadstring(b.decode(%q))",
                     base64.encode(string.dump(v)))
             else
-                return '<' .. tostring(v) .. '>'
+                return "<" .. tostring(v) .. ">"
             end
 
-        elseif type(v) == 'string' then
-            return string.format('%q', v)
+        elseif type(v) == "string" then
+            return string.format("%q", v)
 
-        elseif type(v) == 'table' then
+        elseif type(v) == "table" then
             for _, val in ipairs(ignore) do
                 if v == val then
-                    return '<recursion: ' .. tostring(v) .. '>'
+                    return "<recursion: " .. tostring(v) .. ">"
                 end
             end
 
@@ -70,30 +70,30 @@ function dump.make_dumper(args)
 
             depth = depth - 1
             if inline then
-                local dump = '{ '
+                local dump = "{ "
 
                 if depth > 0 then
                     for k, v in pairs(v) do
                         if list then
-                            dump = dump .. string.format('%s, ', dumper(v))
+                            dump = dump .. string.format("%s, ", dumper(v))
                         else
                             if serialize then
-                                dump = dump .. string.format('[%q] = %s, ',
+                                dump = dump .. string.format("[%q] = %s, ",
                                     k, dumper(v))
                             else
-                                dump = dump .. string.format('%s = %s, ',
+                                dump = dump .. string.format("%s = %s, ",
                                     k, dumper(v))
                             end
                         end
                     end
                 else
-                    dump = dump .. '... '
+                    dump = dump .. "... "
                 end
 
                 depth = depth + 1
-                return dump .. '}'
+                return dump .. "}"
             else
-                local dump = '{\n'
+                local dump = "{\n"
 
                 indent_level = indent_level + 1
                 indent = string.rep(indent_char, indent_width * indent_level)
@@ -101,32 +101,32 @@ function dump.make_dumper(args)
                 if depth > 0 then
                     for k, v in pairs(v) do
                         if list then
-                            dump = dump .. string.format('%s%s,\n',
+                            dump = dump .. string.format("%s%s,\n",
                                 indent, dumper(v))
                         else
                             if serialize then
-                                dump = dump .. string.format('%s[%q] = %s,\n',
+                                dump = dump .. string.format("%s[%q] = %s,\n",
                                     indent, k, dumper(v))
                             else
-                                dump = dump .. string.format('%s%s = %s,\n',
+                                dump = dump .. string.format("%s%s = %s,\n",
                                     indent, k, dumper(v))
                             end
                         end
                     end
                 else
-                    dump = dump .. indent .. '...\n'
+                    dump = dump .. indent .. "...\n"
                 end
 
                 indent_level = indent_level - 1
                 indent = string.rep(indent_char, indent_width * indent_level)
 
                 depth = depth + 1
-                return dump .. indent .. '}'
+                return dump .. indent .. "}"
             end
-        elseif type(v) == 'userdata' then
+        elseif type(v) == "userdata" then
             return tostring(v)
         else
-            return '<unknown: ' .. type(v) .. '>'
+            return "<unknown: " .. type(v) .. ">"
         end
     end
 
@@ -149,8 +149,8 @@ end
 function dump.file_serializer:write(v)
     d = dump.make_dumper{inline = false, dump_funs = true}
 
-    f = io.open(self.file, 'w')
-    f:write('return ' .. d(v) .. '\n')
+    f = io.open(self.file, "w")
+    f:write("return " .. d(v) .. "\n")
     f:close()
 end
 
@@ -172,7 +172,7 @@ end
 
 function dump.unserialize(str)
     local err, res = pcall(function()
-        return load('b=require\'base64\';return ' .. str, "t")()
+        return load("b=require\"base64\";return " .. str, "t")()
     end)
 
     if err then

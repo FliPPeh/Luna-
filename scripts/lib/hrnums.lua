@@ -4,38 +4,38 @@ local hrnums = {}
 -- Metric SI unit prefixes
 --]]
 local si_prefixes = {
-    {1e-24, 'y', 'yocto'},
-    {1e-21, 'z', 'zepto'},
-    {1e-18, 'a', 'atto' },
-    {1e-15, 'f', 'femto'},
-    {1e-12, 'p', 'pico' },
-    {1e-9,  'n', 'nano' },
-    {1e-6,  'µ', 'micro'},
-    {1e-3,  'm', 'milli'},
-    {1e0,   '',  '',    },
-    {1e3,   'k', 'kilo' },
-    {1e6,   'M', 'mega' },
-    {1e9,   'G', 'giga' },
-    {1e12,  'T', 'tera' },
-    {1e15,  'P', 'peta' },
-    {1e18,  'E', 'exa'  },
-    {1e21,  'Z', 'zetta'},
-    {1e24,  'Y', 'yotta'},
+    {1e-24, "y", "yocto"},
+    {1e-21, "z", "zepto"},
+    {1e-18, "a", "atto" },
+    {1e-15, "f", "femto"},
+    {1e-12, "p", "pico" },
+    {1e-9,  "n", "nano" },
+    {1e-6,  "µ", "micro"},
+    {1e-3,  "m", "milli"},
+    {1e0,   "",  "",    },
+    {1e3,   "k", "kilo" },
+    {1e6,   "M", "mega" },
+    {1e9,   "G", "giga" },
+    {1e12,  "T", "tera" },
+    {1e15,  "P", "peta" },
+    {1e18,  "E", "exa"  },
+    {1e21,  "Z", "zetta"},
+    {1e24,  "Y", "yotta"},
 }
 
 --[[
 -- Binary metric SI unit prefixes
 --]]
 local binary_si_prefixes = {
-    {math.pow(1024, 0), '',  '',   },
-    {math.pow(1024, 1), 'K', 'kibi'},
-    {math.pow(1024, 2), 'M', 'mebi'},
-    {math.pow(1024, 3), 'G', 'gibi'},
-    {math.pow(1024, 4), 'T', 'tebi'},
-    {math.pow(1024, 5), 'P', 'pebo'},
-    {math.pow(1024, 6), 'E', 'exbi'},
-    {math.pow(1024, 7), 'Z', 'zebi'},
-    {math.pow(1024, 8), 'Y', 'yobi'},
+    {math.pow(1024, 0), "",  "",   },
+    {math.pow(1024, 1), "K", "kibi"},
+    {math.pow(1024, 2), "M", "mebi"},
+    {math.pow(1024, 3), "G", "gibi"},
+    {math.pow(1024, 4), "T", "tebi"},
+    {math.pow(1024, 5), "P", "pebo"},
+    {math.pow(1024, 6), "E", "exbi"},
+    {math.pow(1024, 7), "Z", "zebi"},
+    {math.pow(1024, 8), "Y", "yobi"},
 }
 
 --[[
@@ -77,7 +77,7 @@ function hrnums.si_binary_factorize(n)
     local n  = math.abs(n)
 
     if n < 1 then
-        error('number must be at least 1', 2)
+        error("number must be at least 1", 2)
     end
 
     -- Go up the prefix list, make number smaller
@@ -92,8 +92,8 @@ function hrnums.si_binary_factorize(n)
 end
 
 hrnums.default_opts = {
-    number_separator  = ',',
-    decimal_separator = '.',
+    number_separator  = ",",
+    decimal_separator = ".",
     decimal_precision = 2,
     group_size = 3,
     force_sign = false
@@ -108,8 +108,8 @@ function hrnums.humanize_number(num, opts)
 
     local opts = opts or hrnums.default_opts
 
-    local numsep = opts.number_separator  or ','
-    local decsep = opts.decimal_separator or '.'
+    local numsep = opts.number_separator  or ","
+    local decsep = opts.decimal_separator or "."
     local decpre = opts.decimal_precision or 2
     local groupsiz = opts.group_size or 3
     local forces = opts.force_sign or false
@@ -121,7 +121,7 @@ function hrnums.humanize_number(num, opts)
     local dec = tostring(n)
     local frac = string.format("%." .. tostring(decpre) .. "f", nd):sub(3)
 
-    local sign = num < 0 and '-' or (forces and '+' or '')
+    local sign = num < 0 and "-" or (forces and "+" or "")
 
     local group = "%d" .. string.rep("%d?", groupsiz - 1)
     for part in dec:reverse():gmatch(group) do
@@ -159,20 +159,20 @@ function hrnums.humanize_metric(num, unit, opts)
     local long = opts.long_prefix or false
 
     local props = {
-        ['g']  = { map = { ['kg'] = 1000,
+        ["g"]  = { map = { ["kg"] = 1000,
                            ["t"]  = 1000*1000 } },
 
-        ['m']  = { map = { ['cm'] = 0.01,
-                         --['dm'] = 0.10,
-                           ['m']  = 1.00,
-                           ['km'] = 1000      } },
+        ["m"]  = { map = { ["cm"] = 0.01,
+                         --["dm"] = 0.10,
+                           ["m"]  = 1.00,
+                           ["km"] = 1000      } },
 
-        ['l']  = { map = { ['cl'] = 0.01,
-                           ['dl'] = 0.10,
-                           ['l']  = 1.00      } },
+        ["l"]  = { map = { ["cl"] = 0.01,
+                           ["dl"] = 0.10,
+                           ["l"]  = 1.00      } },
 
-        -- Don't prefix °C at all
-        ['°C'] = { map = { ['°C'] = 0         } },
+        -- Don"t prefix °C at all
+        ["°C"] = { map = { ["°C"] = 0         } },
     }
 
     local function map_unit(num, unit, map)

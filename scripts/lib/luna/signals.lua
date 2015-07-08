@@ -30,10 +30,10 @@ function luna.dispatch_signal(signal, ...)
 
         if handler and handler.signal == signal then
             status, err = xpcall(handler.callback, function(err)
-                log.warn('[CORE]',
+                log.warn("[CORE]",
                     debug.traceback(
                         string.format(
-                            "handler for `%s' error: %s", signal, err),
+                            "handler for \"%s\" error: %s", signal, err),
                         2))
             end, unpack(args))
         end
@@ -44,21 +44,21 @@ function luna.add_signal_handler(signal, id, fn)
     if not fn then
         fn = id
 
-        id = string.format('__unique_%s_%s',
+        id = string.format("__unique_%s_%s",
                 tostring(__nextid),
                 tostring(math.random(999)))
 
         __nextid = __nextid + 1
     end
 
-    if signal == 'channel_message' then
+    if signal == "channel_message" then
         local wrapped = fn
 
         fn = function(who, where, what, lvl)
             local ru = who:match_reguser()
-            local ai = luna.shared['luna.auto_ignore'] or false
+            local ai = luna.shared["luna.auto_ignore"] or false
 
-            if ru and ru:flags():find('i') and ai then
+            if ru and ru:flags():find("i") and ai then
                 return
             end
 
@@ -94,7 +94,7 @@ function luna.remove_signal_handler(tid)
         end
     end
 
-    error(string.format('no signal handler with id %q found', tid), 2)
+    error(string.format("no signal handler with id %q found", tid), 2)
 end
 
 
@@ -110,7 +110,7 @@ local __commands = {}
 local function command_handler(who, where, what)
     local triggers = {
         where:trigger(),                               -- !command
-        luna.own_nick():literalpattern() .. '[:,]?%s*' -- mynick: command
+        luna.own_nick():literalpattern() .. "[:,]?%s*" -- mynick: command
     }
 
     local disabled = where:disabled_contexts()
@@ -135,10 +135,10 @@ local function command_handler(who, where, what)
             goto continue
         end
 
-        local a, b, rcmd, args = what:find('^' .. trigger .. '([^%s]+)%s*(.*)')
+        local a, b, rcmd, args = what:find("^" .. trigger .. "([^%s]+)%s*(.*)")
 
         if a then
-            luna.dispatch_signal('channel_command', who, where, rcmd, args)
+            luna.dispatch_signal("channel_command", who, where, rcmd, args)
 
             for _, cmd in ipairs(dupkeys(__commands)) do
                 __current_command = cmd
@@ -146,9 +146,9 @@ local function command_handler(who, where, what)
                 local cmdopts = __commands[cmd]
 
                 if cmdopts and cmd:lower() == rcmd:lower() then
-                    if cmdopts.argtype == '*w' then
-                        args = args:split(' ')
-                    elseif cmdopts.argtype == '*s' then
+                    if cmdopts.argtype == "*w" then
+                        args = args:split(" ")
+                    elseif cmdopts.argtype == "*s" then
                         args = args:shlex()
                     end
 
@@ -217,10 +217,10 @@ function luna.command_contexts()
 end
 
 function luna.add_command(command, argtype, fn)
-    if type(argtype) == 'function' then
+    if type(argtype) == "function" then
         -- only 2 args, use default
         fn = argtype
-        argtype = '*s'
+        argtype = "*s"
     end
 
     __commands[command] = {
@@ -230,7 +230,7 @@ function luna.add_command(command, argtype, fn)
 
     if not __command_handler then
         __command_handler =
-            luna.add_signal_handler('channel_message', command_handler)
+            luna.add_signal_handler("channel_message", command_handler)
     end
 end
 
@@ -243,7 +243,7 @@ end
 -- Message and IRC command watchers
 --]]
 function luna.add_message_watcher(pattern, fn)
-    return luna.add_signal_handler('channel_message', function(who, where, what)
+    return luna.add_signal_handler("channel_message", function(who, where, what)
         local matches = {what:find(pattern)}
 
         if matches[1] and matches[2] then
@@ -253,7 +253,7 @@ function luna.add_message_watcher(pattern, fn)
 end
 
 function luna.add_command_watcher(cmd, fn)
-    return luna.add_signal_handler('raw', function(prefix, command, args)
+    return luna.add_signal_handler("raw", function(prefix, command, args)
         if command:lower() == cmd:lower() then
             fn(prefix, command, args)
         end

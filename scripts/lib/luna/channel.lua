@@ -1,10 +1,10 @@
-local base64 = require 'base64'
+local base64 = require "base64"
 
 --[[
 -- Trigger helpers
 --]]
 local function trigger_key(channel)
-    return string.format('luna.channel.%s.trigger', channel:lower())
+    return string.format("luna.channel.%s.trigger", channel:lower())
 end
 
 
@@ -13,20 +13,20 @@ function luna.set_channel_trigger(channel, trigger)
 end
 
 function luna.channel_trigger(channel)
-    return luna.shared[trigger_key(channel)] or luna.shared['luna.trigger']
+    return luna.shared[trigger_key(channel)] or luna.shared["luna.trigger"]
 end
 
 --[[
 -- Context helpers
 --]]
 local function disabled_contexts_key(channel)
-    return string.format('luna.channel.%s.disabled_ctx', channel:lower())
+    return string.format("luna.channel.%s.disabled_ctx", channel:lower())
 end
 
 function luna.channel_disabled_contexts(channel)
     local r = luna.shared[disabled_contexts_key(channel)]
 
-    return r and r:split(';') or {}
+    return r and r:split(";") or {}
 end
 
 function luna.channel_enable_context(channel, ctx)
@@ -65,11 +65,11 @@ end
 -- Filter helpers
 --]]
 local function filter_in_key(channel)
-    return string.format('luna.channel.%s.filter_in', channel:lower())
+    return string.format("luna.channel.%s.filter_in", channel:lower())
 end
 
 local function filter_out_key(channel)
-    return string.format('luna.channel.%s.filter_out', channel:lower())
+    return string.format("luna.channel.%s.filter_out", channel:lower())
 end
 
 
@@ -110,23 +110,23 @@ function channel_meta_aux:privmsg(msg, lvl)
     msg = filter and filter(self, msg) or msg
     msg = self:modes().c and msg:stripformat() or msg
 
-    return luna.privmsg((lvl or '') .. self:name(), msg)
+    return luna.privmsg((lvl or "") .. self:name(), msg)
 end
 
 function channel_meta_aux:notice(msg, lvl)
-    return luna.notice((lvl or '') .. self:name(), msg)
+    return luna.notice((lvl or "") .. self:name(), msg)
 end
 
 function channel_meta_aux:action(msg, lvl)
-    return luna.action((lvl or '') .. self:name(), msg)
+    return luna.action((lvl or "") .. self:name(), msg)
 end
 
 function channel_meta_aux:request_ctcp(ctcp, arg, lvl)
-    return luna.request_ctcp((lvl or '') .. self:name(), ctcp, arg)
+    return luna.request_ctcp((lvl or "") .. self:name(), ctcp, arg)
 end
 
 function channel_meta_aux:respond_ctcp(ctcp, arg, lvl)
-    return luna.respond_ctcp((lvl or '') .. self:name(), ctcp, arg)
+    return luna.respond_ctcp((lvl or "") .. self:name(), ctcp, arg)
 end
 
 

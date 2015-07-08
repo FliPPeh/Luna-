@@ -37,9 +37,9 @@ end
 function luna.init_script()
     -- Then initialize script
     ok, res = xpcall(script.script_load, function(err)
-        log.warn('[CORE]',
+        log.warn("[CORE]",
             debug.traceback(
-                string.format("`script.load' error: %s", err),
+                string.format("\"script.load\" error: %s", err),
                 2))
 
             return false
@@ -53,9 +53,9 @@ function luna.deinit_script()
     end
 
     ok, res = xpcall(script.script_unload, function(err)
-        log.warn('[CORE]',
+        log.warn("[CORE]",
             debug.traceback(
-                string.format("`script_unload' error: %s", err),
+                string.format("\"script_unload\" error: %s", err),
                 2))
 
         return false
@@ -66,19 +66,19 @@ end
 -- High level command helpers
 --]]
 function luna.privmsg(tar, msg)
-    return luna.send_message('PRIVMSG', tar, msg)
+    return luna.send_message("PRIVMSG", tar, msg)
 end
 
 function luna.notice(tar, msg)
-    return luna.send_message('NOTICE', tar, msg)
+    return luna.send_message("NOTICE", tar, msg)
 end
 
 
 local function make_ctcp(ctcp, arg)
     if arg then
-        return string.format('\x01%s %s\x01', ctcp:upper(), arg)
+        return string.format("\x01%s %s\x01", ctcp:upper(), arg)
     else
-        return string.format('\x01%s\x01', ctcp:upper())
+        return string.format("\x01%s\x01", ctcp:upper())
     end
 end
 
@@ -92,16 +92,16 @@ end
 
 
 function luna.action(tar, msg)
-    return luna.request_ctcp(tar, 'ACTION', msg)
+    return luna.request_ctcp(tar, "ACTION", msg)
 end
 
 
 function luna.join(channel, key)
-    return luna.send_message('JOIN', channel, key)
+    return luna.send_message("JOIN", channel, key)
 end
 
 function luna.part(channel, reason)
-    return luna.send_message('PART', channel, reason or '')
+    return luna.send_message("PART", channel, reason or "")
 end
 
 --[[

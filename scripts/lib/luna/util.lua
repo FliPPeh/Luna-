@@ -1,25 +1,25 @@
 luna.util = {}
 
 local function splitmask(prefix)
-    nick = prefix:sub(1, prefix:find('!') - 1)
-    user = prefix:sub(prefix:find('!') + 1, prefix:find('@') - 1)
-    addr = prefix:sub(prefix:find('@') + 1)
+    nick = prefix:sub(1, prefix:find("!") - 1)
+    user = prefix:sub(prefix:find("!") + 1, prefix:find("@") - 1)
+    addr = prefix:sub(prefix:find("@") + 1)
 
-    if addr:match('(%d+.%d+.%d+.%d+)') then
-        host   = addr:sub(addr:find('^%d+.%d+.%d'))
-        domain = addr:sub(addr:find('%d+$'))
+    if addr:match("(%d+.%d+.%d+.%d+)") then
+        host   = addr:sub(addr:find("^%d+.%d+.%d"))
+        domain = addr:sub(addr:find("%d+$"))
     else
         -- special case for no-host addresses
-        if addr:match('^%w+.%w+$') then
+        if addr:match("^%w+.%w+$") then
             host = addr
-            domain = ''
+            domain = ""
         else
-            host   = addr:sub(addr:find('^(%w+)'))
-            domain = addr:sub(addr:find('%w+.%w+$'))
+            host   = addr:sub(addr:find("^(%w+)"))
+            domain = addr:sub(addr:find("%w+.%w+$"))
         end
     end
 
-    user = user:gsub('^~', '')
+    user = user:gsub("^~", "")
 
     return nick, user, host, domain
 end
@@ -29,18 +29,18 @@ luna.util.default_user_mask = 2
 
 -- Mask a hostname
 function luna.util.mask(prefix, style, mtype)
-    local style = style or 'irc'
+    local style = style or "irc"
     local mtype = mtype or 4
     local nick, user, host, domain = splitmask(prefix)
 
     styles = {
-        irc  = {'*',   '*' },
-        ecma = {'.+?', '.?'},
-        lua  = {'.-',  '.?'},
+        irc  = {"*",   "*" },
+        ecma = {".+?", ".?"},
+        lua  = {".-",  ".?"},
     }
 
     if not styles[style:lower()] then
-        error('unsupported hostmask style', 2)
+        error("unsupported hostmask style", 2)
     end
 
     local many1 = styles[style:lower()][1]
@@ -60,28 +60,28 @@ function luna.util.mask(prefix, style, mtype)
     }
 
     if mtype > #masks or mtype < 1 then
-        error('unsupported hostmask type',  2)
+        error("unsupported hostmask type",  2)
     end
 
-    return string.format(domain ~= '' and '%s!%s@%s.%s'
-                                       or '%s!%s@%s', unpack(masks[mtype]))
+    return string.format(domain ~= "" and "%s!%s@%s.%s"
+                                       or "%s!%s@%s", unpack(masks[mtype]))
 end
 
 -- Collects mode changes
 --   e.g.:
 --     luna.util.collect_modechanges{
---        '+o user1',       -- as plain string
---        {'+o', 'user2'},  -- as separated mode and argument
---        '-o user3',
---        '+t'}             -- as plain string without argument
---     => '+oot-o user1 user2 user3'
+--        "+o user1",       -- as plain string
+--        {"+o", "user2"},  -- as separated mode and argument
+--        "-o user3",
+--        "+t"}             -- as plain string without argument
+--     => "+oot-o user1 user2 user3"
 function luna.util.collect_modechanges(modes)
     table.sort(modes, function(a, b)
-        if type(a) == 'table' then
+        if type(a) == "table" then
             a = a[1]
         end
 
-        if type(b) == 'table' then
+        if type(b) == "table" then
             b = b[1]
         end
 
@@ -94,21 +94,21 @@ function luna.util.collect_modechanges(modes)
     for i, modeset in ipairs(modes) do
         local m, a
 
-        if type(modeset) == 'table' then
+        if type(modeset) == "table" then
             if #modeset > 1 then
                 m, a = unpack(modeset)
             else
-                m, a = modeset[1], ''
+                m, a = modeset[1], ""
             end
         else
-            _, _, m, a = modeset:find('([%+%-]%a)%s*(%w*)')
+            _, _, m, a = modeset:find("([%+%-]%a)%s*(%w*)")
         end
 
 
-        m = m:gsub('^%s*(.-)%s*$', '%1')
-        a = a:gsub('^%s*(.-)%s*$', '%1')
+        m = m:gsub("^%s*(.-)%s*$", "%1")
+        a = a:gsub("^%s*(.-)%s*$", "%1")
 
-        if m:sub(1, 1) == '+' then
+        if m:sub(1, 1) == "+" then
             table.insert(set, m:sub(2, 2))
 
             if #a > 0 then
@@ -123,18 +123,18 @@ function luna.util.collect_modechanges(modes)
         end
     end
 
-    rv = ''
+    rv = ""
 
     if #set > 0 then
-        rv = '+' .. table.concat(set)
+        rv = "+" .. table.concat(set)
     end
 
     if #unset > 0 then
-        rv = rv .. '-' .. table.concat(unset)
+        rv = rv .. "-" .. table.concat(unset)
     end
 
-    return (rv .. ' ' .. table.concat(seta,   ' ')
-               .. ' ' .. table.concat(unseta, ' ')):split(" ")
+    return (rv .. " " .. table.concat(seta,   " ")
+               .. " " .. table.concat(unseta, " ")):split(" ")
 end
 
 -- Augment core types for fun and profit
@@ -168,29 +168,29 @@ end
 
 function string:fcolour(f, b)
     if not b then
-        return string.format('\x03%02d%s\x03', f, self)
+        return string.format("\x03%02d%s\x03", f, self)
     else
-        return string.format('\x03%02d,%02d%s\x03', f, b, self)
+        return string.format("\x03%02d,%02d%s\x03", f, b, self)
     end
 end
 
 function string:fbold()
-    return string.format('\x02%s\x02', self)
+    return string.format("\x02%s\x02", self)
 end
 
 function string:funderline()
-    return string.format('\x1f%s\x1f', self)
+    return string.format("\x1f%s\x1f", self)
 end
 
 function string:freverse()
-    return string.format('\x16%s\x16', self)
+    return string.format("\x16%s\x16", self)
 end
 
 function string:stripformat()
     return ({
-        self:gsub('\x03%d%d?,%d%d?',      '')
-            :gsub('\x03%d%d?',            '')
-            :gsub('([\x02\x1f\x16\x03])', '')})[1]
+        self:gsub("\x03%d%d?,%d%d?",      "")
+            :gsub("\x03%d%d?",            "")
+            :gsub("([\x02\x1f\x16\x03])", "")})[1]
 
 end
 
@@ -206,14 +206,14 @@ local function map_irc_color(f, b)
         class = class or 3
 
         if ansi >= 10 then
-            return string.format('\027[1;%d%dm', class, ansi - 10)
+            return string.format("\027[1;%d%dm", class, ansi - 10)
         else
-            return string.format('\027[0;%d%dm', class, ansi)
+            return string.format("\027[0;%d%dm", class, ansi)
         end
     end
 
 
-    res = ''
+    res = ""
 
     if (f+1) <= #irc_to_ansi then
         res = res .. genseq(irc_to_ansi[f + 1])
@@ -232,30 +232,30 @@ function string:irctoansi()
     underline = false
 
     return ({
-        self:gsub('\x03(%d%d?),(%d%d?)', function(f, g)
+        self:gsub("\x03(%d%d?),(%d%d?)", function(f, g)
                     return map_irc_color(tonumber(f), tonumber(g))
                 end)
-            :gsub('\x03(%d%d?)', function(f)
+            :gsub("\x03(%d%d?)", function(f)
                     return map_irc_color(tonumber(f))
                 end)
 
-            :gsub('\x03', function() return '\027[0;39m' end)
-            :gsub('\x02', function()
+            :gsub("\x03", function() return "\027[0;39m" end)
+            :gsub("\x02", function()
                     if not bold then
                         bold = true
-                        return '\027[1m'
+                        return "\027[1m"
                     else
                         bold = false
-                        return '\027[0m'
+                        return "\027[0m"
                     end
                 end)
-            :gsub('\x1f', function()
+            :gsub("\x1f", function()
                     if not bold then
                         bold = true
-                        return '\027[4m'
+                        return "\027[4m"
                     else
                         bold = false
-                        return '\027[0m'
+                        return "\027[0m"
                     end
                 end)
         })[1]
@@ -264,12 +264,12 @@ end
 -- Turns the given string into a literal pattern of itself (by escaping all
 -- characters that have a special meaning in pattern matching)
 function string:literalpattern()
-    return self:gsub('[^%w%s]', '%%%1')
+    return self:gsub("[^%w%s]", "%%%1")
 end
 
 -- Turns a pattern into a case insensitive pattern
 function string:icasepattern()
-    return self:gsub('%w', function(c)
+    return self:gsub("%w", function(c)
         return string.format("[%s%s]", c:lower(), c:upper())
     end)
 end
@@ -292,40 +292,40 @@ end
 -- unless a special replacement is specified ("${VAR/<VAR not found>")
 --
 -- The "enable" parameter controls which kinds of replacements are enabled,
--- where 'e' = environment, 'v' = shared variables, 'l' = Lua expressions.
+-- where "e" = environment, "v" = shared variables, "l" = Lua expressions.
 -- By default it allows all replacements.
 --
 -- Due to the information that can be queried with this function, and the
 -- support for evaluating arbitrary expressions, it should naturally not be
 -- run on untrusted input unless the "enable" field is restricted.
 function string:template(fmt, rep, enable)
-    rep = rep or '(?)'
+    rep = rep or "(?)"
     enable = enable or "evl" -- env, shared vars, lua expr
 
     return self:gsub("(.?)($%b{})", function(p, m)
         local k = m:sub(3, #m - 1)
 
-        p = p or ''
+        p = p or ""
 
-        if p == '$' then
+        if p == "$" then
             return m
         end
 
-        local i = k:find('/')
-        if i and not k:find('^lua:') then
+        local i = k:find("/")
+        if i and not k:find("^lua:") then
             rep = k:sub(i + 1)
             k = k:sub(1, i - 1)
         end
 
-        if k:find('^env:') and enable:find('e') then
+        if k:find("^env:") and enable:find("e") then
             return p .. (os.getenv(k:sub(5):trim()) or
                 rep:template(fmt, rep, enable))
 
-        elseif k:find('^var:') and enable:find('v') then
+        elseif k:find("^var:") and enable:find("v") then
             return p .. (luna.shared[k:sub(5):trim()] or
                 rep:template(fmt, rep, enable))
 
-        elseif k:find('^lua:') and enable:find('l') then
+        elseif k:find("^lua:") and enable:find("l") then
             return p .. tostring(load(k:sub(5))() or nil)
         elseif fmt[k] then
             return p .. fmt[k]

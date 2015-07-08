@@ -1,31 +1,31 @@
 local base = {}
 
-local dump = require 'dumplib'
-local exec = require 'exec'
-local hrnums = require 'hrnums'
-local time = require 'time'
+local dump = require "dumplib"
+local exec = require "exec"
+local hrnums = require "hrnums"
+local time = require "time"
 
 base.info = {
-    name         = 'Base',
-    description  = 'Do basey things',
-    version      = '0.1'
+    name         = "Base",
+    description  = "Do basey things",
+    version      = "0.1"
 }
 
 
 function base.script_load()
-    local nsusr = luna.shared['base.nickserv.user']
-    local nspwd = luna.shared['base.nickserv.passwd']
+    local nsusr = luna.shared["base.nickserv.user"]
+    local nspwd = luna.shared["base.nickserv.passwd"]
 
     if nsusr and nspwd then
-        luna.add_signal_handler('connect', function()
-            luna.send_message('NICKSERV',
-                string.format('identify %s %s', nsusr, nspwd))
+        luna.add_signal_handler("connect", function()
+            luna.send_message("NICKSERV",
+                string.format("identify %s %s", nsusr, nspwd))
         end)
     end
 
-    luna.add_command('sitrep', function(who, where, what, args)
+    luna.add_command("sitrep", function(who, where, what, args)
         local user = who:match_reguser()
-        if not user or not user:flags():find('o') then
+        if not user or not user:flags():find("o") then
             return
         end
 
@@ -60,24 +60,24 @@ function base.script_load()
         who:respond(table.concat(msgs))
     end)
 
-    luna.add_command('sh', '*l', function(who, where, what, args)
+    luna.add_command("sh", "*l", function(who, where, what, args)
         local user = who:match_reguser()
-        if user and user:flags():find('a') then
-            local e = exec.exec{'/bin/bash', '-c', args}
+        if user and user:flags():find("a") then
+            local e = exec.exec{"/bin/bash", "-c", args}
             local t = {}
 
             for l in e:lines() do
                 table.insert(t, l)
             end
 
-            who:respond(table.concat(t, '; '))
+            who:respond(table.concat(t, "; "))
         end
     end)
 
-    luna.add_command('eval', '*l', function(who, where, what, args)
+    luna.add_command("eval", "*l", function(who, where, what, args)
         local user = who:match_reguser()
-        if user and user:flags():find('a') then
-            local f = load(args, "(eval)", 'bt', setmetatable({
+        if user and user:flags():find("a") then
+            local f = load(args, "(eval)", "bt", setmetatable({
                 who = who,
                 where = where,
                 what = what,
@@ -94,41 +94,41 @@ function base.script_load()
                         r[i] = dump.dump_inline(r[i])
                     end
 
-                    who:respond(table.concat(r, ', '))
+                    who:respond(table.concat(r, ", "))
                 else
                     who:respond(dump.dump_inline(r[1]))
                 end
             else
                 log.err(r[1])
 
-                local errs = tostring(r[1]):split('\n')
+                local errs = tostring(r[1]):split("\n")
 
                 if #errs > 1 then
-                    who:respond(string.format('Error: %s (+%d lines)',
+                    who:respond(string.format("Error: %s (+%d lines)",
                      errs[1], #errs - 1))
                 else
-                    who:respond(string.format('Error: %s', errs[1]))
+                    who:respond(string.format("Error: %s", errs[1]))
                 end
             end
         end
     end)
 
-    luna.add_command('ping', function(who, ...)
-        who:respond('pong')
+    luna.add_command("ping", function(who, ...)
+        who:respond("pong")
     end)
 
-    luna.add_command('version', function(who, ...)
-        who:respond(string.format('Luna++ %s (built %s, %s)',
-            luna.shared['luna.version'],
-            luna.shared['luna.compiled'],
-            luna.shared['luna.compiler']))
+    luna.add_command("version", function(who, ...)
+        who:respond(string.format("Luna++ %s (built %s, %s)",
+            luna.shared["luna.version"],
+            luna.shared["luna.compiled"],
+            luna.shared["luna.compiler"]))
     end)
 
-    luna.add_command('settrigger', '*l', function(who, where, what, args)
+    luna.add_command("settrigger", "*l", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('o') then
-            local a, b, target, newtrigger = args:find('(#[^%s]+)%s*(.+)')
+        if u and u:flags():find("o") then
+            local a, b, target, newtrigger = args:find("(#[^%s]+)%s*(.+)")
 
             if not a then
                 target, newtrigger = where:name(), args
@@ -137,11 +137,11 @@ function base.script_load()
             luna.set_channel_trigger(target, newtrigger)
 
             if #newtrigger > 0 then
-                who:respond(string.format('Set trigger for %q to: %q',
+                who:respond(string.format("Set trigger for %q to: %q",
                     target, newtrigger))
             else
                 who:respond(
-                    string.format('Disabled non-highlight trigger for %q',
+                    string.format("Disabled non-highlight trigger for %q",
                         target))
             end
 
@@ -149,58 +149,58 @@ function base.script_load()
         end
     end)
 
-    luna.add_command('unsettrigger', function(who, where, what, args)
+    luna.add_command("unsettrigger", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('o') then
+        if u and u:flags():find("o") then
             local target = args[1] or where:name()
 
             luna.set_channel_trigger(target, nil)
-            who:respond(string.format('Reset trigger for %q', target))
+            who:respond(string.format("Reset trigger for %q", target))
 
             luna.save_shared()
         end
     end)
 
-    luna.add_command('getvar', function(who, where, what, args)
+    luna.add_command("getvar", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('o') then
+        if u and u:flags():find("o") then
             local r = luna.shared[args[1]]
 
             if r then
-                who:respond(string.format('%q -> %q.', args[1], r))
+                who:respond(string.format("%q -> %q.", args[1], r))
             else
-                who:respond(string.format('%q is not set.', args[1]))
+                who:respond(string.format("%q is not set.", args[1]))
             end
         end
     end)
 
-    luna.add_command('setvar', '*l', function(who, where, what, args)
+    luna.add_command("setvar", "*l", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('o') then
+        if u and u:flags():find("o") then
             print(args)
-            local a, b, key, val = args:find('([^%s]+)%s*(.*)')
+            local a, b, key, val = args:find("([^%s]+)%s*(.*)")
 
             print(key, val)
 
-            if val and val ~= '' then
+            if val and val ~= "" then
                 luna.shared[key] = val
-                who:respond(string.format('%q -> %q.', key, val))
+                who:respond(string.format("%q -> %q.", key, val))
             else
                 luna.shared[key] = nil
-                who:respond(string.format('cleared %q.', key))
+                who:respond(string.format("cleared %q.", key))
             end
 
             luna.save_shared()
         end
     end)
 
-    luna.add_command('reloadusers', function(who, where, what, args)
+    luna.add_command("reloadusers", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('a') then
+        if u and u:flags():find("a") then
             luna.users.reload()
             local n = 0
 
@@ -208,14 +208,14 @@ function base.script_load()
                 n = n + 1
             end
 
-            who:respond(string.format('Reloaded %d users', n))
+            who:respond(string.format("Reloaded %d users", n))
         end
     end)
 
-    luna.add_command('reloadvars', function(who, where, what, args)
+    luna.add_command("reloadvars", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('a') then
+        if u and u:flags():find("a") then
             luna.reload_shared()
             local n = 0
 
@@ -223,27 +223,27 @@ function base.script_load()
                 n = n + 1
             end
 
-            who:respond(string.format('Reloaded %d variables', n))
+            who:respond(string.format("Reloaded %d variables", n))
         end
     end)
 
-    luna.add_command('join', function(who, where, what, args)
+    luna.add_command("join", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('o') then
-            who:respond('OK!')
+        if u and u:flags():find("o") then
+            who:respond("OK!")
             luna.join(args[1])
         end
     end)
 
-    luna.add_command('part', function(who, where, what, args)
+    luna.add_command("part", function(who, where, what, args)
         local u = who:match_reguser()
 
-        if u and u:flags():find('o') then
-            who:respond('OK!')
+        if u and u:flags():find("o") then
+            who:respond("OK!")
             luna.part(
                 args[1] or where:name(),
-                'Because ' .. who:nick() .. ' said so :(')
+                "Because " .. who:nick() .. " said so :(")
         end
     end)
 end
