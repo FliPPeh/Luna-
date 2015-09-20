@@ -403,4 +403,79 @@ function string:shlex()
     return res
 end
 
+local function utf8enc(code)
+    if code < 0x80 then
+        return string.char(code)
+    elseif code < 0x800 then
+        return string.char(
+            0xC0 + math.floor(code / 0x40),
+            0x80 + code % 0x40)
+
+    elseif code < 0x10000 then
+        return string.char(
+            0xE0 + math.floor(code / 0x1000),
+            0x80 + math.floor(code / 0x40) % 0x40,
+            0x80 + code % 0x40)
+
+    elseif code < 0x110000 then
+        return string.char(
+            0xF0 + math.floor(code / 0x40000),
+            0x80 + math.floor(code / 0x1000) % 0x40,
+            0x80 + math.floor(code / 0x40) % 0x40,
+            0x80 + code % 0x40)
+    else
+        return utf8enc(0xFFFD)
+    end
+end
+
+function string.unichar(...)
+    local r = ""
+
+    for i, c in ipairs{...} do
+        if c > 0x7f then
+            r = r .. utf8enc(c)
+        else
+            r = r .. string.char(c)
+        end
+    end
+
+    return r
+end
+
+function map(table, fn)
+    local r = {}
+
+    for i, v in ipairs(table) do
+        r[i] = fn(v)
+    end
+
+    return r
+end
+
+function map_kv(table, fn)
+    local r = {}
+
+    for k, v in pairs(table) do
+        local nk, nv = fn(k, v)
+        r[nk] = nv
+    end
+
+    return r
+end
+
+function luna.util.memorize(fn, timevalid)
+    local n
+    local l
+
+    return function(...)
+        if not n or (os.time_ms() / 1000) > n then
+            n = (os.time_ms() / 1000) + timevalid
+
+            l = {fn(...)}
+        end
+
+        return table.unpack(l)
+    end
+end
+
 return luna.util

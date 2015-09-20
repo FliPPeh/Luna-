@@ -598,6 +598,11 @@ Lua standard library modifications
         string.shlex("One\\ Two\\ Three Four \"Five Six\")
         > {"One Two Three", "Four", "Five Six"}
 
+* `string.unichar(...) -> string`
+
+    Like `string.char`, but values outside the ASCII range [0, 127] will be
+    encoded using UTF-8.
+
 Luna++ additions
 -----------------
 
@@ -760,6 +765,27 @@ Additionally, the following functions are defined with the wrapper:
 
         > { "+vookb-tc", "voice1", "op2", "op1", "key", "ban1"}
 
+* `luna.util.memorize(fn: function, time: number) -> function`
+
+    Return a function that memorizes its last result for `time` seconds (may be
+    fractional).
+
+
+* `map(t: table, fn: function) -> table`
+
+    Map a function over a sequential table. For every element, the function `fn`
+    is called with its value, which will be replaced with the returned value.
+
+    Returns the resulting table.
+
+* `map_kv(t: table, fn: function) -> table`
+
+    Map a function over an associative table. For every element, the function
+    `fn` is called with the its key and value. It is expected to return a new
+    key (which may be the same as the old key) and a new value (which may also
+    be the same as the old), which will be inserted into the returned table.
+
+    Returns the resulting table.
 
 Types
 ------
