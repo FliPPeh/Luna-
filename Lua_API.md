@@ -1182,3 +1182,22 @@ Higher level signal handling
         luna.send_message("WHOIS", "user")
 
     Returns the handler's ID.
+
+
+* `luna.add_timeout(seconds: number, fn: function) -> function, function`
+
+    Register a timeout that gets executed after `seconds` seconds (which may
+    be fractional).
+
+    Returns (in order) a reset function and a cancel function. If the reset
+    function is called, the countdown will reset to zero. If the cancel
+    function is called, the timeout will be cancelled.
+
+
+* `luna.add_timer(seconds: number, fn: function) -> string`
+
+    Register a timer with a period of `seconds` seconds (which may be
+    fractional).
+
+    Returns the handler's ID.
+

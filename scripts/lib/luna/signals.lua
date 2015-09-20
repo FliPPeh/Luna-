@@ -238,6 +238,46 @@ function luna.remove_command(command)
     __commands[command] = nil
 end
 
+--[[
+-- Timers
+--]]
+function luna.add_timeout(seconds, fn)
+    local to = (os.time_ms() / 1000) + seconds
+    local cancelled = false
+
+    luna.add_signal_handler("tick", function()
+        if (os.time_ms() / 1000) > to then
+            if not cancelled then
+                fn()
+            end
+
+            luna.remove_current_handler()
+        end
+    end)
+
+    local function reset(n)
+        to = (os.time_ms() / 1000) + (n or seconds)
+    end
+
+    local function cancel()
+        to = 0
+        cancelled = true
+    end
+
+    return reset, cancel
+end
+
+function luna.add_timer(period, fn)
+    local n = (os.time_ms() / 1000) + period
+
+    return luna.add_signal_handler("tick", function()
+        if (os.time_ms() / 1000) > n then
+            n = (os.time_ms() / 1000) + period
+
+            fn()
+        end
+    end)
+end
 
 --[[
 -- Message and IRC command watchers
