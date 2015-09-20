@@ -142,6 +142,11 @@ function string:split(sep)
     local parts = {}
     local l = 1
 
+    -- No separator, something split by nothing = something
+    if #sep == 0 then
+        return {self}
+    end
+
     -- While there is a seperator within the string
     while self:find(sep, l) do
         local sep_start, sep_end = self:find(sep, l)
