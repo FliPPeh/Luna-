@@ -35,7 +35,7 @@ function luna.dispatch_signal(signal, ...)
                         string.format(
                             "handler for \"%s\" error: %s", signal, err),
                         2))
-            end, unpack(args))
+            end, table.unpack(args))
         end
     end
 end
@@ -287,7 +287,7 @@ function luna.add_message_watcher(pattern, fn)
         local matches = {what:find(pattern)}
 
         if matches[1] and matches[2] then
-            fn(who, where, what, unpack(matches))
+            fn(who, where, what, table.unpack(matches))
         end
     end)
 end

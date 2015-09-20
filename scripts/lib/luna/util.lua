@@ -64,7 +64,8 @@ function luna.util.mask(prefix, style, mtype)
     end
 
     return string.format(domain ~= "" and "%s!%s@%s.%s"
-                                       or "%s!%s@%s", unpack(masks[mtype]))
+                                       or "%s!%s@%s",
+                         table.unpack(masks[mtype]))
 end
 
 -- Collects mode changes
@@ -96,7 +97,7 @@ function luna.util.collect_modechanges(modes)
 
         if type(modeset) == "table" then
             if #modeset > 1 then
-                m, a = unpack(modeset)
+                m, a = table.unpack(modeset)
             else
                 m, a = modeset[1], ""
             end
