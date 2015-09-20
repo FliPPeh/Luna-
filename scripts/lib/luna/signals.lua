@@ -127,9 +127,6 @@ local function command_handler(who, where, what)
             own_nick = luna.own_nick():literalpattern():icasepattern()
         }
 
-        -- TODO: not this
-        luna.__response_template = ctx.response
-
         -- To allow per-channel or global disabling of non-highlight trigger
         if not (#trigger > 0) then
             goto continue
@@ -138,6 +135,9 @@ local function command_handler(who, where, what)
         local a, b, rcmd, args = what:find("^" .. trigger .. "([^%s]+)%s*(.*)")
 
         if a then
+            -- TODO: not this
+            luna.__response_template = ctx.response
+
             luna.dispatch_signal("channel_command", who, where, rcmd, args)
 
             for _, cmd in ipairs(dupkeys(__commands)) do
