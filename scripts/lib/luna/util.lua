@@ -407,46 +407,46 @@ end
 local _, _, nver = _VERSION:find("(%d+%.%d+)")
 
 if not tonumber(nver) or tonumber(nver) < 5.3 then
-	local function utf8enc(code)
-		if code < 0x80 then
-			return string.char(code)
-		elseif code < 0x800 then
-			return string.char(
-				0xC0 + math.floor(code / 0x40),
-				0x80 + code % 0x40)
+    local function utf8enc(code)
+        if code < 0x80 then
+            return string.char(code)
+        elseif code < 0x800 then
+            return string.char(
+                0xC0 + math.floor(code / 0x40),
+                0x80 + code % 0x40)
 
-		elseif code < 0x10000 then
-			return string.char(
-				0xE0 + math.floor(code / 0x1000),
-				0x80 + math.floor(code / 0x40) % 0x40,
-				0x80 + code % 0x40)
+        elseif code < 0x10000 then
+            return string.char(
+                0xE0 + math.floor(code / 0x1000),
+                0x80 + math.floor(code / 0x40) % 0x40,
+                0x80 + code % 0x40)
 
-		elseif code < 0x110000 then
-			return string.char(
-				0xF0 + math.floor(code / 0x40000),
-				0x80 + math.floor(code / 0x1000) % 0x40,
-				0x80 + math.floor(code / 0x40) % 0x40,
-				0x80 + code % 0x40)
-		else
-			return utf8enc(0xFFFD)
-		end
-	end
+        elseif code < 0x110000 then
+            return string.char(
+                0xF0 + math.floor(code / 0x40000),
+                0x80 + math.floor(code / 0x1000) % 0x40,
+                0x80 + math.floor(code / 0x40) % 0x40,
+                0x80 + code % 0x40)
+        else
+            return utf8enc(0xFFFD)
+        end
+    end
 
-	function string.unichar(...)
-		local r = ""
+    function string.unichar(...)
+        local r = ""
 
-		for i, c in ipairs{...} do
-			if c > 0x7f then
-				r = r .. utf8enc(c)
-			else
-				r = r .. string.char(c)
-			end
-		end
+        for i, c in ipairs{...} do
+            if c > 0x7f then
+                r = r .. utf8enc(c)
+            else
+                r = r .. string.char(c)
+            end
+        end
 
-		return r
-	end
+        return r
+    end
 else
-	string.unichar = utf8.char
+    string.unichar = utf8.char
 end
 
 function map(table, fn)
