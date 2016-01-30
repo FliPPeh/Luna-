@@ -767,6 +767,13 @@ void luna_script::on_idle()
     emit_signal("tick");
 }
 
+void luna_script::on_message_send(irc::message const& msg)
+{
+    luna_extension::on_message_send(msg);
+
+    emit_signal("message_send", msg.command, msg.args);
+}
+
 void luna_script::on_message(irc::message const& msg)
 {
     luna_extension::on_message(msg);

@@ -37,6 +37,8 @@ void luna_extension::on_connect() { }
 void luna_extension::on_disconnect() { }
 void luna_extension::on_idle() { }
 
+void luna_extension::on_message_send(irc::message const& msg) { }
+
 void luna_extension::on_message(irc::message const& msg) { }
 
 void luna_extension::on_invite(

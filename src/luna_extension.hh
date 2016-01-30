@@ -57,6 +57,9 @@ public:
     virtual void on_disconnect();
     virtual void on_idle();
 
+    // Message sent from this client
+    virtual void on_message_send(irc::message const& msg);
+
     // Raw handler
     virtual void on_message(irc::message const& msg);
 

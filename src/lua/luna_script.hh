@@ -63,6 +63,8 @@ public:
     virtual void on_disconnect() override;
     virtual void on_idle() override;
 
+    virtual void on_message_send(irc::message const& msg) override;
+
     virtual void on_message(irc::message const& msg) override;
 
     virtual void on_invite(
