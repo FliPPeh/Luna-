@@ -613,8 +613,7 @@ void luna::handle_core_ctcp(
             version_reply.str()));
 
     } else if (irc::rfc1459_equal(ctcp, "PING")) {
-        // :)
-        send_message(irc::ctcp_response(rtarget, "PING", "0"));
+        send_message(irc::ctcp_response(rtarget, "PING", args));
 
     } else if (irc::rfc1459_equal(ctcp, "TIME")) {
         std::time_t now = std::time(nullptr);
