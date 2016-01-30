@@ -257,7 +257,6 @@ communicating with the server.
 
     *Can only load Lua scripts as of the time of writing.*
 
-
 * `luna.extensions.unload(id: string) -> nil`
 
     Unload the extension identified by ID "id".
@@ -974,6 +973,13 @@ Examples:
     :irc.example.org 001 yournick :Welcome
     > raw("irc.example.org", "001", {"yournick", "Welcome"})
 
+### message\_send
+Emitted when a message is sent by the client itself.
+
+Arguments:
+
+1. `message_command`: `string`
+2. `message_arguments`: `list of string`
 
 ### invite
 Emitted when the client is invited to a channel.
