@@ -332,7 +332,26 @@ function string:template(fmt, rep, enable)
                 rep:template(fmt, rep, enable))
 
         elseif k:find("^lua:") and enable:find("l") then
-            return p .. tostring(load(k:sub(5))() or nil)
+			local function do_load(s)
+				return load(s, "(eval)", "bt", _ENV)
+			end
+
+			local e
+			local f = do_load("return " .. k:sub(5))
+
+			if not f then
+				f, e = do_load(k:sub(5))
+
+				if not f then
+					log.err(string.format("failed to eval %q: %s", k:sub(5), e))
+
+					f = function()
+						return nil
+					end
+				end
+			end
+
+            return p .. tostring(f() or rep)
         elseif fmt[k] then
             return p .. fmt[k]
         else
