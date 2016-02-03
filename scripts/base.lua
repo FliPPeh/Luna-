@@ -87,9 +87,9 @@ function base.script_load()
 
         local user = who:match_reguser()
         if user and user:flags():find("a") then
-            local f = do_load(args)
+            local f = do_load("return " .. args)
             if not f then
-                f, e = do_load("return " .. args)
+                f, e = do_load(args)
 
                 if not f then
                     who:respond(e)
